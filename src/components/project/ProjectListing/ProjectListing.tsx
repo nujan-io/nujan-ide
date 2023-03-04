@@ -1,11 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { FC } from 'react';
+import NewProject from '../NewProject';
 import s from './ProjectListing.module.scss';
 
 const ProjectListing: FC = () => {
   return (
     <div className={s.root}>
+      <NewProject />
       {Array(7)
         .fill('')
         .map((item, i) => (
