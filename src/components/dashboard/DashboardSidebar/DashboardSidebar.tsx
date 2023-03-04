@@ -1,5 +1,5 @@
+import { AppLogo } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import Image from 'next/image';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './DashboardSidebar.module.scss';
@@ -11,9 +11,7 @@ interface Props {
 const DashboardSidebar: FC<Props> = ({ className }) => {
   return (
     <div className={`${s.root} ${className}`}>
-      <Link href="/projects" className={s.brandLogo} data-aos="fade-in">
-        <Image src="/images/logo.svg" width={195} height={40} alt="Nujan" />
-      </Link>
+      <AppLogo className={s.brandLogo} />
 
       <div className={s.menuItems}>
         <div>
