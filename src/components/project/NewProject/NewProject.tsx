@@ -1,11 +1,16 @@
 import AppIcon from '@/components/ui/icon';
+import { ProjectTemplate } from '@/constant/ProjectTemplate';
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Tree } from '@/interfaces/workspace.interface';
 import { Button, Form, Input, Modal, Radio } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
   const [isActive, setIsActive] = useState(false);
+  const { createNewProject } = useWorkspaceActions();
 
   const [form] = useForm();
 
@@ -16,7 +21,13 @@ const NewProject: FC = () => {
   ];
 
   const onFormFinish = (values: any) => {
-    console.log('values', values);
+    const template: Tree[] = (
+      ProjectTemplate[values.template as 'tonBlank' | 'tonCounter'] as any
+    )['func'];
+    const projectId = uuidv4();
+
+    createNewProject({ id: projectId, ...values }, template);
+    form.resetFields();
     closeModal();
   };
 
