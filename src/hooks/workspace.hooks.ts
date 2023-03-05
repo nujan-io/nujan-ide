@@ -9,6 +9,7 @@ function useWorkspaceActions() {
 
   return {
     createNewProject,
+    projects,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -25,5 +26,9 @@ function useWorkspaceActions() {
       projects: [...workspace.projects, project],
       projectFiles: { ...workspace.projectFiles, [project.id]: template },
     });
+  }
+
+  function projects() {
+    return workspace.projects || [];
   }
 }
