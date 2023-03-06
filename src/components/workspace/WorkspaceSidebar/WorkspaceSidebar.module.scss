@@ -1,0 +1,40 @@
+.container {
+  background-color: var(--grey-500);
+  height: 100%;
+  .action {
+    font-size: 1.8rem;
+    padding: 1rem;
+    cursor: pointer;
+    opacity: 0.5;
+    position: relative;
+    color: #fff;
+    display: flex;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    &::before {
+      content: '';
+      background-color: var(--primary);
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 2px;
+      display: none;
+    }
+    &.isActive,
+    &:hover {
+      opacity: 1;
+      color: var(--primary);
+      &::before {
+        display: block;
+      }
+    }
+    span {
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-top: 5px;
+    }
+  }
+}
