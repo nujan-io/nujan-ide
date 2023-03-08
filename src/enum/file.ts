@@ -1,0 +1,32 @@
+export enum FileType {
+  JavaScript = 'javascript',
+  TypeScript = 'typescript',
+  TypeScriptReact = 'typescriptreact',
+  JavaScriptReact = 'javascriptreact',
+  HTML = 'html',
+  CSS = 'css',
+  C = 'c',
+  FC = 'func',
+  Cpp = 'cpp',
+  Rust = 'rust',
+  Wat = 'wat',
+  Wasm = 'wasm',
+  Directory = 'directory',
+  Log = 'log',
+  x86 = 'x86',
+  Markdown = 'markdown',
+  Cretonne = 'cretonne',
+  JSON = 'json',
+  DOT = 'dot',
+  TOML = 'toml',
+  Unknown = 'unknown',
+}
+
+export enum FileExtensionToFileType {
+  js = FileType.JavaScript,
+  ts = FileType.TypeScript,
+  tsx = FileType.TypeScriptReact,
+  jsx = FileType.JavaScriptReact,
+  rs = FileType.Rust,
+  fc = FileType.FC,
+}

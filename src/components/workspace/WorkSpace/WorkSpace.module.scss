@@ -1,4 +1,13 @@
 .root {
   display: flex;
   height: 100vh;
+  .sidebar {
+    flex: 0 0 70px;
+    width: 70px;
+  }
+  .tree {
+    padding-top: 0.5rem;
+    flex: 0 0 250px;
+    width: 250px;
+  }
 }

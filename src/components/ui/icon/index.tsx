@@ -6,11 +6,10 @@ import {
   AiOutlineHome,
   AiOutlineProject,
 } from 'react-icons/ai';
-import { FiEdit2 } from 'react-icons/fi';
-
-import { VscGist } from 'react-icons/vsc';
-
 import { CiBeaker1 } from 'react-icons/ci';
+import { FiEdit2 } from 'react-icons/fi';
+import { GoTriangleRight } from 'react-icons/go';
+import { VscGist } from 'react-icons/vsc';
 import Plus from './Plus';
 
 export type AppIconType =
@@ -22,7 +21,8 @@ export type AppIconType =
   | 'Code'
   | 'Beaker'
   | 'Plus'
-  | 'Home';
+  | 'Home'
+  | 'AngleRight';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -38,6 +38,7 @@ const Components = {
   Home: AiOutlineHome,
   Code: VscGist,
   Beaker: CiBeaker1,
+  AngleRight: GoTriangleRight,
   Plus,
 };
 
