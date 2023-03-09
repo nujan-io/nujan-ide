@@ -1,5 +1,5 @@
 export interface Tree {
-  id?: string;
+  id: string;
   name: string;
   parent: string | null;
   type: 'directory' | 'file';

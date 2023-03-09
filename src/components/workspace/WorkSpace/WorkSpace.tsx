@@ -1,4 +1,5 @@
-import { useRouter } from 'next/router';
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import FileTree from '../tree/FileTree';
 import WorkspaceSidebar from '../WorkspaceSidebar';
@@ -6,11 +7,21 @@ import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
 import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
+  const workspaceAction = useWorkspaceActions();
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { id: projectId, tab } = router.query;
+
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+    if (workspaceAction.projectFiles(projectId as string).length === 0) {
+      Router.push('/project');
+    }
+  }, [projectId]);
 
   useEffect(() => {
     if (tab) {
@@ -33,7 +44,7 @@ const WorkSpace: FC = () => {
         />
       </div>
       <div className={s.tree}>
-        <FileTree />
+        <FileTree projectId={projectId as string} />
       </div>
     </div>
   );

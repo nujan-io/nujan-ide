@@ -10,6 +10,7 @@ function useWorkspaceActions() {
   return {
     createNewProject,
     projects,
+    projectFiles,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -30,5 +31,9 @@ function useWorkspaceActions() {
 
   function projects() {
     return workspace.projects || [];
+  }
+
+  function projectFiles(id: string) {
+    return workspace?.projectFiles?.[id] || [];
   }
 }
