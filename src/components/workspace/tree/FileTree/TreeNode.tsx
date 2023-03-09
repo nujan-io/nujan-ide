@@ -1,6 +1,8 @@
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
 import cn from 'clsx';
+import { useRouter } from 'next/router';
 import { FC } from 'react';
 import s from './FileTree.module.scss';
 
@@ -15,9 +17,17 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { droppable } = node;
   const indent = depth * 15;
 
-  const handleToggle = (e: React.MouseEvent) => {
+  const router = useRouter();
+  const { id: projectId, tab } = router.query;
+
+  const { openFile } = useWorkspaceActions();
+
+  const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggle(node.id);
+    if (!node.droppable) {
+      openFile(node.id as string, projectId as string);
+    }
   };
 
   const rootClassName = cn(s.treeNode, {
@@ -34,7 +44,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     <div
       className={rootClassName}
       style={{ paddingInlineStart: indent }}
-      onClick={handleToggle}
+      onClick={handleClick}
     >
       <span>{node.text}</span>
     </div>

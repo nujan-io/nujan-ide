@@ -1,6 +1,7 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import Tabs from '../Tabs';
 import FileTree from '../tree/FileTree';
 import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
@@ -24,6 +25,12 @@ const WorkSpace: FC = () => {
   }, [projectId]);
 
   useEffect(() => {
+    return () => {
+      workspaceAction.closeAllFile();
+    };
+  }, []);
+
+  useEffect(() => {
     if (tab) {
       setActiveMenu(tab as WorkSpaceMenu);
     }
@@ -45,6 +52,13 @@ const WorkSpace: FC = () => {
       </div>
       <div className={s.tree}>
         <FileTree projectId={projectId as string} />
+      </div>
+      <div className={s.workArea}>
+        {isLoaded && (
+          <>
+            <Tabs projectId={projectId as string} />
+          </>
+        )}
       </div>
     </div>
   );

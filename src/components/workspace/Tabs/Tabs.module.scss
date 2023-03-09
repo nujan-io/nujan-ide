@@ -1,0 +1,61 @@
+.container {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  background: #1d1c1c;
+  font-size: 14px;
+  height: 2.7rem;
+  min-height: 2.7rem;
+  margin-bottom: 1rem;
+
+  .tabList {
+    display: flex;
+    flex: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .item {
+    display: flex;
+    // max-width: 150px;
+    min-width: fit-content;
+    cursor: pointer;
+    padding-left: 10px;
+    align-items: center;
+    color: #868686;
+    -moz-user-select: none;
+    user-select: none;
+    padding: 0 1rem;
+    &:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    &::before {
+      margin-top: 5%;
+    }
+    &:hover {
+      .close {
+        visibility: visible;
+      }
+    }
+
+    &.isActive {
+      background: var(--grey-1000);
+      color: #ffffff;
+      .close {
+        visibility: visible;
+      }
+    }
+    .close {
+      display: inline-flex;
+      margin-left: 5px;
+      margin-top: 2px;
+      visibility: hidden;
+      border-radius: 5px;
+      padding: 1px;
+      &:hover {
+        background-color: #403d3d;
+      }
+    }
+  }
+}
