@@ -12,8 +12,19 @@
   padding: 0.15rem 0;
   display: flex;
   align-items: center;
+  .item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding-right: 0.6rem;
+  }
   &:hover {
     background-color: #000;
+    .actions {
+      opacity: 1;
+      pointer-events: all;
+    }
   }
   &.isOpen {
     .iconWrapper {
@@ -36,5 +47,39 @@
       transform: rotate(0deg);
       transition: transform 0.15s ease-in;
     }
+  }
+}
+
+.actionRoot {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s;
+  &.visible {
+    opacity: 1;
+    pointer-events: all;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  > span > svg {
+    cursor: pointer;
+    margin-left: 10px;
+    transform: scale(1);
+    transition: 0.2s;
+  }
+}
+
+.treeInputContainer {
+  display: flex;
+  input {
+    background: #333232;
+    border: 1px solid var(--primary);
+    outline: none;
+    color: #fff;
+    width: 100%;
   }
 }

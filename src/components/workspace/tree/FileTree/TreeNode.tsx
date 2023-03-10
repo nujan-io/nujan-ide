@@ -3,8 +3,10 @@ import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
 import cn from 'clsx';
 import { useRouter } from 'next/router';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import s from './FileTree.module.scss';
+import ItemAction from './ItemActions';
+import TreePlaceholderInput from './TreePlaceholderInput';
 
 interface Props {
   node: NodeModel;
@@ -17,10 +19,15 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { droppable } = node;
   const indent = depth * 15;
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [newItemAdd, setNewItemAdd] = useState<string>('');
+
   const router = useRouter();
   const { id: projectId, tab } = router.query;
 
-  const { openFile } = useWorkspaceActions();
+  const { openFile, renameItem } = useWorkspaceActions();
+
+  const disallowedFile = ['contract.cell.js', 'stateInit.cell.js'];
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -28,6 +35,44 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     if (!node.droppable) {
       openFile(node.id as string, projectId as string);
     }
+  };
+
+  const handleItemAction = () => {
+    if (!isAllowed()) {
+      return;
+    }
+    setIsEditing(true);
+  };
+
+  const commitEditing = (name: string) => {
+    renameItem(node.id as string, name, projectId as string);
+    reset();
+  };
+
+  const reset = () => {
+    document.body.classList.remove('editing-file-folder');
+    setIsEditing(false);
+  };
+
+  const getAllowedActions = () => {
+    if (disallowedFile.includes(node.text)) {
+      return [];
+    }
+    if (node.droppable) {
+      return ['Edit', 'NewFile', 'NewFolder', 'Close'];
+    }
+    return ['Edit', 'Close'];
+  };
+
+  const isAllowed = () => {
+    const isEditingItem = document.body.classList.contains(
+      'editing-file-folder'
+    );
+    if (!isEditingItem) {
+      document.body.classList.add('editing-file-folder');
+      return true;
+    }
+    return false;
   };
 
   const rootClassName = cn(s.treeNode, {
@@ -46,7 +91,30 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
       style={{ paddingInlineStart: indent }}
       onClick={handleClick}
     >
-      <span>{node.text}</span>
+      {!isEditing && (
+        <div className={s.item}>
+          <span>{node.text}</span>
+          <ItemAction
+            className={s.actions}
+            onRename={() => {
+              handleItemAction();
+            }}
+            allowedActions={getAllowedActions() as any}
+            onNewFile={() => {}}
+            onNewDirectory={() => {}}
+            onDelete={() => {}}
+          />
+        </div>
+      )}
+
+      {isEditing && (
+        <TreePlaceholderInput
+          type={node.droppable ? 'directory' : 'file'}
+          defaultValue={node.text}
+          onSubmit={commitEditing}
+          onCancel={reset}
+        />
+      )}
     </div>
   );
 };
