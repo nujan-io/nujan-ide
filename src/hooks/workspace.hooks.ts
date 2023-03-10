@@ -2,6 +2,7 @@ import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
+import { v4 } from 'uuid';
 
 export { useWorkspaceActions };
 
@@ -14,6 +15,8 @@ function useWorkspaceActions() {
     projectFiles,
     openFile,
     renameItem,
+    deleteItem,
+    createNewItem,
     openedFiles,
     closeFile,
     closeAllFile,
@@ -121,6 +124,41 @@ function useWorkspaceActions() {
     updateProjectFiles(item.project, projectId);
   }
 
+  function deleteItem(id: Tree['id'], projectId: string) {
+    const item = searchNode(id, projectId);
+    if (!item.node) {
+      return;
+    }
+
+    item.project = item.project.filter(
+      (file: any) => file.id !== id && file.parent !== id
+    );
+
+    closeFile(id);
+
+    updateProjectFiles(item.project, projectId);
+  }
+
+  function createNewItem(
+    id: Tree['parent'],
+    name: string,
+    type: string,
+    projectId: string
+  ) {
+    const item = searchNode(id as string, projectId, 'parent');
+    if (isFileExists(name, projectId, item.node?.parent || '')) {
+      return;
+    }
+    const newItem = _createItem(
+      type,
+      name,
+      id as string,
+      item.node?.path || ''
+    );
+    item.project.push(newItem);
+    updateProjectFiles(item.project, projectId);
+  }
+
   function isFileExists(
     name: string,
     projectId: string,
@@ -150,5 +188,21 @@ function useWorkspaceActions() {
     const node = projectTemp.find((file) => file[key] === id);
 
     return { node: node || null, project: projectTemp };
+  }
+
+  function _createItem(
+    type: string,
+    name: string,
+    parent: string,
+    parentPath: string
+  ) {
+    return {
+      id: v4(),
+      name,
+      parent: parent || null,
+      type: type as any,
+      content: '',
+      path: `${parentPath ? parentPath + '/' : ''}${name}`,
+    };
   }
 }

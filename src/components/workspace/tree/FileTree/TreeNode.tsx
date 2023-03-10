@@ -25,7 +25,8 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const router = useRouter();
   const { id: projectId, tab } = router.query;
 
-  const { openFile, renameItem } = useWorkspaceActions();
+  const { openFile, renameItem, deleteItem, createNewItem } =
+    useWorkspaceActions();
 
   const disallowedFile = ['contract.cell.js', 'stateInit.cell.js'];
 
@@ -49,8 +50,14 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     reset();
   };
 
+  const commitItemCreation = (name: string) => {
+    createNewItem(node.id as string, name, newItemAdd, projectId as string);
+    reset();
+  };
+
   const reset = () => {
     document.body.classList.remove('editing-file-folder');
+    setNewItemAdd('');
     setIsEditing(false);
   };
 
@@ -62,6 +69,10 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
       return ['Edit', 'NewFile', 'NewFolder', 'Close'];
     }
     return ['Edit', 'Close'];
+  };
+
+  const deleteItemFromNode = () => {
+    deleteItem(node.id as string, projectId as string);
   };
 
   const isAllowed = () => {
@@ -86,36 +97,58 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   });
 
   return (
-    <div
-      className={rootClassName}
-      style={{ paddingInlineStart: indent }}
-      onClick={handleClick}
-    >
-      {!isEditing && (
-        <div className={s.item}>
-          <span>{node.text}</span>
-          <ItemAction
-            className={s.actions}
-            onRename={() => {
-              handleItemAction();
-            }}
-            allowedActions={getAllowedActions() as any}
-            onNewFile={() => {}}
-            onNewDirectory={() => {}}
-            onDelete={() => {}}
-          />
-        </div>
-      )}
+    <>
+      <div
+        className={rootClassName}
+        style={{ paddingInlineStart: indent }}
+        onClick={handleClick}
+      >
+        {!isEditing && (
+          <div className={s.item}>
+            <span>{node.text}</span>
+            <ItemAction
+              className={s.actions}
+              onRename={() => {
+                handleItemAction();
+              }}
+              allowedActions={getAllowedActions() as any}
+              onNewFile={() => {
+                if (!isAllowed()) {
+                  return;
+                }
+                setNewItemAdd('file');
+              }}
+              onNewDirectory={() => {
+                if (!isAllowed()) {
+                  return;
+                }
+                setNewItemAdd('directory');
+              }}
+              onDelete={() => {
+                deleteItemFromNode();
+              }}
+            />
+          </div>
+        )}
 
-      {isEditing && (
+        {isEditing && (
+          <TreePlaceholderInput
+            type={node.droppable ? 'directory' : 'file'}
+            defaultValue={node.text}
+            onSubmit={commitEditing}
+            onCancel={reset}
+          />
+        )}
+      </div>
+      {newItemAdd && (
         <TreePlaceholderInput
-          type={node.droppable ? 'directory' : 'file'}
-          defaultValue={node.text}
-          onSubmit={commitEditing}
+          style={{ paddingInlineStart: 15 * (depth + 1) }}
+          onSubmit={commitItemCreation}
           onCancel={reset}
+          type={newItemAdd}
         />
       )}
-    </div>
+    </>
   );
 };
 
