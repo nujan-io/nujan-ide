@@ -1,6 +1,7 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import BuildProject from '../BuildProject';
 import Editor from '../Editor';
 import Tabs from '../Tabs';
 import FileTree from '../tree/FileTree';
@@ -54,7 +55,12 @@ const WorkSpace: FC = () => {
         />
       </div>
       <div className={s.tree}>
-        <FileTree projectId={projectId as string} />
+        {isLoaded && activeMenu === 'code' && (
+          <FileTree projectId={projectId as string} />
+        )}
+        {activeMenu === 'build' && (
+          <BuildProject projectId={projectId as string} />
+        )}
       </div>
       <div className={s.workArea}>
         {isLoaded && (
