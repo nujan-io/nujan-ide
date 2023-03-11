@@ -1,8 +1,9 @@
+import TonAuth from '@/components/auth/TonAuth';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import { compileFunc } from '@ton-community/func-js';
 import { Button, Form, message, Select } from 'antd';
-import { FC, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
 import s from './BuildProject.module.scss';
 
@@ -16,6 +17,7 @@ const BuildProject: FC<Props> = ({ projectId }) => {
     contractBOC: string | null;
     dataCell: Cell | null;
   } | null>(null);
+  const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
   const { Option } = Select;
 
@@ -66,12 +68,34 @@ const BuildProject: FC<Props> = ({ projectId }) => {
         };
       });
       message.success('Build successfull');
+      createStateInitCell();
     } catch (error) {
       console.log('error', error);
       message.error('Something went wrong');
     } finally {
       setIsLoading('');
     }
+  };
+
+  const createStateInitCell = () => {
+    if (!cellBuilderRef.current?.contentWindow) return;
+    const stateInitData = getFileByPath('stateInit.cell.js', projectId);
+    if (stateInitData && !stateInitData.content) {
+      message.error('State init data is missing in file stateInit.cell.js');
+      return;
+    }
+    if (!stateInitData?.content?.includes('cell')) {
+      message.error('cell variable is missing in file stateInit.cell.js');
+      return;
+    }
+    cellBuilderRef.current.contentWindow.postMessage(
+      {
+        name: 'nujan-ton-ide',
+        type: 'state-init-data',
+        code: stateInitData?.content,
+      },
+      '*'
+    );
   };
 
   const getProjectFiles = () => {
@@ -89,9 +113,38 @@ const BuildProject: FC<Props> = ({ projectId }) => {
     return files;
   };
 
+  useEffect(() => {
+    const handler = (
+      event: MessageEvent<{ name: string; type: string; data: any }>
+    ) => {
+      if (
+        !event.data ||
+        typeof event.data !== 'object' ||
+        event.data?.type !== 'state-init-data' ||
+        event.data?.name !== 'nujan-ton-ide'
+      ) {
+        return;
+      }
+
+      setBuildoutput((t: any) => {
+        return {
+          ...t,
+          dataCell: event.data.data,
+        };
+      });
+    };
+
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
   return (
     <div className={s.root}>
       <h3 className={s.heading}>Build & Deploy</h3>
+      <iframe
+        className={s.cellBuilderRef}
+        ref={cellBuilderRef}
+        src="/html/tonweb.html"
+      />
       <Form
         className={s.form}
         layout="vertical"
@@ -122,7 +175,10 @@ const BuildProject: FC<Props> = ({ projectId }) => {
         >
           Build
         </Button>
+        <br />
+        <br />
       </Form>
+      <TonAuth />
     </div>
   );
 };

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON Web</title>
+</head>
+
+<body>
+    <script src="https://cdn.jsdelivr.net/gh/toncenter/tonweb@master/dist/tonweb.js"></script>
+    <script>
+        window.addEventListener('message', async function (event) {
+            if (!event.data || typeof event.data !== "object" || !event.data?.type || event.data?.name !== 'nujan-ton-ide') {
+                return;
+            }
+
+            const d = `async function main() {
+                const tonweb = new window.TonWeb();
+                ${event.data.code}
+                const boc = await cell.toBoc();
+                return boc;
+            } main()`;
+            const cellValue = await eval(d);
+            const response = {
+                name: 'nujan-ton-ide',
+                data: cellValue,
+                type: event.data?.type
+            }
+            window.parent.postMessage(response, "*");
+        });
+    </script>
+</body>
+
+</html>
