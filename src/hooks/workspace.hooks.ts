@@ -21,6 +21,7 @@ function useWorkspaceActions() {
     openedFiles,
     activeFile,
     getFileById,
+    getFileByPath,
     closeFile,
     updateFileContent,
     closeAllFile,
@@ -101,6 +102,14 @@ function useWorkspaceActions() {
 
   function getFileById(id: Tree['id'], projectId: string): Tree | undefined {
     return projectFiles(projectId).find((file) => file.id === id);
+  }
+
+
+  function getFileByPath(
+    path: Tree['path'],
+    projectId: string
+  ): Tree | undefined {
+    return projectFiles(projectId).find((file) => file.path === path);
   }
 
   function updateFileContent(
