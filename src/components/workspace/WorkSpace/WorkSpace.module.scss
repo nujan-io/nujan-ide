@@ -14,4 +14,25 @@
   .workArea {
     flex: 0 0 100%;
   }
+  .globalAction {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    padding-left: 0.7rem;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--black-500);
+    align-items: center;
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+
+    svg {
+      font-size: 1.2rem;
+    }
+    .visible {
+      opacity: 1;
+      pointer-events: all;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
 }

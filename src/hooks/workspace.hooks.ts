@@ -1,5 +1,6 @@
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
+import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
 import { v4 } from 'uuid';
@@ -169,7 +170,7 @@ function useWorkspaceActions() {
   }
 
   function createNewItem(
-    id: Tree['parent'],
+    id: Tree['parent'] | '',
     name: string,
     type: string,
     projectId: string
@@ -193,19 +194,27 @@ function useWorkspaceActions() {
     projectId: string,
     parentId: string = ''
   ): boolean {
-    // if same file already exists in same directory
+    let exists = false;
     if (!parentId) {
-      return (
+      exists = !!(
         projectFiles(projectId).findIndex(
-          (file) => file.parent == '0' && file.name === name
+          (file) => file.parent == null && file.name === name
         ) >= 0
       );
+    } else {
+      exists =
+        projectFiles(projectId).findIndex(
+          (file) => file.parent === parentId && file.name === name
+        ) >= 0;
     }
-    return (
-      projectFiles(projectId).findIndex(
-        (file) => file.parent === parentId && file.name === name
-      ) >= 0
-    );
+    if (exists) {
+      notification.warning({
+        message: name + ': Already exists',
+        key: name + 'exists',
+      });
+    }
+
+    return exists;
   }
 
   function searchNode(

@@ -5,6 +5,7 @@ import BuildProject from '../BuildProject';
 import Editor from '../Editor';
 import Tabs from '../Tabs';
 import FileTree from '../tree/FileTree';
+import ItemAction from '../tree/FileTree/ItemActions';
 import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
 import s from './WorkSpace.module.scss';
@@ -18,6 +19,10 @@ const WorkSpace: FC = () => {
   const { id: projectId, tab } = router.query;
 
   const activeFile = workspaceAction.activeFile(projectId as string);
+
+  const commitItemCreation = (type: string, name: string) => {
+    workspaceAction.createNewItem('', name, type, projectId as string);
+  };
 
   useEffect(() => {
     if (!projectId) {
@@ -56,7 +61,20 @@ const WorkSpace: FC = () => {
       </div>
       <div className={s.tree}>
         {isLoaded && activeMenu === 'code' && (
-          <FileTree projectId={projectId as string} />
+          <>
+            <div className={s.globalAction}>
+              <span>Project</span>
+              <ItemAction
+                className={`${s.visible}`}
+                allowedActions={['NewFile', 'NewFolder']}
+                onNewFile={() => commitItemCreation('file', 'new file')}
+                onNewDirectory={() =>
+                  commitItemCreation('directory', 'new folder')
+                }
+              />
+            </div>
+            <FileTree projectId={projectId as string} />
+          </>
         )}
         {activeMenu === 'build' && (
           <BuildProject projectId={projectId as string} />
