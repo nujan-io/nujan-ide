@@ -18,7 +18,10 @@ function useWorkspaceActions() {
     deleteItem,
     createNewItem,
     openedFiles,
+    activeFile,
+    getFileById,
     closeFile,
+    updateFileContent,
     closeAllFile,
   };
 
@@ -84,6 +87,32 @@ function useWorkspaceActions() {
 
   function openedFiles() {
     return workspace.openFiles;
+  }
+
+  function activeFile(projectId: string) {
+    const file = openedFiles().find((item) => item.isOpen);
+    if (!file) {
+      return undefined;
+    }
+
+    return getFileById(file.id, projectId);
+  }
+
+  function getFileById(id: Tree['id'], projectId: string): Tree | undefined {
+    return projectFiles(projectId).find((file) => file.id === id);
+  }
+
+  function updateFileContent(
+    id: Tree['id'],
+    content: string,
+    projectId: string
+  ) {
+    const item = searchNode(id, projectId);
+    if (!item.node) {
+      return;
+    }
+    item.node.content = content;
+    updateProjectFiles(item.project, projectId);
   }
 
   function closeFile(id: string) {

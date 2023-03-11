@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@minoru/react-dnd-treeview": "^3.4.1",
+    "@monaco-editor/react": "^4.4.6",
     "@next/font": "13.1.6",
     "@types/node": "18.14.0",
     "@types/react": "18.0.28",
@@ -19,6 +20,7 @@
     "eslint": "8.34.0",
     "eslint-config-next": "13.1.6",
     "lodash.clonedeep": "^4.5.0",
+    "monaco-editor": "^0.36.1",
     "next": "13.1.6",
     "react": "18.2.0",
     "react-dnd": "^16.0.1",

@@ -1,6 +1,7 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import Editor from '../Editor';
 import Tabs from '../Tabs';
 import FileTree from '../tree/FileTree';
 import WorkspaceSidebar from '../WorkspaceSidebar';
@@ -14,6 +15,8 @@ const WorkSpace: FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const { id: projectId, tab } = router.query;
+
+  const activeFile = workspaceAction.activeFile(projectId as string);
 
   useEffect(() => {
     if (!projectId) {
@@ -57,6 +60,12 @@ const WorkSpace: FC = () => {
         {isLoaded && (
           <>
             <Tabs projectId={projectId as string} />
+            {activeFile && (
+              <Editor
+                file={activeFile as any}
+                projectId={projectId as string}
+              />
+            )}
           </>
         )}
       </div>

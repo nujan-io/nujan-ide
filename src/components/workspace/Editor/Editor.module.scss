@@ -1,0 +1,11 @@
+.container {
+  height: 75%;
+  .editor {
+    height: 100%;
+  }
+  .saveFile {
+    position: absolute;
+    top: 5px;
+    right: 1rem;
+  }
+}
