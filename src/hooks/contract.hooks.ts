@@ -17,6 +17,7 @@ export function useContractAction() {
 
   return {
     deployContract,
+    sendMessage,
   };
   async function deployContract(codeBOC: string, dataCell: any) {
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
@@ -64,5 +65,28 @@ export function useContractAction() {
     } finally {
     }
     return '';
+  }
+
+  async function sendMessage(dataCell: number, contractAddress: string) {
+    const messageBody = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
+    try {
+      const params: SendTransactionRequest = {
+        validUntil: Date.now() + 1000000,
+        messages: [
+          {
+            address: contractAddress,
+            amount: toNano('0.02').toString(),
+            payload: messageBody.toBoc().toString('base64'),
+          },
+        ],
+      };
+
+      const response = await tonConnector.sendTransaction(params);
+      console.log('sendMessage', response);
+    } catch (error) {
+      console.log(error, 'error');
+    } finally {
+      return '';
+    }
   }
 }

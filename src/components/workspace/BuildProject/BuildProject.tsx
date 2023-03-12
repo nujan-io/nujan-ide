@@ -8,6 +8,7 @@ import { Button, Form, message, Select } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
+import ContractInteraction from '../ContractInteraction';
 import s from './BuildProject.module.scss';
 
 interface Props {
@@ -237,6 +238,15 @@ const BuildProject: FC<Props> = ({ projectId }) => {
         <br />
       </Form>
       <TonAuth />
+
+      {activeProject?.id && tonConnector && activeProject?.contractAddress && (
+        <div className={s.contractInteraction}>
+          <ContractInteraction
+            contractAddress={activeProject?.contractAddress!!}
+            projectId={projectId}
+          />
+        </div>
+      )}
     </div>
   );
 };
