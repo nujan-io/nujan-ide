@@ -98,6 +98,9 @@ const ContractInteraction: FC<Props> = ({ contractAddress, projectId }) => {
         ref={cellBuilderRef}
         src="/html/tonweb.html"
       />
+      <p>
+        <b>This will be used to send internal message to contract</b>
+      </p>
       <Form className={s.form} onFinish={onSubmit}>
         <Button
           type="default"
