@@ -1,8 +1,11 @@
 import TonAuth from '@/components/auth/TonAuth';
+import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import { compileFunc } from '@ton-community/func-js';
+import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message, Select } from 'antd';
+import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
 import s from './BuildProject.module.scss';
@@ -18,10 +21,15 @@ const BuildProject: FC<Props> = ({ projectId }) => {
     dataCell: Cell | null;
   } | null>(null);
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
+  const [tonConnector] = useTonConnectUI();
 
   const { Option } = Select;
 
-  const { projectFiles, getFileByPath } = useWorkspaceActions();
+  const { projectFiles, getFileByPath, updateProjectById, project } =
+    useWorkspaceActions();
+  const { deployContract } = useContractAction();
+
+  const activeProject = project(projectId);
 
   const onFormFinish = async ({ fileId }: { fileId: Tree['id'] }) => {
     const file = getProjectFiles().find((f) => f.id === fileId);
@@ -72,6 +80,36 @@ const BuildProject: FC<Props> = ({ projectId }) => {
     } catch (error) {
       console.log('error', error);
       message.error('Something went wrong');
+    } finally {
+      setIsLoading('');
+    }
+  };
+
+  const deploy = async () => {
+    if (!buildOutput?.contractBOC || !buildOutput?.dataCell) {
+      return;
+    }
+
+    try {
+      setIsLoading('deploy');
+      const _contractAddress = await deployContract(
+        buildOutput?.contractBOC,
+        buildOutput?.dataCell as any
+      );
+      if (!_contractAddress) {
+        return;
+      }
+
+      updateProjectById(
+        activeProject?.id!!,
+        {
+          contractAddress: _contractAddress,
+        },
+        projectId
+      );
+    } catch (error: any) {
+      console.log(error);
+      // message.error(error.response?.data?.message);
     } finally {
       setIsLoading('');
     }
@@ -167,6 +205,18 @@ const BuildProject: FC<Props> = ({ projectId }) => {
             ))}
           </Select>
         </Form.Item>
+
+        {activeProject?.contractAddress!! && (
+          <div className={`${s.contractAddress} wrap`}>
+            <Link
+              href={`https://testnet.tonscan.org/address/${activeProject?.contractAddress}`}
+              target="_blank"
+            >
+              View Deployed Contract
+            </Link>
+          </div>
+        )}
+
         <Button
           style={{ marginRight: '5px' }}
           type="primary"
@@ -174,6 +224,14 @@ const BuildProject: FC<Props> = ({ projectId }) => {
           loading={isLoading == 'build'}
         >
           Build
+        </Button>
+        <Button
+          type="primary"
+          loading={isLoading == 'deploy'}
+          onClick={deploy}
+          disabled={!buildOutput?.contractBOC}
+        >
+          Deploy
         </Button>
         <br />
         <br />

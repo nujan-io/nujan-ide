@@ -3,4 +3,5 @@ export const AppConfig = {
   seo: {
     title: 'Nujan IDE',
   },
+  network: 'testnet',
 };

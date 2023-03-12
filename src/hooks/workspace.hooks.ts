@@ -13,6 +13,7 @@ function useWorkspaceActions() {
   return {
     createNewProject,
     projects,
+    project,
     projectFiles,
     openFile,
     renameItem,
@@ -24,6 +25,7 @@ function useWorkspaceActions() {
     getFileByPath,
     closeFile,
     updateFileContent,
+    updateProjectById,
     closeAllFile,
   };
 
@@ -43,8 +45,30 @@ function useWorkspaceActions() {
     });
   }
 
+  function updateProjectList(
+    projectId: string,
+    projectListItem: Project | any
+  ) {
+    const projectIndex = projects().findIndex((item) => item.id === projectId);
+    if (projectIndex < 0) {
+      return;
+    }
+    const projectList = [...workspace.projects];
+    projectList[projectIndex] = {
+      ...projectList[projectIndex],
+      ...projectListItem,
+    };
+    updateStateByKey({
+      projects: projectList,
+    });
+  }
+
   function projects() {
     return workspace.projects || [];
+  }
+
+  function project(projectId: string) {
+    return projects().find((p) => p.id === projectId);
   }
 
   function projectFiles(projectId: string) {
@@ -104,7 +128,6 @@ function useWorkspaceActions() {
     return projectFiles(projectId).find((file) => file.id === id);
   }
 
-
   function getFileByPath(
     path: Tree['path'],
     projectId: string
@@ -123,6 +146,13 @@ function useWorkspaceActions() {
     }
     item.node.content = content;
     updateProjectFiles(item.project, projectId);
+  }
+
+  function updateProjectById(id: string, updateObject: any, projectId: string) {
+    updateProjectList(id, {
+      ...project(projectId),
+      ...updateObject,
+    });
   }
 
   function closeFile(id: string) {
