@@ -9,6 +9,7 @@ import {
 import { CiBeaker1 } from 'react-icons/ci';
 import { FiEdit2 } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
+import { SiTestcafe } from 'react-icons/si';
 import { VscGist } from 'react-icons/vsc';
 import Plus from './Plus';
 
@@ -22,7 +23,8 @@ export type AppIconType =
   | 'Beaker'
   | 'Plus'
   | 'Home'
-  | 'AngleRight';
+  | 'AngleRight'
+  | 'TestCases';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -39,6 +41,7 @@ const Components = {
   Code: VscGist,
   Beaker: CiBeaker1,
   AngleRight: GoTriangleRight,
+  TestCases: SiTestcafe,
   Plus,
 };
 

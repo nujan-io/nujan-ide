@@ -20,6 +20,7 @@ export function useContractAction() {
     sendMessage,
   };
   async function deployContract(codeBOC: string, dataCell: any) {
+    console.log('codeBOC', codeBOC, dataCell);
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     // Amount to send to contract. Gas fee
@@ -30,6 +31,7 @@ export function useContractAction() {
       data: Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0],
     };
     const _contractAddress = contractAddress(0, stateInit);
+    console.log('_contractAddress', _contractAddress);
     const endpoint = await getHttpEndpoint({
       network: AppConfig.network as Network,
     });

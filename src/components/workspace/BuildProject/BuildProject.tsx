@@ -13,8 +13,9 @@ import s from './BuildProject.module.scss';
 
 interface Props {
   projectId: string;
+  onCodeCompile: (codeBOC: string) => void;
 }
-const BuildProject: FC<Props> = ({ projectId }) => {
+const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const [isLoading, setIsLoading] = useState('');
   const [funcStdLib, setFuncStdLib] = useState('');
   const [buildOutput, setBuildoutput] = useState<{
@@ -76,6 +77,7 @@ const BuildProject: FC<Props> = ({ projectId }) => {
           contractBOC: result.codeBoc,
         };
       });
+      onCodeCompile(result.codeBoc);
       message.success('Build successfull');
       createStateInitCell();
     } catch (error) {
@@ -237,6 +239,13 @@ const BuildProject: FC<Props> = ({ projectId }) => {
         <br />
         <br />
       </Form>
+
+      <p className={s.infoLine}>
+        <b>
+          Connect wallet to deploy and send internal message to contract on
+          testnet
+        </b>
+      </p>
       <TonAuth />
 
       {activeProject?.id && tonConnector && activeProject?.contractAddress && (

@@ -4,6 +4,7 @@ import { FC, useEffect, useState } from 'react';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
 import Tabs from '../Tabs';
+import TestCases from '../TestCases';
 import FileTree from '../tree/FileTree';
 import ItemAction from '../tree/FileTree/ItemActions';
 import WorkspaceSidebar from '../WorkspaceSidebar';
@@ -15,6 +16,7 @@ const WorkSpace: FC = () => {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [codeBOC, setCodeBOC] = useState('');
 
   const { id: projectId, tab } = router.query;
 
@@ -76,15 +78,36 @@ const WorkSpace: FC = () => {
             <FileTree projectId={projectId as string} />
           </>
         )}
-        {activeMenu === 'build' && (
-          <BuildProject projectId={projectId as string} />
+        {(activeMenu === 'build' || activeMenu === 'test-cases') && (
+          <BuildProject
+            projectId={projectId as string}
+            onCodeCompile={(_codeBOC) => {
+              setCodeBOC(_codeBOC);
+            }}
+          />
         )}
       </div>
       <div className={s.workArea}>
         {isLoaded && (
           <>
-            <Tabs projectId={projectId as string} />
-            {activeFile && (
+            {activeMenu !== 'test-cases' && (
+              <Tabs projectId={projectId as string} />
+            )}
+
+            {activeMenu === 'test-cases' && (
+              <div className={s.testCaseArea}>
+                {codeBOC ? (
+                  <TestCases
+                    codeBOC={codeBOC}
+                    projectId={projectId as string}
+                  />
+                ) : (
+                  <h3>Build Your project first to run test cases</h3>
+                )}
+              </div>
+            )}
+
+            {activeFile && activeMenu !== 'test-cases' && (
               <Editor
                 file={activeFile as any}
                 projectId={projectId as string}
