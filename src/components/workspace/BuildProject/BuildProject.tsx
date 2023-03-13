@@ -205,7 +205,7 @@ const BuildProject: FC<Props> = ({
   }, []);
   return (
     <div className={s.root}>
-      <h3 className={s.heading}>Build & Deploy</h3>
+      <h3 className={s.heading}>Compile & Deploy</h3>
       <iframe
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
@@ -251,7 +251,7 @@ const BuildProject: FC<Props> = ({
           htmlType="submit"
           loading={isLoading == 'build'}
         >
-          Build
+          Compile
         </Button>
         <Button
           type="primary"
