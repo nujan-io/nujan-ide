@@ -84,6 +84,7 @@ const WorkSpace: FC = () => {
             onCodeCompile={(_codeBOC) => {
               setCodeBOC(_codeBOC);
             }}
+            onABIGenerated={(abi) => {}}
           />
         )}
       </div>

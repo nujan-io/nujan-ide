@@ -5,11 +5,13 @@ import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
 import { StateInit, TonClient } from 'ton';
 import {
+  Address,
   beginCell,
   Cell,
   contractAddress,
   storeStateInit,
   toNano,
+  TupleItem,
 } from 'ton-core';
 
 export function useContractAction() {
@@ -18,9 +20,9 @@ export function useContractAction() {
   return {
     deployContract,
     sendMessage,
+    callGetter,
   };
   async function deployContract(codeBOC: string, dataCell: any) {
-    console.log('codeBOC', codeBOC, dataCell);
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     // Amount to send to contract. Gas fee
@@ -31,7 +33,6 @@ export function useContractAction() {
       data: Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0],
     };
     const _contractAddress = contractAddress(0, stateInit);
-    console.log('_contractAddress', _contractAddress);
     const endpoint = await getHttpEndpoint({
       network: AppConfig.network as Network,
     });
@@ -90,5 +91,23 @@ export function useContractAction() {
     } finally {
       return '';
     }
+  }
+
+  async function callGetter(
+    contractAddress: string,
+    methodName: string,
+    stack?: TupleItem[]
+  ) {
+    const endpoint = await getHttpEndpoint({
+      network: 'testnet',
+    });
+
+    const client = new TonClient({ endpoint });
+    const call = await client.runMethod(
+      Address.parse(contractAddress),
+      methodName,
+      stack
+    );
+    return call.stack.readBigNumber().toString();
   }
 }

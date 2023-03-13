@@ -1,15 +1,22 @@
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { ABI } from '@/interfaces/workspace.interface';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
+import ABIUi from '../ABIUi';
 import s from './ContractInteraction.module.scss';
 
 interface Props {
   contractAddress: string;
   projectId: string;
+  abi: ABI[];
 }
-const ContractInteraction: FC<Props> = ({ contractAddress, projectId }) => {
+const ContractInteraction: FC<Props> = ({
+  contractAddress,
+  projectId,
+  abi,
+}) => {
   const [tonConnector] = useTonConnectUI();
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
@@ -99,15 +106,31 @@ const ContractInteraction: FC<Props> = ({ contractAddress, projectId }) => {
         src="/html/tonweb.html"
       />
       <p>
-        <b>This will be used to send internal message to contract</b>
+        <b>
+          This will be used to send internal message and call getter method on
+          contract
+        </b>
       </p>
+      <br />
+
+      {abi && abi.length > 0 && (
+        <>
+          <h3 className={s.label}>Getter:</h3>
+          {abi.map((item, i) => (
+            <ABIUi abi={item} key={i} contractAddress={contractAddress} />
+          ))}
+        </>
+      )}
+      <br />
+      <h3 className={s.label}>Setter:</h3>
+      <p>Update values in contract.cell.js and send message</p>
       <Form className={s.form} onFinish={onSubmit}>
         <Button
           type="default"
           htmlType="submit"
           loading={isLoading === 'setter'}
         >
-          Send Message
+          Send Internal Message
         </Button>
       </Form>
     </div>

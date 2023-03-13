@@ -29,3 +29,14 @@ export type WorkspaceState = {
   projects: Project[];
   activeProjectId: string;
 };
+
+export interface ABIParameter {
+  type: string;
+  name: string;
+}
+
+export interface ABI {
+  returnTypes: string[];
+  name: string;
+  parameters: ABIParameter[];
+}

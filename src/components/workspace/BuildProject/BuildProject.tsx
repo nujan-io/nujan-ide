@@ -1,7 +1,8 @@
 import TonAuth from '@/components/auth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Tree } from '@/interfaces/workspace.interface';
+import { ABI, Tree } from '@/interfaces/workspace.interface';
+import { parseGetters } from '@/utility/getterParser';
 import { compileFunc } from '@ton-community/func-js';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message, Select } from 'antd';
@@ -14,14 +15,20 @@ import s from './BuildProject.module.scss';
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
+  onABIGenerated: (abi: ABI[]) => void;
 }
-const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
+const BuildProject: FC<Props> = ({
+  projectId,
+  onCodeCompile,
+  onABIGenerated,
+}) => {
   const [isLoading, setIsLoading] = useState('');
   const [funcStdLib, setFuncStdLib] = useState('');
   const [buildOutput, setBuildoutput] = useState<{
     contractBOC: string | null;
     dataCell: Cell | null;
   } | null>(null);
+  const [abi, setABI] = useState<ABI[]>([]);
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
   const [tonConnector] = useTonConnectUI();
 
@@ -55,6 +62,8 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         setFuncStdLib(stdLib);
       }
 
+      const fileList: any = {};
+
       let result: any = await compileFunc({
         targets: ['stdlib.fc', file?.name],
         sources: (path) => {
@@ -62,9 +71,14 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
             return stdLib.toString();
           }
           const file = getFileByPath(path, projectId as string);
+          if (file?.content) {
+            fileList[file.id] = file;
+          }
           return file?.content;
         },
       });
+
+      generateABI(fileList);
 
       if (result.status === 'error') {
         message.error(result.message);
@@ -86,6 +100,17 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
     } finally {
       setIsLoading('');
     }
+  };
+
+  const generateABI = async (fileList: any) => {
+    const unresolvedPromises = Object.values(fileList).map(
+      async (file: any) => {
+        return await parseGetters(file.content);
+      }
+    );
+    const results = await Promise.all(unresolvedPromises);
+    setABI(results[0]);
+    onABIGenerated(results[0]);
   };
 
   const deploy = async () => {
@@ -253,6 +278,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
           <ContractInteraction
             contractAddress={activeProject?.contractAddress!!}
             projectId={projectId}
+            abi={abi}
           />
         </div>
       )}
