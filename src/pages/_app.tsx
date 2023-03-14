@@ -1,12 +1,18 @@
+import { Layout } from '@/components/shared';
 import { AppConfig } from '@/config/AppConfig';
 import '@/styles/theme.scss';
 import { THEME, TonConnectUIProvider } from '@tonconnect/ui-react';
 import { ConfigProvider, theme } from 'antd';
+import type { Session } from 'next-auth';
+import { SessionProvider } from 'next-auth/react';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { RecoilRoot } from 'recoil';
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppProps<{ session: Session }>) {
   const { darkAlgorithm } = theme;
 
   return (
@@ -26,15 +32,19 @@ export default function App({ Component, pageProps }: AppProps) {
             algorithm: darkAlgorithm,
           }}
         >
-          {/* On some of the ISP raw.githubusercontent.com was getting blocked which is the domain for manifest and wallet list. So we are keeping local at the moment */}
-          <TonConnectUIProvider
-            uiPreferences={{ theme: THEME.DARK }}
-            manifestUrl="https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json"
-            // manifestUrl="/assets/ton/tonconnect-manifest.json"
-            // walletsListSource="/assets/ton/wallets.json"
-          >
-            <Component {...pageProps} />
-          </TonConnectUIProvider>
+          <SessionProvider session={session}>
+            {/* On some of the ISP raw.githubusercontent.com was getting blocked which is the domain for manifest and wallet list. So we are keeping local at the moment */}
+            <TonConnectUIProvider
+              uiPreferences={{ theme: THEME.DARK }}
+              manifestUrl="https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json"
+              // manifestUrl="/assets/ton/tonconnect-manifest.json"
+              // walletsListSource="/assets/ton/wallets.json"
+            >
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </TonConnectUIProvider>
+          </SessionProvider>
         </ConfigProvider>
       </RecoilRoot>
     </>

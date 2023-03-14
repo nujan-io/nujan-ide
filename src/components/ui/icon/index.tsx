@@ -3,7 +3,10 @@ import {
   AiOutlineClose,
   AiOutlineFileAdd,
   AiOutlineFolderAdd,
+  AiOutlineGithub,
+  AiOutlineGoogle,
   AiOutlineHome,
+  AiOutlineLogout,
   AiOutlineProject,
 } from 'react-icons/ai';
 import { CiBeaker1 } from 'react-icons/ci';
@@ -24,7 +27,10 @@ export type AppIconType =
   | 'Plus'
   | 'Home'
   | 'AngleRight'
-  | 'TestCases';
+  | 'TestCases'
+  | 'Google'
+  | 'GitHub'
+  | 'Logout';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -42,6 +48,9 @@ const Components = {
   Beaker: CiBeaker1,
   AngleRight: GoTriangleRight,
   TestCases: SiTestcafe,
+  Google: AiOutlineGoogle,
+  GitHub: AiOutlineGithub,
+  Logout: AiOutlineLogout,
   Plus,
 };
 

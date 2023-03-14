@@ -11,6 +11,7 @@
   "dependencies": {
     "@minoru/react-dnd-treeview": "^3.4.1",
     "@monaco-editor/react": "^4.4.6",
+    "@next-auth/mongodb-adapter": "^1.1.1",
     "@orbs-network/ton-access": "^2.3.0",
     "@ton-community/func-js": "^0.5.0",
     "@tonconnect/ui-react": "^0.0.14",
@@ -23,7 +24,9 @@
     "eslint-config-next": "13.1.6",
     "lodash.clonedeep": "^4.5.0",
     "monaco-editor": "^0.36.1",
+    "mongodb": "^4.14.0",
     "next": "13.0.7",
+    "next-auth": "^4.20.1",
     "react": "18.2.0",
     "react-dnd": "^16.0.1",
     "react-dom": "18.2.0",
