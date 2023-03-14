@@ -16,8 +16,7 @@ const UserOnboarding: FC<Props> = ({ authProviders }) => {
       <div className={s.columnLeft}>
         <div className={s.content}>
           <h1 className={s.heading}>
-            Write <br />
-            Your <br />
+            Write Your <br />
             Smart Contract <br />
             <span>Effortlessly</span>
           </h1>
