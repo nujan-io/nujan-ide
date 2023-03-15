@@ -1,4 +1,7 @@
+import { ProjectTemplate } from '@/constant/ProjectTemplate';
+import { Tree } from '@/interfaces/workspace.interface';
 import { ProjectModel } from '@/models/Project';
+import { ProjectFileModel } from '@/models/ProjectFile';
 import dbConnect from '@/utility/dbConnect';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getToken } from 'next-auth/jwt';
@@ -15,7 +18,8 @@ export default async function handler(
     if (!token) {
       throw 'Login required';
     }
-    let project;
+    let project: any;
+    let projectFiles: any;
     if (projectId && contractAddress) {
       project = await ProjectModel.findById(projectId);
       if (token.id === project.userId) {
@@ -29,13 +33,27 @@ export default async function handler(
         template: template || '',
         contractAddress: contractAddress || '',
       });
+      let selectedTemplateFiles: Tree[] = (
+        ProjectTemplate[template as 'tonBlank' | 'tonCounter'] as any
+      )['func'];
+
       await project.save();
+
+      selectedTemplateFiles = selectedTemplateFiles.map((file: any) => {
+        const temp = file;
+        delete temp['id'];
+        return { ...temp, projectId: project._id };
+      });
+      projectFiles = await ProjectFileModel.insertMany(selectedTemplateFiles);
     }
 
     res.status(200).json({
       success: true,
       message: 'Successfull',
-      data: project.toJSON(),
+      data: {
+        project: project.toJSON(),
+        projectFiles: projectFiles,
+      },
     });
   } catch (error: any) {
     if (error.message) {
