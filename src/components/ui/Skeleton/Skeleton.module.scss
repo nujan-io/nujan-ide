@@ -1,0 +1,31 @@
+.listingItems {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+
+  div[class*='ant-skeleton'],
+  [class*='ant-skeleton-avatar'] {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: var(--border-radius, 10px);
+  }
+  .singleItems {
+    flex: 0 0 20%;
+    max-width: 20%;
+    color: #fff;
+    padding: 0.5rem;
+    min-height: 300px;
+    &.item-4 {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
+    &.item-3 {
+      flex: 0 0 33.33%;
+      max-width: 33.33%;
+    }
+  }
+}
+.pagination {
+  margin-top: 3rem;
+}
