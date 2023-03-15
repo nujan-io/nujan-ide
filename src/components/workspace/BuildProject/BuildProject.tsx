@@ -129,7 +129,6 @@ const BuildProject: FC<Props> = ({
       }
 
       updateProjectById(
-        activeProject?.id!!,
         {
           contractAddress: _contractAddress,
         },

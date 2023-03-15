@@ -26,7 +26,8 @@ const NewProject: FC = () => {
       const response = await projectServiceAction.createProject({
         name: values.name,
         template: values.template,
-      });
+        action: 'create-project',
+      } as any);
       const { project, projectFiles } = response.data.data;
       createNewProject({ ...project }, projectFiles);
       form.resetFields();

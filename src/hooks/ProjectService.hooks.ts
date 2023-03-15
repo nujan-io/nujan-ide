@@ -9,9 +9,14 @@ function useProjectServiceActions() {
 
   return {
     createProject,
+    updateProject,
   };
 
   async function createProject(data: Partial<Project>): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/project`, data);
+  }
+
+  async function updateProject(data: Partial<Project>): Promise<AxiosResponse> {
     return ApiClient.post(`/api/project`, data);
   }
 }

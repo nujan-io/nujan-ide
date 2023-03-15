@@ -4,11 +4,13 @@ import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
 import { v4 } from 'uuid';
+import { useProjectServiceActions } from './ProjectService.hooks';
 
 export { useWorkspaceActions };
 
 function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
+  const projectServiceAction = useProjectServiceActions();
 
   return {
     createNewProject,
@@ -148,8 +150,13 @@ function useWorkspaceActions() {
     updateProjectFiles(item.project, projectId);
   }
 
-  function updateProjectById(id: string, updateObject: any, projectId: string) {
-    updateProjectList(id, {
+  async function updateProjectById(updateObject: any, projectId: string) {
+    await projectServiceAction.updateProject({
+      projectId,
+      ...updateObject,
+      action: 'update-project',
+    });
+    updateProjectList(projectId, {
       ...project(projectId),
       ...updateObject,
     });
