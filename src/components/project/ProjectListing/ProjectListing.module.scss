@@ -1,12 +1,16 @@
 .root {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 25%);
-  min-height: 40vh;
-  > div,
-  > a {
-    margin-right: 1rem;
-    margin-bottom: 1rem;
+  padding-right: 1rem;
+  .content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 25%);
+    min-height: 40vh;
+    > div,
+    > a {
+      margin-right: 1rem;
+      margin-bottom: 1rem;
+    }
   }
+
   .item {
     background-color: var(--grey-500);
     border-radius: var(--border-radius);

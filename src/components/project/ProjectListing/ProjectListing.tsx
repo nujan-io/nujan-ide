@@ -1,3 +1,4 @@
+import { Skeleton } from '@/components/ui';
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import Image from 'next/image';
@@ -27,21 +28,25 @@ const ProjectListing: FC = () => {
 
   return (
     <div className={s.root}>
-      <NewProject />
-      {!isLoading &&
-        [...projects()].reverse().map((item, i) => (
-          <Link href={`/project/${item.id}`} key={item.id} className={s.item}>
-            <Image
-              src={`/images/icon/ton-protocol-logo-white.svg`}
-              width={30}
-              height={30}
-              alt={''}
-              className={s.platformIcon}
-            />
+      <Skeleton isLoading={isLoading} />
+      {!isLoading && (
+        <div className={s.content}>
+          <NewProject />
+          {[...projects()].reverse().map((item, i) => (
+            <Link href={`/project/${item.id}`} key={item.id} className={s.item}>
+              <Image
+                src={`/images/icon/ton-protocol-logo-white.svg`}
+                width={30}
+                height={30}
+                alt={''}
+                className={s.platformIcon}
+              />
 
-            <span className={s.name}>{item.name}</span>
-          </Link>
-        ))}
+              <span className={s.name}>{item.name}</span>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
