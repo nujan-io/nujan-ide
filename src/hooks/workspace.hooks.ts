@@ -29,6 +29,7 @@ function useWorkspaceActions() {
     updateFileContent,
     updateProjectById,
     closeAllFile,
+    clearWorkSpace,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -288,5 +289,9 @@ function useWorkspaceActions() {
       content: '',
       path: `${parentPath ? parentPath + '/' : ''}${name}`,
     };
+  }
+
+  function clearWorkSpace() {
+    updateStateByKey({ openFiles: [], projectFiles: null, projects: [] });
   }
 }
