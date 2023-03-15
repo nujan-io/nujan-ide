@@ -1,3 +1,4 @@
+import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -6,17 +7,28 @@ import NewProject from '../NewProject';
 import s from './ProjectListing.module.scss';
 
 const ProjectListing: FC = () => {
-  const { projects } = useWorkspaceActions();
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { projects, setProjects } = useWorkspaceActions();
+  const { listProjects } = useProjectServiceActions();
+  const [isLoading, setIsLoadeding] = useState(true);
+
+  const loadProjects = async () => {
+    try {
+      const projects = (await listProjects())?.data?.data;
+      setProjects(projects);
+    } catch (error) {
+    } finally {
+      setIsLoadeding(false);
+    }
+  };
 
   useEffect(() => {
-    setIsLoaded(true);
+    loadProjects();
   }, []);
 
   return (
     <div className={s.root}>
       <NewProject />
-      {isLoaded &&
+      {!isLoading &&
         [...projects()].reverse().map((item, i) => (
           <Link href={`/project/${item.id}`} key={item.id} className={s.item}>
             <Image

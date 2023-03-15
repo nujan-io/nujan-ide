@@ -28,9 +28,12 @@ export default async function handler(
       case 'update-project':
         resposne = await updateProject(req.body, token);
         break;
+      case 'list-projects':
+        resposne = await listProject(token.id as string);
+        break;
 
       default:
-        break;
+        throw 'Invalid action';
     }
 
     res.status(200).json({
@@ -50,6 +53,11 @@ export default async function handler(
   } finally {
   }
 }
+
+const listProject = async (userId: string) => {
+  const project = await ProjectModel.find({ userId });
+  return project || [];
+};
 
 const updateProject = async (formData: any, token: JWT) => {
   const { contractAddress, projectId } = formData;
