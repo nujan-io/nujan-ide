@@ -18,6 +18,7 @@ interface ProjectFiles {
 export interface Project {
   id: string;
   name: string;
+  template: string;
   contractAddress?: string;
   createdAt?: Date;
   updatedAt?: Date;

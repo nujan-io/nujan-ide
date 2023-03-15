@@ -10,7 +10,6 @@ interface Props {
 export const Layout: FC<Props> = ({ className, children }) => {
   const router = useRouter();
   const { data: session } = useSession();
-  console.log('router.basePath', router.route);
 
   useEffect(() => {
     if (session && router.basePath === '/') {

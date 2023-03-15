@@ -1,16 +1,18 @@
 import AppIcon from '@/components/ui/icon';
 import { ProjectTemplate } from '@/constant/ProjectTemplate';
+import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import { Button, Form, Input, Modal, Radio } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
   const [isActive, setIsActive] = useState(false);
   const { createNewProject } = useWorkspaceActions();
+  const projectServiceAction = useProjectServiceActions();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [form] = useForm();
 
@@ -20,15 +22,24 @@ const NewProject: FC = () => {
     { label: 'Chat Bot Contract', value: 'chatBot' },
   ];
 
-  const onFormFinish = (values: any) => {
+  const onFormFinish = async (values: any) => {
     const template: Tree[] = (
       ProjectTemplate[values.template as 'tonBlank' | 'tonCounter'] as any
     )['func'];
-    const projectId = uuidv4();
-
-    createNewProject({ id: projectId, ...values }, template);
-    form.resetFields();
-    closeModal();
+    try {
+      setIsLoading(true);
+      const response = await projectServiceAction.createProject({
+        name: values.name,
+        template: values.template,
+      });
+      const data = response.data.data;
+      createNewProject({ ...data }, template);
+      form.resetFields();
+      closeModal();
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const closeModal = () => {
@@ -75,7 +86,7 @@ const NewProject: FC = () => {
           </Form.Item>
 
           <Form.Item wrapperCol={{ offset: 10, span: 16 }}>
-            <Button type="primary" htmlType="submit">
+            <Button loading={isLoading} type="primary" htmlType="submit">
               Create
             </Button>
           </Form.Item>

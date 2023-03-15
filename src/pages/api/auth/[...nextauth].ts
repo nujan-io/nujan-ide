@@ -24,7 +24,10 @@ export const authOptions: NextAuthOptions = {
     colorScheme: 'dark',
   },
   callbacks: {
-    async jwt({ token }) {
+    async jwt({ user, token }) {
+      if (user) {
+        token.id = user.id;
+      }
       return token;
     },
   },
