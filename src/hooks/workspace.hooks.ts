@@ -329,7 +329,7 @@ function useWorkspaceActions() {
 
   function isProjectEditable(projectId: Project['id']) {
     const _project = project(projectId);
-    return session && (session?.user as any)?.id == _project?.userId;
+    return !!(session && (session?.user as any)?.id == _project?.userId);
   }
 
   function clearWorkSpace() {

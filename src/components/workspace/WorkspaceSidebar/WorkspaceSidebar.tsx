@@ -1,7 +1,11 @@
 import AppIcon from '@/components/ui/icon';
-import { useSession } from 'next-auth/react';
+import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Project } from '@/interfaces/workspace.interface';
+import { message, Spin } from 'antd';
 import Link from 'next/link';
-import { FC } from 'react';
+import Router from 'next/router';
+import { FC, useState } from 'react';
 import s from './WorkspaceSidebar.module.scss';
 
 export type WorkSpaceMenu = 'code' | 'build' | 'test-cases' | 'setting';
@@ -15,10 +19,18 @@ interface MenuItem {
 interface Props {
   activeMenu: WorkSpaceMenu;
   onMenuClicked: (name: WorkSpaceMenu) => void;
+  projectId: Project['id'];
 }
 
-const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
-  const { data: session } = useSession();
+const WorkspaceSidebar: FC<Props> = ({
+  activeMenu,
+  onMenuClicked,
+  projectId,
+}) => {
+  const { isProjectEditable, createNewProject } = useWorkspaceActions();
+  const { cloneProject } = useProjectServiceActions();
+  const [isLoading, setIsLoading] = useState(false);
+  const hasEditAccess = isProjectEditable(projectId as string);
 
   const menuItems: MenuItem[] = [
     {
@@ -43,6 +55,24 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
       private: true,
     },
   ];
+
+  const cloneCurrentProject = async () => {
+    try {
+      setIsLoading(true);
+      const response = await cloneProject(projectId);
+      const { project, projectFiles } = response.data.data;
+      createNewProject({ ...project }, projectFiles);
+      setTimeout(() => {
+        Router.push(`/project/${project.id}`);
+        message.success('Project cloned');
+      }, 1000);
+    } catch (error) {
+      message.error('Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className={s.container}>
       <Link href="/project" className={`${s.action}`}>
@@ -50,7 +80,7 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
         <span>Home</span>
       </Link>
       {menuItems.map((menu, i) => {
-        if (menu.private && !(session?.user as any)?.id) {
+        if (menu.private && !hasEditAccess) {
           return;
         }
         return (
@@ -66,6 +96,16 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
           </div>
         );
       })}
+      {!hasEditAccess && (
+        <div
+          className={`${s.action} ${isLoading ? s.disabled : ''}`}
+          onClick={cloneCurrentProject}
+        >
+          {!isLoading && <AppIcon name="Clone" className={s.clone} />}
+          {isLoading && <Spin size="default" className={s.loader} />}
+          <span>Clone Project</span>
+        </div>
+      )}
     </div>
   );
 };

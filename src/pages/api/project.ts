@@ -22,6 +22,10 @@ export default async function handler(
     let resposne = null;
 
     switch (action) {
+      case 'clone-project':
+        resposne = await cloneProject(req.body, token);
+        break;
+
       case 'create-project':
         resposne = await createProject(req.body, token);
         break;
@@ -43,6 +47,7 @@ export default async function handler(
     });
   } catch (error: any) {
     let message = 'Something went wrong.';
+    console.log('error', error);
     if (typeof error === 'string') {
       message = error;
     }
@@ -53,6 +58,40 @@ export default async function handler(
   } finally {
   }
 }
+
+const cloneProject = async (formData: any, token: JWT) => {
+  const { projectId } = formData;
+
+  const projectToClone = await ProjectModel.findById(projectId);
+  if (!projectToClone || !projectToClone.isPublic) {
+    throw 'Unauthorised access';
+  }
+
+  const newProject = await ProjectModel.create({
+    name: projectToClone.name,
+    userId: token.id,
+  });
+  newProject.save();
+
+  const files = await ProjectFileModel.find({ projectId });
+  const newFiles = files.map((file: any) => {
+    return {
+      name: file.name,
+      parent: file.parent,
+      type: file.type,
+      path: file.path,
+      content: file.content,
+      projectId: newProject._id,
+    };
+  });
+
+  const projectFiles = await ProjectFileModel.insertMany(newFiles);
+
+  return {
+    project: newProject.toJSON(),
+    projectFiles: projectFiles,
+  };
+};
 
 const listProject = async (userId: string) => {
   const project = await ProjectModel.find({ userId });

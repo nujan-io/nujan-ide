@@ -77,6 +77,7 @@ const WorkSpace: FC = () => {
       <div className={s.sidebar}>
         <WorkspaceSidebar
           activeMenu={activeMenu}
+          projectId={projectId as string}
           onMenuClicked={(name) => {
             setActiveMenu(name);
             router.replace({

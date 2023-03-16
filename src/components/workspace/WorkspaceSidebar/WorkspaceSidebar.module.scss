@@ -38,4 +38,11 @@
       text-align: center;
     }
   }
+  .disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .clone {
+    font-size: 1.3rem;
+  }
 }

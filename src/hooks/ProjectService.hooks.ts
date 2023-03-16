@@ -9,6 +9,7 @@ function useProjectServiceActions() {
 
   return {
     createProject,
+    cloneProject,
     updateProject,
     listProjects,
     listFiles,
@@ -19,6 +20,15 @@ function useProjectServiceActions() {
 
   async function createProject(data: Partial<Project>): Promise<AxiosResponse> {
     return ApiClient.post(`/api/project`, data);
+  }
+
+  async function cloneProject(
+    projectId: Project['id']
+  ): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/project`, {
+      projectId,
+      action: 'clone-project',
+    });
   }
 
   async function updateProject(data: Partial<Project>): Promise<AxiosResponse> {

@@ -11,6 +11,7 @@ import {
   AiOutlineSetting,
 } from 'react-icons/ai';
 import { CiBeaker1 } from 'react-icons/ci';
+import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2 } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
 import { SiTestcafe } from 'react-icons/si';
@@ -32,7 +33,8 @@ export type AppIconType =
   | 'Google'
   | 'GitHub'
   | 'Logout'
-  | 'Setting';
+  | 'Setting'
+  | 'Clone';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -54,6 +56,7 @@ const Components = {
   GitHub: AiOutlineGithub,
   Logout: AiOutlineLogout,
   Setting: AiOutlineSetting,
+  Clone: FaRegClone,
   Plus,
 };
 
