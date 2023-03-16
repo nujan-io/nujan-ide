@@ -1,4 +1,4 @@
-import { Project } from '@/interfaces/workspace.interface';
+import { Project, Tree } from '@/interfaces/workspace.interface';
 import { AxiosResponse } from 'axios';
 import { useApiClient } from './ApiClient.hooks';
 
@@ -11,6 +11,8 @@ function useProjectServiceActions() {
     createProject,
     updateProject,
     listProjects,
+    updateFile,
+    deleteFile,
   };
 
   async function createProject(data: Partial<Project>): Promise<AxiosResponse> {
@@ -23,5 +25,13 @@ function useProjectServiceActions() {
 
   async function listProjects(): Promise<AxiosResponse> {
     return ApiClient.post(`/api/project`, { action: 'list-projects' });
+  }
+
+  async function updateFile(data: Partial<Tree>): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/file`, { ...data, action: 'update-file' });
+  }
+
+  async function deleteFile(data: Partial<Tree>): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/file`, { ...data, action: 'delete-file' });
   }
 }

@@ -156,6 +156,12 @@ function useWorkspaceActions() {
     }
     item.node.content = content;
     updateProjectFiles(item.project, projectId);
+    try {
+      projectServiceAction.updateFile({
+        id,
+        content,
+      });
+    } catch (error) {}
   }
 
   async function updateProjectById(updateObject: any, projectId: string) {
@@ -206,6 +212,13 @@ function useWorkspaceActions() {
     }
     item.node.path = newPath;
     updateProjectFiles(item.project, projectId);
+    try {
+      projectServiceAction.updateFile({
+        id,
+        name,
+        path: newPath,
+      });
+    } catch (error) {}
   }
 
   function deleteItem(id: Tree['id'], projectId: string) {
@@ -219,8 +232,12 @@ function useWorkspaceActions() {
     );
 
     closeFile(id);
-
     updateProjectFiles(item.project, projectId);
+    try {
+      projectServiceAction.deleteFile({
+        id,
+      });
+    } catch (error) {}
   }
 
   function createNewItem(
