@@ -33,9 +33,6 @@ const ProjectListing: FC = () => {
   }, [session]);
 
   useEffect(() => {
-    if (!session) {
-      return;
-    }
     loadProjects();
   }, []);
 
