@@ -20,6 +20,9 @@ export default async function handler(
     let resposne = null;
 
     switch (action) {
+      case 'create-file':
+        resposne = await createFile(req.body, token);
+        break;
       case 'update-file':
         resposne = await updateFile(req.body, token);
         break;
@@ -50,6 +53,30 @@ export default async function handler(
   }
 }
 
+const createFile = async (formData: any, token: JWT) => {
+  const { name, path, parent, projectId, type } = formData;
+  if (!name || !path) {
+    throw 'File name and path required';
+  }
+
+  const project = await ProjectModel.findById(projectId);
+
+  if (token.id != project.userId) {
+    throw 'Unauthorised access';
+  }
+
+  const file = await ProjectFileModel.create({
+    projectId,
+    name: name,
+    parent: parent || null,
+    type: type,
+    path: path,
+    content: '',
+  });
+  await file.save();
+  return file;
+};
+
 const updateFile = async (formData: any, token: JWT) => {
   const { name, path, content, id } = formData;
 
@@ -76,7 +103,7 @@ const updateFile = async (formData: any, token: JWT) => {
 };
 
 const deleteFile = async (formData: any, token: JWT) => {
-  const { name, path, content, id } = formData;
+  const { id } = formData;
 
   const file = await ProjectFileModel.findById(id);
   if (!file) {

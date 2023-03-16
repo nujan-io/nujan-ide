@@ -240,7 +240,7 @@ function useWorkspaceActions() {
     } catch (error) {}
   }
 
-  function createNewItem(
+  async function createNewItem(
     id: Tree['parent'] | '',
     name: string,
     type: string,
@@ -256,6 +256,14 @@ function useWorkspaceActions() {
       id as string,
       item.node?.path || ''
     );
+    const response = await projectServiceAction.createFile({
+      projectId,
+      name,
+      parent: id,
+      type,
+      path: newItem.path,
+    } as any);
+    newItem.id = response.data.data.id;
     item.project.push(newItem);
     updateProjectFiles(item.project, projectId);
   }
