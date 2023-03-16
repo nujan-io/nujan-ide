@@ -1,8 +1,7 @@
 import { AppLogo } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { signOut } from 'next-auth/react';
-import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
 import { FC } from 'react';
 import s from './DashboardSidebar.module.scss';
 
@@ -12,6 +11,7 @@ interface Props {
 
 const DashboardSidebar: FC<Props> = ({ className }) => {
   const { clearWorkSpace } = useWorkspaceActions();
+  const { data: session } = useSession();
 
   const logout = () => {
     clearWorkSpace();
@@ -24,11 +24,17 @@ const DashboardSidebar: FC<Props> = ({ className }) => {
 
       <div className={s.menuItems}>
         <div>
-          <Link className={s.item} href="/">
-            <AppIcon name="Project" /> <span className={s.label}>Projects</span>
-          </Link>
-          <div className={s.item} onClick={logout}>
-            <AppIcon name="Logout" /> <span className={s.label}>Logout</span>
+          <span className={s.name}>
+            Welcome,
+            <br /> {session?.user?.name}
+          </span>
+        </div>
+        <div className={`${s.item} ${s.logoutContainer}`}>
+          <div>
+            <div className={s.logout} onClick={logout}>
+              <AppIcon name="Logout" />
+              <span className={s.label}>Logout</span>
+            </div>
           </div>
         </div>
       </div>

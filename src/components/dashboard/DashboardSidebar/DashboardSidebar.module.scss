@@ -38,4 +38,18 @@
       }
     }
   }
+  .logoutContainer {
+    cursor: default !important;
+    .name {
+      display: block;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+  }
+  .logout {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
 }
