@@ -23,6 +23,11 @@ const ProjectSetting: FC<Props> = ({ projectId }) => {
       <Form.Item label="Is project public" valuePropName="checked">
         <Switch checked={isChecked} onChange={toggleProjectStatus} />
       </Form.Item>
+      <p>
+        <small>
+          You can make your project public if want to make it shareable anywhere
+        </small>
+      </p>
     </div>
   );
 };
