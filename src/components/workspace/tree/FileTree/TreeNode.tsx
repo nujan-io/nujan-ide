@@ -28,7 +28,11 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { openFile, renameItem, deleteItem, createNewItem } =
     useWorkspaceActions();
 
-  const disallowedFile = ['contract.cell.js', 'stateInit.cell.js'];
+  const disallowedFile = [
+    'contract.cell.js',
+    'stateInit.cell.js',
+    'test.spec.js',
+  ];
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
