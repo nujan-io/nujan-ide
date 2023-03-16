@@ -10,6 +10,9 @@
     flex: 0 0 250px;
     width: 250px;
     background-color: #393939;
+    div[class*='ant-spin-nested-loading'] {
+      height: 4rem;
+    }
   }
   .workArea {
     flex: 0 0 100%;

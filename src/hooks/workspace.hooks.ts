@@ -18,6 +18,7 @@ function useWorkspaceActions() {
     projects,
     project,
     projectFiles,
+    updateProjectFiles,
     openFile,
     renameItem,
     deleteItem,

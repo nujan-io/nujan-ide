@@ -11,6 +11,7 @@ function useProjectServiceActions() {
     createProject,
     updateProject,
     listProjects,
+    listFiles,
     updateFile,
     deleteFile,
     createFile,
@@ -26,6 +27,10 @@ function useProjectServiceActions() {
 
   async function listProjects(): Promise<AxiosResponse> {
     return ApiClient.post(`/api/project`, { action: 'list-projects' });
+  }
+
+  async function listFiles(projectId: Project['id']): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/file`, { projectId, action: 'list-files' });
   }
 
   async function createFile(data: Partial<Tree>): Promise<AxiosResponse> {

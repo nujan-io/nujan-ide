@@ -1,4 +1,6 @@
+import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Spin } from 'antd';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import BuildProject from '../BuildProject';
@@ -13,10 +15,12 @@ import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
+  const projectServiceAction = useProjectServiceActions();
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
   const [codeBOC, setCodeBOC] = useState('');
+  const [isLoading, setIsloading] = useState(false);
 
   const { id: projectId, tab } = router.query;
 
@@ -26,13 +30,28 @@ const WorkSpace: FC = () => {
     workspaceAction.createNewItem('', name, type, projectId as string);
   };
 
+  const getFiles = async () => {
+    if (workspaceAction.projectFiles(projectId as string).length === 0) {
+      setIsloading(true);
+      try {
+        const response = await projectServiceAction.listFiles(
+          projectId as string
+        );
+        const files = response.data.data;
+        workspaceAction.updateProjectFiles(files, projectId as string);
+      } catch (error) {
+        Router.push('/project');
+      } finally {
+        setIsloading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!projectId) {
       return;
     }
-    if (workspaceAction.projectFiles(projectId as string).length === 0) {
-      Router.push('/project');
-    }
+    getFiles();
   }, [projectId]);
 
   useEffect(() => {
@@ -75,6 +94,11 @@ const WorkSpace: FC = () => {
                 }
               />
             </div>
+            {isLoading && (
+              <Spin tip="Loading" size="default" className={s.loader}>
+                <div className="content" />
+              </Spin>
+            )}
             <FileTree projectId={projectId as string} />
           </>
         )}

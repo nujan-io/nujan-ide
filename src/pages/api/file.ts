@@ -1,3 +1,4 @@
+import { Project } from '@/interfaces/workspace.interface';
 import { ProjectModel } from '@/models/Project';
 import { ProjectFileModel } from '@/models/ProjectFile';
 import dbConnect from '@/utility/dbConnect';
@@ -20,6 +21,9 @@ export default async function handler(
     let resposne = null;
 
     switch (action) {
+      case 'list-files':
+        resposne = await listFiles(req.body, token, res);
+        break;
       case 'create-file':
         resposne = await createFile(req.body, token);
         break;
@@ -52,6 +56,23 @@ export default async function handler(
   } finally {
   }
 }
+
+const listFiles = async (
+  { projectId }: { projectId: Project['id'] },
+  token: JWT,
+  res: NextApiResponse
+) => {
+  const files = await ProjectFileModel.find({ projectId });
+  if (!files) {
+    res.status(404).json({
+      success: false,
+      message: 'Failed',
+      data: '',
+    });
+    return;
+  }
+  return files;
+};
 
 const createFile = async (formData: any, token: JWT) => {
   const { name, path, parent, projectId, type } = formData;
