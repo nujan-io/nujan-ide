@@ -34,7 +34,12 @@ const NewProject: FC = () => {
       closeModal();
       message.success(`Project '${values.name}' created`);
     } catch (error) {
-      message.error('Error in creating project');
+      let messageText = 'Error in creating project';
+      if (typeof error === 'string') {
+        messageText = error;
+      }
+
+      message.error(messageText);
     } finally {
       setIsLoading(false);
     }

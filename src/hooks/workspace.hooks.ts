@@ -47,6 +47,9 @@ function useWorkspaceActions() {
   }
 
   function createNewProject(project: Project, template: Tree[]) {
+    if (projects().findIndex((p) => p.name == project.name) >= 0) {
+      throw 'Project with the same already exists';
+    }
     updateStateByKey({
       projects: [...workspace.projects, project],
       projectFiles: { ...workspace.projectFiles, [project.id]: template },
