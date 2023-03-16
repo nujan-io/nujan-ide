@@ -25,7 +25,7 @@ const DashboardSidebar: FC<Props> = ({ className }) => {
       <div className={s.menuItems}>
         <div>
           <span className={s.name}>
-            Welcome,
+            Welcome 👋,
             <br /> {session?.user?.name}
           </span>
         </div>

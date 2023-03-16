@@ -47,7 +47,12 @@ const ABIUi: FC<Props> = ({ abi, contractAddress }) => {
           </Form.Item>
         ))}
 
-        <Button type="default" htmlType="submit" loading={isLoading}>
+        <Button
+          className={s.btnAction}
+          type="default"
+          htmlType="submit"
+          loading={isLoading}
+        >
           {abi.name}
         </Button>
         {responseMessage && (

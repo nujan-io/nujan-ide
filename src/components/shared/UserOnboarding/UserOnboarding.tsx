@@ -26,7 +26,7 @@ const UserOnboarding: FC<Props> = ({ authProviders }) => {
       <div className={s.columnRight}>
         <div className={s.content}>
           <Image src="/images/logo.svg" width={140} height={30} alt="Nujan" />
-          <h3 className={s.heading}>Hey, Hello 👋</h3>
+          <h3 className={s.heading}>Hey, Hackers</h3>
           <p>Sign in to get started</p>
           <div className={s.form}>
             {Object.values(authProviders).map((provider: any) => (

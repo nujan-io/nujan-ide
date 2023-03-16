@@ -106,6 +106,7 @@ const ContractInteraction: FC<Props> = ({
         src="/html/tonweb.html"
       />
       <p>
+        <br />
         <b>
           This will be used to send internal message and call getter method on
           contract

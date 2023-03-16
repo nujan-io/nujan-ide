@@ -24,7 +24,7 @@
     margin-top: 2rem;
     justify-content: space-between;
     flex-direction: column;
-    height: 87%;
+    height: 83%;
     .item {
       color: #fff;
       display: flex;
@@ -32,6 +32,9 @@
       font-size: 1rem;
       padding: 0.5rem 0;
       cursor: pointer;
+      > div {
+        width: 100%;
+      }
       .label {
         display: inline-flex;
         margin-left: 5px;
@@ -51,5 +54,8 @@
     display: flex;
     align-items: center;
     padding: 0.5rem 0;
+    background: #5f5e5e;
+    border-radius: 5px;
+    justify-content: center;
   }
 }

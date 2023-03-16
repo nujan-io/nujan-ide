@@ -246,7 +246,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
             rules: [
               {
                 token: 'keyword',
-                foreground: '#ff6600',
+                foreground: '#f97583',
                 fontStyle: 'bold',
               },
               {
