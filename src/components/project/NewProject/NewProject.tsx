@@ -1,7 +1,7 @@
 import AppIcon from '@/components/ui/icon';
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Button, Form, Input, Modal, Radio } from 'antd';
+import { Button, Form, Input, message, Modal, Radio } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useState } from 'react';
 import s from './NewProject.module.scss';
@@ -32,7 +32,9 @@ const NewProject: FC = () => {
       createNewProject({ ...project }, projectFiles);
       form.resetFields();
       closeModal();
+      message.success(`Project '${values.name}' created`);
     } catch (error) {
+      message.error('Error in creating project');
     } finally {
       setIsLoading(false);
     }
