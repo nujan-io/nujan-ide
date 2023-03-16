@@ -1,8 +1,11 @@
 import { Skeleton } from '@/components/ui';
+import { AppConfig } from '@/config/AppConfig';
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Router from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import NewProject from '../NewProject';
 import s from './ProjectListing.module.scss';
@@ -11,6 +14,7 @@ const ProjectListing: FC = () => {
   const { projects, setProjects } = useWorkspaceActions();
   const { listProjects } = useProjectServiceActions();
   const [isLoading, setIsLoadeding] = useState(true);
+  const { data: session } = useSession();
 
   const loadProjects = async () => {
     try {
@@ -23,6 +27,15 @@ const ProjectListing: FC = () => {
   };
 
   useEffect(() => {
+    if (!session) {
+      Router.push(AppConfig.loginPath);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
     loadProjects();
   }, []);
 
