@@ -3,7 +3,7 @@ import {
   getBackendOptions,
   MultiBackend,
   NodeModel,
-  Tree
+  Tree,
 } from '@minoru/react-dnd-treeview';
 import { FC } from 'react';
 import { DndProvider } from 'react-dnd';
@@ -16,7 +16,7 @@ interface Props {
 
 const FileTree: FC<Props> = ({ projectId }) => {
   const workspaceAction = useWorkspaceActions();
-  
+
   const projectFiles = (): NodeModel[] => {
     return workspaceAction.projectFiles(projectId).map((item) => {
       return {
@@ -41,6 +41,7 @@ const FileTree: FC<Props> = ({ projectId }) => {
           onDrop={handleDrop}
           render={(node, { depth, isOpen, onToggle }) => (
             <TreeNode
+              projectId={projectId as string}
               node={node}
               depth={depth}
               isOpen={isOpen}

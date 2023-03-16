@@ -1,4 +1,5 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Project } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
 import cn from 'clsx';
@@ -13,6 +14,7 @@ interface Props {
   depth: number;
   isOpen: boolean;
   onToggle: (id: NodeModel['id']) => void;
+  projectId: Project['id'];
 }
 
 const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
@@ -25,7 +27,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const router = useRouter();
   const { id: projectId, tab } = router.query;
 
-  const { openFile, renameItem, deleteItem, createNewItem } =
+  const { openFile, renameItem, deleteItem, createNewItem, isProjectEditable } =
     useWorkspaceActions();
 
   const disallowedFile = [
@@ -110,28 +112,30 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
         {!isEditing && (
           <div className={s.item}>
             <span>{node.text}</span>
-            <ItemAction
-              className={s.actions}
-              onRename={() => {
-                handleItemAction();
-              }}
-              allowedActions={getAllowedActions() as any}
-              onNewFile={() => {
-                if (!isAllowed()) {
-                  return;
-                }
-                setNewItemAdd('file');
-              }}
-              onNewDirectory={() => {
-                if (!isAllowed()) {
-                  return;
-                }
-                setNewItemAdd('directory');
-              }}
-              onDelete={() => {
-                deleteItemFromNode();
-              }}
-            />
+            {isProjectEditable(projectId as string) && (
+              <ItemAction
+                className={s.actions}
+                onRename={() => {
+                  handleItemAction();
+                }}
+                allowedActions={getAllowedActions() as any}
+                onNewFile={() => {
+                  if (!isAllowed()) {
+                    return;
+                  }
+                  setNewItemAdd('file');
+                }}
+                onNewDirectory={() => {
+                  if (!isAllowed()) {
+                    return;
+                  }
+                  setNewItemAdd('directory');
+                }}
+                onDelete={() => {
+                  deleteItemFromNode();
+                }}
+              />
+            )}
           </div>
         )}
 

@@ -2,6 +2,7 @@ import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
+import { useSession } from 'next-auth/react';
 import { useRecoilState } from 'recoil';
 import { v4 } from 'uuid';
 import { useProjectServiceActions } from './ProjectService.hooks';
@@ -11,6 +12,7 @@ export { useWorkspaceActions };
 function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
   const projectServiceAction = useProjectServiceActions();
+  const { data: session } = useSession();
 
   return {
     createNewProject,
@@ -31,6 +33,7 @@ function useWorkspaceActions() {
     updateFileContent,
     updateProjectById,
     closeAllFile,
+    isProjectEditable,
     clearWorkSpace,
   };
 
@@ -322,6 +325,11 @@ function useWorkspaceActions() {
       content: '',
       path: `${parentPath ? parentPath + '/' : ''}${name}`,
     };
+  }
+
+  function isProjectEditable(projectId: Project['id']) {
+    const _project = project(projectId);
+    return session && (session?.user as any)?.id == _project?.userId;
   }
 
   function clearWorkSpace() {

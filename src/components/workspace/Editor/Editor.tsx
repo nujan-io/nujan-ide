@@ -13,7 +13,8 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
-  const { updateFileContent } = useWorkspaceActions();
+  const { updateFileContent, isProjectEditable } = useWorkspaceActions();
+
   const [isFileDirty, setIsFileDirty] = useState(false);
   const [loop, setLoop] = useState(0);
   const fileData = { ...file };
@@ -100,6 +101,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
           bracketPairColorization: {
             enabled: true,
           },
+          readOnly: !isProjectEditable(projectId as string),
         }}
         onMount={(editor, monaco) => {
           editorRef.current = editor;

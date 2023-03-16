@@ -26,6 +26,9 @@ const WorkSpace: FC = () => {
 
   const { id: projectId, tab } = router.query;
 
+  const isProjectEditable = workspaceAction.isProjectEditable(
+    projectId as string
+  );
   const activeFile = workspaceAction.activeFile(projectId as string);
 
   const commitItemCreation = (type: string, name: string) => {
@@ -90,14 +93,16 @@ const WorkSpace: FC = () => {
           <>
             <div className={s.globalAction}>
               <span>Project</span>
-              <ItemAction
-                className={`${s.visible}`}
-                allowedActions={['NewFile', 'NewFolder']}
-                onNewFile={() => commitItemCreation('file', 'new file')}
-                onNewDirectory={() =>
-                  commitItemCreation('directory', 'new folder')
-                }
-              />
+              {isProjectEditable && (
+                <ItemAction
+                  className={`${s.visible}`}
+                  allowedActions={['NewFile', 'NewFolder']}
+                  onNewFile={() => commitItemCreation('file', 'new file')}
+                  onNewDirectory={() =>
+                    commitItemCreation('directory', 'new folder')
+                  }
+                />
+              )}
             </div>
             {isLoading && (
               <Spin tip="Loading" size="default" className={s.loader}>

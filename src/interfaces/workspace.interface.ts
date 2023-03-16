@@ -17,6 +17,7 @@ interface ProjectFiles {
 
 export interface Project {
   id: string;
+  userId: string;
   name: string;
   template: string;
   contractAddress?: string;
