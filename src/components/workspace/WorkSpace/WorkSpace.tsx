@@ -1,10 +1,12 @@
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Project } from '@/interfaces/workspace.interface';
 import { Spin } from 'antd';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
+import ProjectSetting from '../ProjectSetting';
 import Tabs from '../Tabs';
 import TestCases from '../TestCases';
 import FileTree from '../tree/FileTree';
@@ -81,6 +83,9 @@ const WorkSpace: FC = () => {
         />
       </div>
       <div className={s.tree}>
+        {activeMenu === 'setting' && (
+          <ProjectSetting projectId={projectId as Project['id']} />
+        )}
         {isLoaded && activeMenu === 'code' && (
           <>
             <div className={s.globalAction}>

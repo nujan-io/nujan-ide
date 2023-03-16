@@ -60,15 +60,20 @@ const listProject = async (userId: string) => {
 };
 
 const updateProject = async (formData: any, token: JWT) => {
-  const { contractAddress, projectId } = formData;
-  if (!projectId || !contractAddress) {
+  const { contractAddress, isPublic, projectId } = formData;
+  if (!projectId) {
     throw 'Project and contract address required';
   }
   const project = await ProjectModel.findById(projectId);
   if (token.id != project.userId) {
     throw 'Unauthorised access';
   }
-  project.contractAddress = contractAddress;
+  if (contractAddress) {
+    project.contractAddress = contractAddress;
+  }
+  if (typeof isPublic == 'boolean') {
+    project.isPublic = isPublic;
+  }
   await project.save();
 };
 

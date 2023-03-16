@@ -8,6 +8,7 @@ import {
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineProject,
+  AiOutlineSetting,
 } from 'react-icons/ai';
 import { CiBeaker1 } from 'react-icons/ci';
 import { FiEdit2 } from 'react-icons/fi';
@@ -30,7 +31,8 @@ export type AppIconType =
   | 'TestCases'
   | 'Google'
   | 'GitHub'
-  | 'Logout';
+  | 'Logout'
+  | 'Setting';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -51,6 +53,7 @@ const Components = {
   Google: AiOutlineGoogle,
   GitHub: AiOutlineGithub,
   Logout: AiOutlineLogout,
+  Setting: AiOutlineSetting,
   Plus,
 };
 

@@ -20,6 +20,7 @@ export interface Project {
   name: string;
   template: string;
   contractAddress?: string;
+  isPublic?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

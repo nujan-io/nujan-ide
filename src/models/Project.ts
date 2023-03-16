@@ -7,6 +7,7 @@ const ProjectSchema = new Schema<Project>(
     name: { type: String, required: false },
     template: { type: String, required: false },
     contractAddress: { type: String, required: false },
+    isPublic: { type: Boolean, required: false, default: false },
   },
   { timestamps: true }
 );

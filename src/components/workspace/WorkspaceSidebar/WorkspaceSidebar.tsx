@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FC } from 'react';
 import s from './WorkspaceSidebar.module.scss';
 
-export type WorkSpaceMenu = 'code' | 'build' | 'test-cases';
+export type WorkSpaceMenu = 'code' | 'build' | 'test-cases' | 'setting';
 interface MenuItem {
   label: string;
   value: WorkSpaceMenu;
@@ -31,6 +31,11 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
       label: 'Test Cases',
       value: 'test-cases',
       icon: 'TestCases',
+    },
+    {
+      label: 'Setting',
+      value: 'setting',
+      icon: 'Setting',
     },
   ];
   return (
