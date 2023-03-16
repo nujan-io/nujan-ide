@@ -1,4 +1,5 @@
 import AppIcon from '@/components/ui/icon';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './WorkspaceSidebar.module.scss';
@@ -8,6 +9,7 @@ interface MenuItem {
   label: string;
   value: WorkSpaceMenu;
   icon: string;
+  private?: boolean;
 }
 
 interface Props {
@@ -16,6 +18,8 @@ interface Props {
 }
 
 const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
+  const { data: session } = useSession();
+
   const menuItems: MenuItem[] = [
     {
       label: 'Code',
@@ -36,6 +40,7 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
       label: 'Setting',
       value: 'setting',
       icon: 'Setting',
+      private: true,
     },
   ];
   return (
@@ -44,18 +49,23 @@ const WorkspaceSidebar: FC<Props> = ({ activeMenu, onMenuClicked }) => {
         <AppIcon name="Home" />
         <span>Home</span>
       </Link>
-      {menuItems.map((menu, i) => (
-        <div
-          key={i}
-          className={`${s.action} ${
-            activeMenu === menu.value ? s.isActive : ''
-          }`}
-          onClick={() => onMenuClicked(menu.value)}
-        >
-          <AppIcon name={menu.icon as any} />
-          <span>{menu.label}</span>
-        </div>
-      ))}
+      {menuItems.map((menu, i) => {
+        if (menu.private && !(session?.user as any)?.id) {
+          return;
+        }
+        return (
+          <div
+            key={i}
+            className={`${s.action} ${
+              activeMenu === menu.value ? s.isActive : ''
+            }`}
+            onClick={() => onMenuClicked(menu.value)}
+          >
+            <AppIcon name={menu.icon as any} />
+            <span>{menu.label}</span>
+          </div>
+        );
+      })}
     </div>
   );
 };

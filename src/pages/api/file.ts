@@ -14,7 +14,7 @@ export default async function handler(
   try {
     await dbConnect();
     const token = await getToken({ req });
-    if (!token) {
+    if (!token && action !== 'list-files') {
       throw 'Login required';
     }
 
@@ -25,13 +25,13 @@ export default async function handler(
         resposne = await listFiles(req.body, token, res);
         break;
       case 'create-file':
-        resposne = await createFile(req.body, token);
+        resposne = await createFile(req.body, token as JWT);
         break;
       case 'update-file':
-        resposne = await updateFile(req.body, token);
+        resposne = await updateFile(req.body, token as JWT);
         break;
       case 'delete-file':
-        resposne = await deleteFile(req.body, token);
+        resposne = await deleteFile(req.body, token as JWT);
         break;
 
       default:
@@ -59,10 +59,26 @@ export default async function handler(
 
 const listFiles = async (
   { projectId }: { projectId: Project['id'] },
-  token: JWT,
+  token: JWT | null,
   res: NextApiResponse
 ) => {
+  const project = await ProjectModel.findById(projectId);
+
+  if (!project || !project.isPublic) {
+    res.status(404).json({
+      success: false,
+      message: 'Failed',
+      data: '',
+    });
+    return;
+  }
+
+  if (!token && !project.isPublic) {
+    throw 'Login required ';
+  }
+
   const files = await ProjectFileModel.find({ projectId });
+
   if (!files) {
     res.status(404).json({
       success: false,
@@ -71,6 +87,7 @@ const listFiles = async (
     });
     return;
   }
+
   return files;
 };
 

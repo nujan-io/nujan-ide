@@ -30,6 +30,10 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
+    async session({ session, token }) {
+      (session.user as any).id = token.id;
+      return session;
+    },
   },
   pages: {
     signIn: '/',
