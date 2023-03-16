@@ -15,7 +15,7 @@ const NewProject: FC = () => {
   const [form] = useForm();
 
   const templatedList = [
-    { label: 'New Contract', value: 'tonBlank' },
+    { label: 'Blank Contract', value: 'tonBlank' },
     { label: 'Counter Contract', value: 'tonCounter' },
     { label: 'Chat Bot Contract', value: 'chatBot' },
   ];
