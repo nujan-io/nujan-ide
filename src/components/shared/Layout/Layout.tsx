@@ -12,11 +12,13 @@ export const Layout: FC<Props> = ({ className, children }) => {
   const { data: session } = useSession();
 
   useEffect(() => {
+    if (!session) {
+      Router.push('/');
+    }
     if (session && router.basePath === '/') {
       Router.push('/projects');
       return;
     }
-    Router.push('/');
   }, [session]);
   return <main className={s.root}>{children}</main>;
 };
