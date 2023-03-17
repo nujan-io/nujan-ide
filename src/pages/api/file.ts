@@ -16,9 +16,9 @@ export default async function handler(
     let token;
     await dbConnect();
 
-    if (action !== 'list-files') {
+    try {
       token = authenticate(req);
-    }
+    } catch (error) {}
 
     let resposne = null;
 
