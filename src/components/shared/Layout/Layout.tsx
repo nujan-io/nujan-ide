@@ -19,7 +19,7 @@ export const Layout: FC<Props> = ({ className, children }) => {
       Router.push('/project');
       return;
     }
-  }, [user.token]);
+  }, [user.token, router]);
   return <main className={s.root}>{children}</main>;
 };
 

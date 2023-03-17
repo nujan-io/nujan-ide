@@ -18,6 +18,15 @@ const TonAuth: FC = () => {
       return;
     }
 
+    setIsConnected(tonConnector.connected);
+
+    return () => {};
+  }, [tonConnector]);
+
+  useEffect(() => {
+    if (!tonConnector) {
+      return;
+    }
     tonConnector.onStatusChange(async (wallet) => {
       if (
         wallet?.connectItems?.tonProof &&
@@ -42,10 +51,7 @@ const TonAuth: FC = () => {
         setIsConnected(false);
       }
     });
-    setIsConnected(tonConnector.connected);
-
-    return () => {};
-  }, [tonConnector]);
+  }, []);
 
   return (
     <div className={s.root}>
