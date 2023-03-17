@@ -4,7 +4,6 @@ import { workspaceState } from '@/state/workspace.state';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
-import { v4 } from 'uuid';
 import { useProjectServiceActions } from './ProjectService.hooks';
 
 export { useWorkspaceActions };
@@ -320,7 +319,6 @@ function useWorkspaceActions() {
     parentPath: string
   ) {
     return {
-      id: v4(),
       name,
       parent: parent || null,
       type: type as any,
