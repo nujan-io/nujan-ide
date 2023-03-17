@@ -1,3 +1,4 @@
+import { HowToUse } from '@/components/shared';
 import { Skeleton } from '@/components/ui';
 import { AppConfig } from '@/config/AppConfig';
 import { useAuthAction } from '@/hooks/auth.hooks';
@@ -57,6 +58,7 @@ const ProjectListing: FC = () => {
           ))}
         </div>
       )}
+      <HowToUse />
     </div>
   );
 };
