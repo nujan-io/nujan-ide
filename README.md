@@ -1,38 +1,71 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Nujan
+
+Nujan is a web browser-based IDE (better remix for TON). Nujan is designed to write, test, compile, deploy, and interact with your smart contract. A developer can write a smart contract from anywhere, on any device without any setup, configuration, or download. Our user-friendly interface, fast compiler, and sharing feature make the process of contract deployment simple, fast, and accessible for all users.
+
+#### IDE Preview:
+
+![IDE Preview](https://res.cloudinary.com/cerebza/image/upload/v1679073846/nujan/ide-preview.jpg)
+
+## Project
+
+### Features:
+
+- **Login via TON wallets :** Supports multiple TON wallets to log in with ease.
+- **Code Editor :** To write and edit your code easily and effortlessly.
+- **Syntax highlighter :** To highlight your code and display errors.
+- **File manager :** Handling and management of the project files are smooth and efficient
+- **Compiler :** Code is compiled in the browser using web assembly which will accelerate the compiling in the browser
+- **Writing test cases :** To write and run test cases on web so that we can minimize contract bugs.
+- **Deploy :** Easy one-click deployment using Nujan IDE
+- **Interaction with the contract :** You can update the state and call-getter method with our easy-to-use contract interaction UI.
+- **Code sharing :** Share your code with other developers to get instant feedback to enhance your project and embed it on any website.
+- **Project clone :** Clone public project to avoid duplication of efforts.
+- **Sync code to the server :** Helps to save your project safely in the clouds, makes it accessible from any device.
+
+For testcase we have compiled: [TON standalone library](https://github.com/rahulyadav-57/ton-standalone-libraries)
+
+#### Built with
+
+- Next.js
+- TON libraries
+- FunC
+- Monaco editor
+- MongoDB
+- Tree Sitter
 
 ## Getting Started
 
-First, run the development server:
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Build for a production:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Run the production server:
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+```bash
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Future Roadmap:
 
-## Learn More
+- Improving UI/UX
+- Verify code directly from Nujan
+- Code Autocompletion
+- Real-time collaboration
+- Static analysis
+- Debugging
+- Download and import the project
+- Git support
+- Pre-built templates for most used code - like NFT marketplace
+- Bounty platform - Micro task-based module to incentivize developers to learn FunC
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+[Business Source License 1.1](https://github.com/rahulyadav-57/ton-ide/blob/main/LICENSE)
