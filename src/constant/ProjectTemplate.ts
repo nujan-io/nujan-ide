@@ -24,6 +24,10 @@ int counter() method_id {        ;; getter declaration - returns int as result
   var (counter) = load_data();   ;; call our read utility function to load value
   return counter;
 }
+
+int add(int a, int b) method_id {    ;; this is just for testing purpose  
+  return a + b;
+}
 `;
 
 const contractSampleBlank = `() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
