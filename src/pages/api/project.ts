@@ -1,11 +1,11 @@
 import { ProjectTemplate } from '@/constant/ProjectTemplate';
+import { JWT } from '@/interfaces/auth.interface';
 import { Tree } from '@/interfaces/workspace.interface';
 import { ProjectModel } from '@/models/Project';
 import { ProjectFileModel } from '@/models/ProjectFile';
 import dbConnect from '@/utility/dbConnect';
 import { authenticate } from '@/utility/jwt';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { JWT } from 'next-auth/jwt';
 
 export default async function handler(
   req: NextApiRequest,

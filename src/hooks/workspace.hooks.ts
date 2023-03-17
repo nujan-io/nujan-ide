@@ -319,6 +319,7 @@ function useWorkspaceActions() {
     parentPath: string
   ) {
     return {
+      id: '',
       name,
       parent: parent || null,
       type: type as any,
