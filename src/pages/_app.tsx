@@ -35,8 +35,8 @@ export default function App({
           <TonConnectUIProvider
             uiPreferences={{ theme: THEME.DARK }}
             // manifestUrl="https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json"
-            manifestUrl="https://ton-ide-git-tonproof-integration-rkdev57.vercel.app/assets/ton/tonconnect-manifest.json"
-            walletsListSource="https://ton-ide-git-tonproof-integration-rkdev57.vercel.app/assets/ton/wallets.json"
+            manifestUrl="https://ton-ide-nujan.vercel.app/assets/ton/tonconnect-manifest.json"
+            walletsListSource="https://ton-ide-nujan.vercel.app/assets/ton/wallets.json"
             getConnectParameters={async () => {
               // TODO: make payload generation only once. It will run at every popup open for wallet.
               const tonProof = await axios.post('/api/ton-proof', {
