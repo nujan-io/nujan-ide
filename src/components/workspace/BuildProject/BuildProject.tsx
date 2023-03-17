@@ -1,4 +1,3 @@
-import TonAuth from '@/components/auth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ABI, Tree } from '@/interfaces/workspace.interface';
@@ -263,14 +262,6 @@ const BuildProject: FC<Props> = ({
         <br />
         <br />
       </Form>
-
-      <p className={s.infoLine}>
-        <b>
-          Connect wallet to deploy and send internal message to contract on
-          testnet
-        </b>
-      </p>
-      <TonAuth />
 
       {activeProject?.id && tonConnector && activeProject?.contractAddress && (
         <div className={s.contractInteraction}>

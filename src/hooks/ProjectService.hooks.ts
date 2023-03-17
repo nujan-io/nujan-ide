@@ -1,4 +1,5 @@
 import { Project, Tree } from '@/interfaces/workspace.interface';
+import { Wallet } from '@tonconnect/sdk';
 import { AxiosResponse } from 'axios';
 import { useApiClient } from './ApiClient.hooks';
 
@@ -16,6 +17,7 @@ function useProjectServiceActions() {
     updateFile,
     deleteFile,
     createFile,
+    verifyTonProof,
   };
 
   async function createProject(data: Partial<Project>): Promise<AxiosResponse> {
@@ -53,5 +55,12 @@ function useProjectServiceActions() {
 
   async function deleteFile(data: Partial<Tree>): Promise<AxiosResponse> {
     return ApiClient.post(`/api/file`, { ...data, action: 'delete-file' });
+  }
+
+  async function verifyTonProof(data: Partial<Wallet>): Promise<AxiosResponse> {
+    return ApiClient.post(`/api/ton-proof`, {
+      data,
+      action: 'verify-proof',
+    });
   }
 }

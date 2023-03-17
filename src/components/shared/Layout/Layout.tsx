@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react';
+import { useAuthAction } from '@/hooks/auth.hooks';
 import Router, { useRouter } from 'next/router';
 import { FC, useEffect } from 'react';
 import s from './Layout.module.scss';
@@ -9,17 +9,17 @@ interface Props {
 }
 export const Layout: FC<Props> = ({ className, children }) => {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useAuthAction();
 
   useEffect(() => {
-    if (!session && router.pathname !== '/project/[id]') {
+    if (!user.token && router.pathname !== '/project/[id]') {
       Router.push('/');
     }
-    if (session && router.pathname === '/') {
-      Router.push('/projects');
+    if (user.token && router.pathname === '/') {
+      Router.push('/project');
       return;
     }
-  }, [session]);
+  }, [user.token]);
   return <main className={s.root}>{children}</main>;
 };
 

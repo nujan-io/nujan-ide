@@ -1,0 +1,26 @@
+.root {
+  .btnAction {
+    // width: 100%;
+    background-color: var(--primary) !important;
+    color: #fff;
+    font-weight: 600;
+    // text-transform: uppercase;
+    height: 2.5rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 3rem;
+    &:hover {
+      opacity: 0.9;
+    }
+    .icon {
+      margin-right: 0.5rem;
+      font-size: 1.3rem;
+    }
+    .label {
+      margin-top: 7px;
+    }
+  }
+}

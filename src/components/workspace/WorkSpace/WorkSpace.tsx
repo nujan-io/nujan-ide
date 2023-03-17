@@ -1,8 +1,9 @@
+import { useAuthAction } from '@/hooks/auth.hooks';
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { Spin } from 'antd';
-import Router, { useRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
@@ -26,9 +27,12 @@ const WorkSpace: FC = () => {
 
   const { id: projectId, tab } = router.query;
 
+  const { user } = useAuthAction();
   const isProjectEditable = workspaceAction.isProjectEditable(
-    projectId as string
+    projectId as string,
+    user
   );
+
   const activeFile = workspaceAction.activeFile(projectId as string);
 
   const commitItemCreation = (type: string, name: string) => {
@@ -45,7 +49,7 @@ const WorkSpace: FC = () => {
         const files = response.data.data;
         workspaceAction.updateProjectFiles(files, projectId as string);
       } catch (error) {
-        Router.push('/project');
+        // Router.push('/project');
       } finally {
         setIsloading(false);
       }

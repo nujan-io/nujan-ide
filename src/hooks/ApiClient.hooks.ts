@@ -6,8 +6,6 @@ import Router from 'next/router';
 export { useApiClient };
 
 function useApiClient() {
-  //   const [auth, updateAuth] = useRecoilState(authState);
-
   return {
     get: request('GET'),
     post: request('POST'),
@@ -45,13 +43,13 @@ function useApiClient() {
 
   function authHeaders(url: string) {
     // return auth header with jwt if user if logged in and request is set to api url
-    // const token = auth?.accessToken;
-    // const isLoggedIn = !!token;
-    const isApiUrl = url.startsWith(AppConfig.API_URL);
-
-    // if (isLoggedIn && isApiUrl) {
-    //   return { Authorization: `Bearer ${token}` };
-    // }
+    const isApiUrl = url.startsWith('/api');
+    const token = localStorage.getItem('ton-ide-user-token');
+    if (isApiUrl && token) {
+      return {
+        Authorization: `Bearer ${token}`,
+      };
+    }
     return {};
   }
 

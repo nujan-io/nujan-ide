@@ -1,3 +1,4 @@
+import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
@@ -14,6 +15,7 @@ interface Props {
 
 const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const { updateFileContent, isProjectEditable } = useWorkspaceActions();
+  const { user } = useAuthAction();
 
   const [isFileDirty, setIsFileDirty] = useState(false);
   const [loop, setLoop] = useState(0);
@@ -101,7 +103,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
           bracketPairColorization: {
             enabled: true,
           },
-          readOnly: !isProjectEditable(projectId as string),
+          readOnly: !isProjectEditable(projectId as string, user),
         }}
         onMount={(editor, monaco) => {
           editorRef.current = editor;

@@ -2,8 +2,9 @@ import { Project } from '@/interfaces/workspace.interface';
 import { ProjectModel } from '@/models/Project';
 import { ProjectFileModel } from '@/models/ProjectFile';
 import dbConnect from '@/utility/dbConnect';
+import { authenticate } from '@/utility/jwt';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getToken, JWT } from 'next-auth/jwt';
+import { JWT } from 'next-auth/jwt';
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,10 +13,11 @@ export default async function handler(
   const { action } = req.body;
 
   try {
+    let token;
     await dbConnect();
-    const token = await getToken({ req });
-    if (!token && action !== 'list-files') {
-      throw 'Login required';
+
+    if (action !== 'list-files') {
+      token = authenticate(req);
     }
 
     let resposne = null;
@@ -64,13 +66,13 @@ const listFiles = async (
 ) => {
   const project = await ProjectModel.findById(projectId);
 
-  if (!project || !project.isPublic) {
+  if (!project) {
     res.status(404).json({
       success: false,
       message: 'Failed',
       data: '',
     });
-    return;
+    throw 'Failed';
   }
 
   if (!token && !project.isPublic) {

@@ -3,8 +3,9 @@ import { Tree } from '@/interfaces/workspace.interface';
 import { ProjectModel } from '@/models/Project';
 import { ProjectFileModel } from '@/models/ProjectFile';
 import dbConnect from '@/utility/dbConnect';
+import { authenticate } from '@/utility/jwt';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getToken, JWT } from 'next-auth/jwt';
+import { JWT } from 'next-auth/jwt';
 
 export default async function handler(
   req: NextApiRequest,
@@ -13,8 +14,8 @@ export default async function handler(
   const { action } = req.body;
 
   try {
+    const token = authenticate(req);
     await dbConnect();
-    const token = await getToken({ req });
     if (!token) {
       throw 'Login required';
     }

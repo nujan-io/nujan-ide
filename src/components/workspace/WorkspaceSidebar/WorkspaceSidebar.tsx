@@ -1,4 +1,5 @@
 import AppIcon from '@/components/ui/icon';
+import { useAuthAction } from '@/hooks/auth.hooks';
 import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
@@ -30,7 +31,9 @@ const WorkspaceSidebar: FC<Props> = ({
   const { isProjectEditable, createNewProject } = useWorkspaceActions();
   const { cloneProject } = useProjectServiceActions();
   const [isLoading, setIsLoading] = useState(false);
-  const hasEditAccess = isProjectEditable(projectId as string);
+  const { user } = useAuthAction();
+
+  const hasEditAccess = isProjectEditable(projectId as string, user);
 
   const menuItems: MenuItem[] = [
     {

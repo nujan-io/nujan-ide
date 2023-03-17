@@ -1,8 +1,8 @@
+import { AuthInterface } from '@/interfaces/auth.interface';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
-import { useSession } from 'next-auth/react';
 import { useRecoilState } from 'recoil';
 import { v4 } from 'uuid';
 import { useProjectServiceActions } from './ProjectService.hooks';
@@ -12,7 +12,6 @@ export { useWorkspaceActions };
 function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
   const projectServiceAction = useProjectServiceActions();
-  const { data: session } = useSession();
 
   return {
     createNewProject,
@@ -330,9 +329,9 @@ function useWorkspaceActions() {
     };
   }
 
-  function isProjectEditable(projectId: Project['id']) {
+  function isProjectEditable(projectId: Project['id'], user: AuthInterface) {
     const _project = project(projectId);
-    return !!(session && (session?.user as any)?.id == _project?.userId);
+    return !!(user.token && user?.id == _project?.userId);
   }
 
   function clearWorkSpace() {

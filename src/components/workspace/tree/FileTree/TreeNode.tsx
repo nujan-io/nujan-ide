@@ -1,3 +1,4 @@
+import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
@@ -29,6 +30,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
 
   const { openFile, renameItem, deleteItem, createNewItem, isProjectEditable } =
     useWorkspaceActions();
+  const { user } = useAuthAction();
 
   const disallowedFile = [
     'contract.cell.js',
@@ -112,7 +114,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
         {!isEditing && (
           <div className={s.item}>
             <span>{node.text}</span>
-            {isProjectEditable(projectId as string) && (
+            {isProjectEditable(projectId as string, user) && (
               <ItemAction
                 className={s.actions}
                 onRename={() => {

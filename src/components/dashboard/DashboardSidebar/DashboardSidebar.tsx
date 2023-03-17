@@ -1,7 +1,7 @@
 import { AppLogo } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { signOut, useSession } from 'next-auth/react';
+import { useAuthAction } from '@/hooks/auth.hooks';
+import { useTonConnectUI } from '@tonconnect/ui-react';
 import { FC } from 'react';
 import s from './DashboardSidebar.module.scss';
 
@@ -10,13 +10,8 @@ interface Props {
 }
 
 const DashboardSidebar: FC<Props> = ({ className }) => {
-  const { clearWorkSpace } = useWorkspaceActions();
-  const { data: session } = useSession();
-
-  const logout = () => {
-    clearWorkSpace();
-    signOut();
-  };
+  const { logout } = useAuthAction();
+  const [tonConnector] = useTonConnectUI();
 
   return (
     <div className={`${s.root} ${className}`}>
@@ -25,13 +20,21 @@ const DashboardSidebar: FC<Props> = ({ className }) => {
       <div className={s.menuItems}>
         <div>
           <span className={s.name}>
-            Welcome 👋,
-            <br /> {session?.user?.name}
+            Welcome 👋
+            {/* <br /> {session?.user?.name} */}
           </span>
         </div>
         <div className={`${s.item} ${s.logoutContainer}`}>
           <div>
-            <div className={s.logout} onClick={logout}>
+            <div
+              className={s.logout}
+              onClick={() => {
+                logout();
+                if (tonConnector.connected) {
+                  tonConnector.disconnect();
+                }
+              }}
+            >
               <AppIcon name="Logout" />
               <span className={s.label}>Logout</span>
             </div>
