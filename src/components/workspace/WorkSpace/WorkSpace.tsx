@@ -1,5 +1,3 @@
-import { useAuthAction } from '@/hooks/auth.hooks';
-import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { Spin } from 'antd';
@@ -10,15 +8,14 @@ import Editor from '../Editor';
 import ProjectSetting from '../ProjectSetting';
 import Tabs from '../Tabs';
 import TestCases from '../TestCases';
-import FileTree from '../tree/FileTree';
-import ItemAction from '../tree/FileTree/ItemActions';
 import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
+import FileTree from '../tree/FileTree';
+import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
-  const projectServiceAction = useProjectServiceActions();
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -27,41 +24,11 @@ const WorkSpace: FC = () => {
 
   const { id: projectId, tab } = router.query;
 
-  const { user } = useAuthAction();
-  const isProjectEditable = workspaceAction.isProjectEditable(
-    projectId as string,
-    user
-  );
-
   const activeFile = workspaceAction.activeFile(projectId as string);
 
   const commitItemCreation = (type: string, name: string) => {
     workspaceAction.createNewItem('', name, type, projectId as string);
   };
-
-  const getFiles = async () => {
-    if (workspaceAction.projectFiles(projectId as string).length === 0) {
-      setIsloading(true);
-      try {
-        const response = await projectServiceAction.listFiles(
-          projectId as string
-        );
-        const files = response.data.data;
-        workspaceAction.updateProjectFiles(files, projectId as string);
-      } catch (error) {
-        // Router.push('/project');
-      } finally {
-        setIsloading(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!projectId) {
-      return;
-    }
-    getFiles();
-  }, [projectId]);
 
   useEffect(() => {
     return () => {
@@ -98,16 +65,14 @@ const WorkSpace: FC = () => {
           <>
             <div className={s.globalAction}>
               <span>Project</span>
-              {isProjectEditable && (
-                <ItemAction
-                  className={`${s.visible}`}
-                  allowedActions={['NewFile', 'NewFolder']}
-                  onNewFile={() => commitItemCreation('file', 'new file')}
-                  onNewDirectory={() =>
-                    commitItemCreation('directory', 'new folder')
-                  }
-                />
-              )}
+              <ItemAction
+                className={`${s.visible}`}
+                allowedActions={['NewFile', 'NewFolder']}
+                onNewFile={() => commitItemCreation('file', 'new file')}
+                onNewDirectory={() =>
+                  commitItemCreation('directory', 'new folder')
+                }
+              />
             </div>
             {isLoading && (
               <Spin tip="Loading" size="default" className={s.loader}>

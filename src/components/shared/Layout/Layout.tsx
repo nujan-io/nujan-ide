@@ -12,10 +12,10 @@ export const Layout: FC<Props> = ({ className, children }) => {
   const { user } = useAuthAction();
 
   useEffect(() => {
-    if (!user.token && router.pathname !== '/project/[id]') {
+    if (!user.walletAddress && router.pathname !== '/project/[id]') {
       Router.push('/');
     }
-    if (user.token && router.pathname === '/') {
+    if (user.walletAddress && router.pathname === '/') {
       Router.push('/project');
       return;
     }

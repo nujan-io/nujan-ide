@@ -1,11 +1,9 @@
 import { AuthInterface } from '@/interfaces/auth.interface';
 import { authState } from '@/state/auth.state';
 import { useRecoilState } from 'recoil';
-import { useWorkspaceActions } from './workspace.hooks';
 
 export function useAuthAction() {
   const [authDetails, setAuthDetails] = useRecoilState(authState);
-  const { clearWorkSpace } = useWorkspaceActions();
 
   return {
     updateAuth,
@@ -27,6 +25,5 @@ export function useAuthAction() {
       walletAddress: '',
       token: '',
     });
-    clearWorkSpace();
   }
 }

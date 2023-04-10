@@ -1,7 +1,7 @@
 export interface AuthInterface {
-  id: string;
+  id?: string;
   walletAddress: string;
-  token: string;
+  token?: string;
 }
 
 export interface JWT {

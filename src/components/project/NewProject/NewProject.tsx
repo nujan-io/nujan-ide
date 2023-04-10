@@ -1,15 +1,16 @@
 import AppIcon from '@/components/ui/icon';
-import { useProjectServiceActions } from '@/hooks/ProjectService.hooks';
+import { ProjectTemplate } from '@/constant/ProjectTemplate';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Tree } from '@/interfaces/workspace.interface';
 import { Button, Form, Input, message, Modal, Radio } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
   const [isActive, setIsActive] = useState(false);
   const { createNewProject } = useWorkspaceActions();
-  const projectServiceAction = useProjectServiceActions();
   const [isLoading, setIsLoading] = useState(false);
 
   const [form] = useForm();
@@ -23,12 +24,17 @@ const NewProject: FC = () => {
   const onFormFinish = async (values: any) => {
     try {
       setIsLoading(true);
-      const response = await projectServiceAction.createProject({
+
+      const projectId = uuidv4();
+      const project = {
+        id: projectId,
         name: values.name,
         template: values.template,
-        action: 'create-project',
-      } as any);
-      const { project, projectFiles } = response.data.data;
+      };
+
+      const projectFiles: Tree[] = (
+        ProjectTemplate[values.template as 'tonBlank' | 'tonCounter'] as any
+      )['func'];
       createNewProject({ ...project }, projectFiles);
       form.resetFields();
       closeModal();

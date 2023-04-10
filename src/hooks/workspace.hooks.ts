@@ -4,13 +4,11 @@ import { workspaceState } from '@/state/workspace.state';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
-import { useProjectServiceActions } from './ProjectService.hooks';
-
+import { v4 } from 'uuid';
 export { useWorkspaceActions };
 
 function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
-  const projectServiceAction = useProjectServiceActions();
 
   return {
     createNewProject,
@@ -161,20 +159,9 @@ function useWorkspaceActions() {
     }
     item.node.content = content;
     updateProjectFiles(item.project, projectId);
-    try {
-      projectServiceAction.updateFile({
-        id,
-        content,
-      });
-    } catch (error) {}
   }
 
   async function updateProjectById(updateObject: any, projectId: string) {
-    await projectServiceAction.updateProject({
-      projectId,
-      ...updateObject,
-      action: 'update-project',
-    });
     updateProjectList(projectId, {
       ...project(projectId),
       ...updateObject,
@@ -217,13 +204,6 @@ function useWorkspaceActions() {
     }
     item.node.path = newPath;
     updateProjectFiles(item.project, projectId);
-    try {
-      projectServiceAction.updateFile({
-        id,
-        name,
-        path: newPath,
-      });
-    } catch (error) {}
   }
 
   function deleteItem(id: Tree['id'], projectId: string) {
@@ -238,11 +218,6 @@ function useWorkspaceActions() {
 
     closeFile(id);
     updateProjectFiles(item.project, projectId);
-    try {
-      projectServiceAction.deleteFile({
-        id,
-      });
-    } catch (error) {}
   }
 
   async function createNewItem(
@@ -261,14 +236,6 @@ function useWorkspaceActions() {
       id as string,
       item.node?.path || ''
     );
-    const response = await projectServiceAction.createFile({
-      projectId,
-      name,
-      parent: id,
-      type,
-      path: newItem.path,
-    } as any);
-    newItem.id = response.data.data.id;
     item.project.push(newItem);
     updateProjectFiles(item.project, projectId);
   }
@@ -319,7 +286,7 @@ function useWorkspaceActions() {
     parentPath: string
   ) {
     return {
-      id: '',
+      id: v4(),
       name,
       parent: parent || null,
       type: type as any,
@@ -329,8 +296,9 @@ function useWorkspaceActions() {
   }
 
   function isProjectEditable(projectId: Project['id'], user: AuthInterface) {
-    const _project = project(projectId);
-    return !!(user.token && user?.id == _project?.userId);
+    // const _project = project(projectId);
+    // return !!(user.token && user?.id == _project?.userId);
+    return true;
   }
 
   function clearWorkSpace() {
