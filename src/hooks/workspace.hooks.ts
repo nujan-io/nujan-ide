@@ -126,6 +126,15 @@ function useWorkspaceActions() {
     updateStateByKey({ openFiles });
   }
 
+  function onFileRename(fileId: Tree['id'], name: string) {
+    let files = cloneDeep(openedFiles());
+    if (!files) return;
+    const fileToChange = files.find((item) => item.id === fileId);
+    if (!fileToChange) return;
+    fileToChange.name = name;
+    updateStateByKey({ openFiles: files });
+  }
+
   function openedFiles() {
     return workspace.openFiles;
   }
@@ -212,6 +221,7 @@ function useWorkspaceActions() {
     }
     item.node.path = newPath;
     updateProjectFiles(item.project, projectId);
+    onFileRename(id, name);
   }
 
   function deleteItem(id: Tree['id'], projectId: string) {
