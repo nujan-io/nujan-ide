@@ -39,4 +39,26 @@
       margin-top: 1rem;
     }
   }
+  .deleting {
+    animation: fade 1s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .deleteProject {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 0.7rem;
+    color: var(--color-danger);
+    cursor: pointer;
+  }
+}
+
+@keyframes fade {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }

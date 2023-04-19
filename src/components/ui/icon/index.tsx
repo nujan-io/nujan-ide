@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import {
   AiOutlineClose,
+  AiOutlineDelete,
   AiOutlineFileAdd,
   AiOutlineFolderAdd,
   AiOutlineGithub,
@@ -8,7 +9,7 @@ import {
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineProject,
-  AiOutlineSetting,
+  AiOutlineSetting
 } from 'react-icons/ai';
 import { CiBeaker1 } from 'react-icons/ci';
 import { FaRegClone } from 'react-icons/fa';
@@ -34,7 +35,8 @@ export type AppIconType =
   | 'GitHub'
   | 'Logout'
   | 'Setting'
-  | 'Clone';
+  | 'Clone'
+  | 'Delete';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -58,6 +60,7 @@ const Components = {
   Setting: AiOutlineSetting,
   Clone: FaRegClone,
   Plus,
+  Delete: AiOutlineDelete
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

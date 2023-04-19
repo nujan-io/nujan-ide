@@ -13,6 +13,7 @@ function useWorkspaceActions() {
 
   return {
     createNewProject,
+    deleteProject,
     setProjects,
     projects,
     project,
@@ -51,6 +52,26 @@ function useWorkspaceActions() {
     updateStateByKey({
       projects: [...workspace.projects, project],
       projectFiles: { ...workspace.projectFiles, [project.id]: template },
+    });
+  }
+
+  async function deleteProject(projectId: string) {
+    const projectIndex = projects().findIndex((item) => item.id === projectId);
+    if (projectIndex < 0) {
+      return;
+    }
+    const _projectFiles = cloneDeep(workspace.projectFiles);
+
+    if (_projectFiles && _projectFiles[projectId]) {
+      const fileIds = _projectFiles[projectId].map((item) => item.id);
+      await fileSystem.files.bulkDelete(fileIds);
+      delete _projectFiles[projectId];
+    }
+    const projectList = [...workspace.projects];
+    projectList.splice(projectIndex, 1);
+    updateStateByKey({
+      projects: projectList,
+      projectFiles: _projectFiles,
     });
   }
 

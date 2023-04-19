@@ -1,17 +1,38 @@
 import { HowToUse } from '@/components/shared';
+import AppIcon from '@/components/ui/icon';
 import { AppConfig } from '@/config/AppConfig';
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Project } from '@/interfaces/workspace.interface';
 import Image from 'next/image';
 import Link from 'next/link';
 import Router from 'next/router';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import NewProject from '../NewProject';
 import s from './ProjectListing.module.scss';
 
 const ProjectListing: FC = () => {
-  const { projects } = useWorkspaceActions();
+  const { projects, deleteProject } = useWorkspaceActions();
   const { user } = useAuthAction();
+  const [projectToDelete, setProjectToDelete] = useState<Project['id'] | null>(
+    null
+  );
+
+  const deleteSelectedProject = async (
+    e: React.MouseEvent,
+    id: Project['id']
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setProjectToDelete(id);
+
+    try {
+      await deleteProject(id);
+    } catch (error) {
+    } finally {
+      setProjectToDelete(null);
+    }
+  };
 
   useEffect(() => {
     if (!user.walletAddress) {
@@ -23,8 +44,14 @@ const ProjectListing: FC = () => {
     <div className={s.root}>
       <div className={s.content}>
         <NewProject />
-        {[...projects()].reverse().map((item, i) => (
-          <Link href={`/project/${item.id}`} key={item.id} className={s.item}>
+        {[...projects()].reverse().map((item) => (
+          <Link
+            href={`/project/${item.id}`}
+            key={item.id}
+            className={`${s.item} ${
+              projectToDelete === item.id ? s.deleting : ''
+            }`}
+          >
             <Image
               src={`/images/icon/ton-protocol-logo-white.svg`}
               width={30}
@@ -32,6 +59,13 @@ const ProjectListing: FC = () => {
               alt={''}
               className={s.platformIcon}
             />
+
+            <div
+              className={s.deleteProject}
+              onClick={(e) => deleteSelectedProject(e, item.id)}
+            >
+              <AppIcon name="Delete" />
+            </div>
 
             <span className={s.name}>{item.name}</span>
           </Link>
