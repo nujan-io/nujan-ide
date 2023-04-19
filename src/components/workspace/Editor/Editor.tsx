@@ -14,12 +14,13 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
-  const { updateFileContent, isProjectEditable } = useWorkspaceActions();
+  const { updateFileContent, isProjectEditable, getFileContent } =
+    useWorkspaceActions();
   const { user } = useAuthAction();
 
   const [isFileDirty, setIsFileDirty] = useState(false);
   const [loop, setLoop] = useState(0);
-  const fileData = { ...file };
+  const fileData = file;
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
@@ -27,7 +28,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const saveFile = (isManual = false) => {
     if (!file.id) return;
     try {
-      updateFileContent(file.id, editorRef.current.getValue(), projectId);
+      updateFileContent(file.id, editorRef.current.getValue());
       if (isManual) {
         message.success('File saved');
       }
@@ -40,15 +41,24 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     return () => clearInterval(timer);
   }, []);
 
+  const fetchFileContent = async () => {
+    const content = await getFileContent(file.id);
+    editorRef.current.setValue(content);
+  };
+
+  useEffect(() => {
+    fetchFileContent();
+  }, [file]);
+
   useEffect(() => {
     if (!monacoRef.current) {
       return;
     }
-    if (fileTypeFromFileName(fileData.name) === 'func') {
-      monacoRef.current.setTheme('func-theme');
-    } else {
-      monacoRef.current.setTheme('vs-dark');
-    }
+    // if (fileTypeFromFileName(fileData.name) === 'func') {
+    //   monacoRef.current.setTheme('func-theme');
+    // } else {
+    //   monacoRef.current.setTheme('vs-dark');
+    // }
   }, [fileData]);
 
   useEffect(() => {
@@ -94,7 +104,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         // height="90vh"
         defaultLanguage={`${fileTypeFromFileName(fileData.name)}`}
         // defaultLanguage={`func`}
-        defaultValue={fileData.content || ''}
+        // defaultValue={}
         onChange={() => {
           setIsFileDirty(true);
         }}
@@ -105,7 +115,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
           },
           readOnly: !isProjectEditable(projectId as string, user),
         }}
-        onMount={(editor, monaco) => {
+        onMount={async (editor, monaco) => {
           editorRef.current = editor;
           monacoRef.current = monaco.editor;
           monaco.languages.typescript.typescriptDefaults.setCompilerOptions({

@@ -78,3 +78,24 @@ export async function parseGetters(code: string): Promise<Getter[]> {
 
   return gettersParsed;
 }
+
+export async function extractCompilerDiretive(code: string): Promise<any> {
+  if (!isWebAssemblySupported()) {
+    return [];
+  }
+
+  await initParser(
+    '/assets/ton/tree-sitter.wasm',
+    '/assets/ton//tree-sitter-func.wasm'
+  );
+  const p = createParser();
+  const parsed = p.parse(code);
+
+  const directives = parsed.rootNode.children
+    .filter((c) => c.type === 'compiler_directive')
+    .map((c) => {
+      return c.children[0].children[2].text.replace(/["']/g, '');
+    });
+
+  return directives;
+}

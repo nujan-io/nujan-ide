@@ -1,6 +1,7 @@
 import { AuthInterface } from '@/interfaces/auth.interface';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
+import { fileSystem } from '@/utility/fileSystem';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
@@ -24,6 +25,7 @@ function useWorkspaceActions() {
     openedFiles,
     activeFile,
     getFileById,
+    getFileContent,
     getFileByPath,
     closeFile,
     updateFileContent,
@@ -133,32 +135,38 @@ function useWorkspaceActions() {
     if (!file) {
       return undefined;
     }
-
-    return getFileById(file.id, projectId);
+    return file;
   }
 
-  function getFileById(id: Tree['id'], projectId: string): Tree | undefined {
-    return projectFiles(projectId).find((file) => file.id === id);
+  async function getFileById(
+    id: Tree['id'],
+    projectId: string
+  ): Promise<Tree | undefined> {
+    const file = projectFiles(projectId).find((file) => file.id === id);
+    const fileContent = await getFileContent(id);
+    return { ...file, content: fileContent } as Tree | undefined;
   }
 
-  function getFileByPath(
+  async function getFileContent(id: Tree['id']) {
+    if (!id) return '';
+    const fileContent = await fileSystem.files.get(id);
+    return fileContent?.content || '';
+  }
+
+  async function getFileByPath(
     path: Tree['path'],
     projectId: string
-  ): Tree | undefined {
-    return projectFiles(projectId).find((file) => file.path === path);
+  ): Promise<Tree | undefined> {
+    const file = projectFiles(projectId).find((file) => file.path === path);
+    if (!file) {
+      return undefined;
+    }
+    const fileContent = await fileSystem.files.get(file.id);
+    return { ...file, content: fileContent?.content };
   }
 
-  function updateFileContent(
-    id: Tree['id'],
-    content: string,
-    projectId: string
-  ) {
-    const item = searchNode(id, projectId);
-    if (!item.node) {
-      return;
-    }
-    item.node.content = content;
-    updateProjectFiles(item.project, projectId);
+  function updateFileContent(id: Tree['id'], content: string) {
+    fileSystem.files.update(id, { content });
   }
 
   async function updateProjectById(updateObject: any, projectId: string) {
@@ -230,12 +238,16 @@ function useWorkspaceActions() {
     if (isFileExists(name, projectId, item.node?.parent || '')) {
       return;
     }
+
     const newItem = _createItem(
       type,
       name,
       id as string,
       item.node?.path || ''
     );
+    if (type === 'file') {
+      await fileSystem.files.add({ id: newItem.id, content: '' });
+    }
     item.project.push(newItem);
     updateProjectFiles(item.project, projectId);
   }

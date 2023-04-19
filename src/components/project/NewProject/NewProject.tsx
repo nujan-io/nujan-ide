@@ -2,10 +2,13 @@ import AppIcon from '@/components/ui/icon';
 import { ProjectTemplate } from '@/constant/ProjectTemplate';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
-import { Button, Form, Input, message, Modal, Radio } from 'antd';
+import { FileInterface, fileSystem } from '@/utility/fileSystem';
+import { Button, Form, Input, Modal, Radio, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
+import cloneDeep from 'lodash.clonedeep';
 import { FC, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
@@ -32,14 +35,32 @@ const NewProject: FC = () => {
         template: values.template,
       };
 
-      const projectFiles: Tree[] = (
+      let projectFiles: Tree[] = cloneDeep(
         ProjectTemplate[values.template as 'tonBlank' | 'tonCounter'] as any
       )['func'];
+      const filesWithId: FileInterface[] = [];
+
+      projectFiles = projectFiles.map((file) => {
+        if (file.type !== 'file') {
+          return file;
+        }
+        const fileId = uuidv4();
+        filesWithId.push({ id: fileId, content: file.content || '' });
+        return {
+          ...file,
+          id: fileId,
+          content: '',
+        };
+      });
+
+      fileSystem.files.bulkAdd(filesWithId);
+
       createNewProject({ ...project }, projectFiles);
       form.resetFields();
       closeModal();
       message.success(`Project '${values.name}' created`);
     } catch (error) {
+      console.log(error);
       let messageText = 'Error in creating project';
       if (typeof error === 'string') {
         messageText = error;

@@ -13,7 +13,7 @@ const TestCases: FC<Props> = ({ codeBOC, projectId }) => {
 
   const executeTestCases = async () => {
     // Include tests folder path
-    const file = getFileByPath('test.spec.js', projectId);
+    const file = await getFileByPath('test.spec.js', projectId);
 
     if (!file) {
       message.error('test.spec.js file not found');

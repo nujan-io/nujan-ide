@@ -24,9 +24,9 @@ const ContractInteraction: FC<Props> = ({
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
-  const createCell = () => {
+  const createCell = async () => {
     if (!cellBuilderRef.current?.contentWindow) return;
-    const contractCellData = getFileByPath('contract.cell.js', projectId);
+    const contractCellData = await getFileByPath('contract.cell.js', projectId);
     if (contractCellData && !contractCellData.content) {
       message.error('Cell data is missing in file contract.cell.js');
       return;

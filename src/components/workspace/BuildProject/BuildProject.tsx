@@ -1,10 +1,14 @@
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ABI, Tree } from '@/interfaces/workspace.interface';
-import { parseGetters } from '@/utility/getterParser';
-import { compileFunc } from '@ton-community/func-js';
+import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
+import {
+  CompileResult,
+  SuccessResult,
+  compileFunc,
+} from '@ton-community/func-js';
 import { useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Form, message, Select } from 'antd';
+import { Button, Form, Select, message } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
@@ -33,8 +37,13 @@ const BuildProject: FC<Props> = ({
 
   const { Option } = Select;
 
-  const { projectFiles, getFileByPath, updateProjectById, project } =
-    useWorkspaceActions();
+  const {
+    projectFiles,
+    getFileByPath,
+    getFileContent,
+    updateProjectById,
+    project,
+  } = useWorkspaceActions();
   const { deployContract } = useContractAction();
 
   const activeProject = project(projectId);
@@ -44,10 +53,6 @@ const BuildProject: FC<Props> = ({
     setBuildoutput(null);
     if (!file?.id) {
       message.error('File not found');
-      return;
-    }
-    if (!file.content) {
-      message.error('Code missing from file');
       return;
     }
     setIsLoading('build');
@@ -63,13 +68,31 @@ const BuildProject: FC<Props> = ({
 
       const fileList: any = {};
 
-      let result: any = await compileFunc({
+      let filesToProcess = [file?.path];
+
+      while (filesToProcess.length !== 0) {
+        const fileToProcess = filesToProcess.pop();
+        const file = await getFileByPath(fileToProcess, projectId);
+        if (file?.content) {
+          fileList[file.id] = file;
+        }
+        if (!file?.content) {
+          continue;
+        }
+        let compileDirectives = await extractCompilerDiretive(file.content);
+        if (compileDirectives.length === 0) {
+          continue;
+        }
+        filesToProcess.push(...compileDirectives);
+      }
+      const filesCollection: Tree[] = Object.values(fileList);
+      let buildResult: CompileResult = await compileFunc({
         targets: ['stdlib.fc', file?.name],
         sources: (path) => {
           if (path === 'stdlib.fc') {
             return stdLib.toString();
           }
-          const file = getFileByPath(path, projectId as string);
+          const file = filesCollection.find((f: Tree) => f.path === path);
           if (file?.content) {
             fileList[file.id] = file;
           }
@@ -79,18 +102,18 @@ const BuildProject: FC<Props> = ({
 
       generateABI(fileList);
 
-      if (result.status === 'error') {
-        message.error(result.message);
+      if (buildResult.status === 'error') {
+        message.error(buildResult.message);
         return;
       }
 
       setBuildoutput((t: any) => {
         return {
           ...t,
-          contractBOC: result.codeBoc,
+          contractBOC: (buildResult as SuccessResult).codeBoc,
         };
       });
-      onCodeCompile(result.codeBoc);
+      onCodeCompile(buildResult.codeBoc);
       message.success('Build successfull');
       createStateInitCell();
     } catch (error) {
@@ -141,9 +164,9 @@ const BuildProject: FC<Props> = ({
     }
   };
 
-  const createStateInitCell = () => {
+  const createStateInitCell = async () => {
     if (!cellBuilderRef.current?.contentWindow) return;
-    const stateInitData = getFileByPath('stateInit.cell.js', projectId);
+    const stateInitData = await getFileByPath('stateInit.cell.js', projectId);
     if (stateInitData && !stateInitData.content) {
       message.error('State init data is missing in file stateInit.cell.js');
       return;
