@@ -22,6 +22,7 @@ function useWorkspaceActions() {
     openFile,
     renameItem,
     deleteItem,
+    moveFile,
     createNewItem,
     openedFiles,
     activeFile,
@@ -257,6 +258,34 @@ function useWorkspaceActions() {
 
     closeFile(id);
     updateProjectFiles(item.project, projectId);
+  }
+
+  async function moveFile(
+    sourceId: Tree['id'],
+    destinationId: Tree['id'],
+    projectId: Project['id']
+  ) {
+    let parent = destinationId ? destinationId : null;
+
+    const sourceItem = searchNode(sourceId, projectId);
+    let sourcePath = sourceItem.node?.name;
+    const destinationItem = searchNode(destinationId, projectId);
+    if (!sourceItem.node) {
+      return;
+    }
+    if (!destinationId) {
+      parent = null;
+    } else {
+      sourcePath = destinationItem.node?.path + '/' + sourceItem.node?.name;
+    }
+
+    if (isFileExists(sourceItem.node.name, projectId, destinationId)) {
+      return;
+    }
+
+    sourceItem.node.parent = parent;
+    sourceItem.node.path = sourcePath;
+    updateProjectFiles(sourceItem.project, projectId);
   }
 
   async function createNewItem(

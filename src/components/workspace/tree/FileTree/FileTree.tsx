@@ -1,5 +1,6 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import {
+  DropOptions,
   getBackendOptions,
   MultiBackend,
   NodeModel,
@@ -27,9 +28,12 @@ const FileTree: FC<Props> = ({ projectId }) => {
       };
     });
   };
-  const handleDrop = (newTreeData: any, options: any) => {
-    // console.log('newTreeData', newTreeData, options);
-    // setTreeData(newTreeData)
+  const handleDrop = (newTreeData: any, options: DropOptions) => {
+    workspaceAction.moveFile(
+      options.dragSourceId as string,
+      options.dropTargetId as string,
+      projectId
+    );
   };
 
   return (
