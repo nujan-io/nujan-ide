@@ -47,19 +47,16 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   };
 
   useEffect(() => {
-    fetchFileContent();
-  }, [file]);
-
-  useEffect(() => {
     if (!monacoRef.current) {
       return;
     }
+    fetchFileContent();
     // if (fileTypeFromFileName(fileData.name) === 'func') {
     //   monacoRef.current.setTheme('func-theme');
     // } else {
     //   monacoRef.current.setTheme('vs-dark');
     // }
-  }, [fileData]);
+  }, [file, monacoRef]);
 
   useEffect(() => {
     if (!isFileDirty) {
