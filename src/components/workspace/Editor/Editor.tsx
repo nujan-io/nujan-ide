@@ -19,6 +19,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const { user } = useAuthAction();
 
   const [isFileDirty, setIsFileDirty] = useState(false);
+  const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [loop, setLoop] = useState(0);
   const fileData = file;
 
@@ -47,7 +48,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   };
 
   useEffect(() => {
-    if (!monacoRef.current) {
+    if (!isEditorInitialized) {
       return;
     }
     fetchFileContent();
@@ -56,7 +57,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     // } else {
     //   monacoRef.current.setTheme('vs-dark');
     // }
-  }, [file, monacoRef]);
+  }, [file, isEditorInitialized]);
 
   useEffect(() => {
     if (!isFileDirty) {
@@ -115,6 +116,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         onMount={async (editor, monaco) => {
           editorRef.current = editor;
           monacoRef.current = monaco.editor;
+          setIsEditorInitialized(true);
           monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
             experimentalDecorators: false,
           });
