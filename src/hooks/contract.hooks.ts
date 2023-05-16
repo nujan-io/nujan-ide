@@ -85,7 +85,6 @@ export function useContractAction() {
       };
 
       const response = await tonConnector.sendTransaction(params);
-      console.log('sendMessage', response);
     } catch (error) {
       console.log(error, 'error');
     } finally {

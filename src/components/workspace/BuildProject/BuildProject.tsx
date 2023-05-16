@@ -1,6 +1,7 @@
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ABI, Tree } from '@/interfaces/workspace.interface';
+import { buildTs } from '@/utility/typescriptHelper';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Select, message } from 'antd';
 import Link from 'next/link';
@@ -49,14 +50,19 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const initDeploy = async () => {
     try {
       setIsLoading('deploy');
-      createStateInitCell();
+      await createStateInitCell();
     } catch (error: any) {
       console.log(error);
+      setIsLoading('');
+      if (typeof error === 'string') {
+        message.error(error);
+        return;
+      }
+    } finally {
     }
   };
 
   const deploy = async () => {
-    console.log('activeProject?.contractBOC', activeProject?.contractBOC);
     try {
       const _contractAddress = await deployContract(
         activeProject?.contractBOC as string,
@@ -81,20 +87,30 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   const createStateInitCell = async () => {
     if (!cellBuilderRef.current?.contentWindow) return;
-    const stateInitData = await getFileByPath('stateInit.cell.js', projectId);
-    if (stateInitData && !stateInitData.content) {
-      message.error('State init data is missing in file stateInit.cell.js');
-      return;
+    const stateInitContent = await getFileByPath(
+      'stateInit.cell.ts',
+      projectId
+    );
+    if (stateInitContent && !stateInitContent.content) {
+      throw 'State init data is missing in file stateInit.cell.js';
     }
-    if (!stateInitData?.content?.includes('cell')) {
-      message.error('cell variable is missing in file stateInit.cell.js');
-      return;
+    if (!stateInitContent?.content?.includes('cell')) {
+      throw 'cell variable is missing in file stateInit.cell.ts';
     }
+    const jsOutout = await buildTs(
+      { 'stateInit.cell.ts': stateInitContent?.content },
+      'stateInit.cell.ts'
+    );
+
+    const finalJsoutput = jsOutout[0].code
+      .replace(/^import\s+{/, 'const {')
+      .replace(/}\s+from\s.+/, '} = window.TonCore;');
+
     cellBuilderRef.current.contentWindow.postMessage(
       {
         name: 'nujan-ton-ide',
         type: 'state-init-data',
-        code: stateInitData?.content,
+        code: finalJsoutput,
       },
       '*'
     );
@@ -153,6 +169,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
         src="/html/tonweb.html"
+        sandbox="allow-scripts"
       />
 
       {activeProject?.contractAddress!! && (
@@ -174,7 +191,9 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       >
         Deploy
       </Button>
-      {!activeProject?.contractBOC && <p>Build your contract before deploy</p>}
+      {!activeProject?.contractBOC && (
+        <p className={s.info}>Build your contract before deploy</p>
+      )}
       <br />
       <br />
 

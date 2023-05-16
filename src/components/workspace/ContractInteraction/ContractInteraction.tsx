@@ -1,6 +1,7 @@
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ABI } from '@/interfaces/workspace.interface';
+import { buildTs } from '@/utility/typescriptHelper';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -26,20 +27,30 @@ const ContractInteraction: FC<Props> = ({
 
   const createCell = async () => {
     if (!cellBuilderRef.current?.contentWindow) return;
-    const contractCellData = await getFileByPath('contract.cell.js', projectId);
-    if (contractCellData && !contractCellData.content) {
-      message.error('Cell data is missing in file contract.cell.js');
-      return;
+    const contractCellContent = await getFileByPath(
+      'contract.cell.ts',
+      projectId
+    );
+    if (contractCellContent && !contractCellContent.content) {
+      throw 'Cell data is missing in file contract.cell.ts';
     }
-    if (!contractCellData?.content?.includes('cell')) {
-      message.error('cell variable is missing in file contract.cell.js');
-      return;
+    if (!contractCellContent?.content?.includes('cell')) {
+      throw 'cell variable is missing in file contract.cell.ts';
     }
+    const jsOutout = await buildTs(
+      { 'contract.cell.ts': contractCellContent?.content },
+      'contract.cell.ts'
+    );
+
+    const finalJsoutput = jsOutout[0].code
+      .replace(/^import\s+{/, 'const {')
+      .replace(/}\s+from\s.+/, '} = window.TonCore;');
+
     cellBuilderRef.current.contentWindow.postMessage(
       {
         name: 'nujan-ton-ide',
         type: 'abi-data',
-        code: contractCellData?.content,
+        code: finalJsoutput,
       },
       '*'
     );
@@ -53,9 +64,13 @@ const ContractInteraction: FC<Props> = ({
 
     try {
       setIsLoading('setter');
-      createCell();
+      await createCell();
     } catch (error: any) {
-      console.log(error);
+      setIsLoading('');
+      if (typeof error === 'string') {
+        message.error(error);
+        return;
+      }
       if (error.message.includes('Wrong AccessKey used for')) {
         message.error('Contract address changed. Relogin required.');
       }
@@ -73,6 +88,7 @@ const ContractInteraction: FC<Props> = ({
         event.data?.type !== 'abi-data' ||
         event.data?.name !== 'nujan-ton-ide'
       ) {
+        setIsLoading('');
         return;
       }
 
@@ -104,6 +120,7 @@ const ContractInteraction: FC<Props> = ({
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
         src="/html/tonweb.html"
+        sandbox="allow-scripts"
       />
       <p>
         <br />
@@ -124,7 +141,7 @@ const ContractInteraction: FC<Props> = ({
       )}
       <br />
       <h3 className={s.label}>Setter:</h3>
-      <p>Update values in contract.cell.js and send message</p>
+      <p>Update values in contract.cell.ts and send message</p>
       <Form className={s.form} onFinish={onSubmit}>
         <Button
           type="default"

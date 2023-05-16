@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <script src="https://cdn.jsdelivr.net/gh/toncenter/tonweb@master/dist/tonweb.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/ton-core.js"></script>
     <script>
         window.addEventListener('message', async function (event) {
             if (!event.data || typeof event.data !== "object" || !event.data?.type || event.data?.name !== 'nujan-ton-ide') {
@@ -17,7 +17,6 @@
             }
 
             const d = `async function main() {
-                const tonweb = new window.TonWeb();
                 ${event.data.code}
                 const boc = await cell.toBoc();
                 return boc;

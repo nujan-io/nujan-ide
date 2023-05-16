@@ -15,18 +15,17 @@ const ExecuteFile: FC<Props> = ({ file, projectId }) => {
   const { compileFuncProgram } = useProjectActions();
   const fileExtension = file.name.split('.').pop();
 
-  const allowedFile = ['ts', 'fc'];
+  const allowedFile = ['fc'];
 
   const buildFile = async () => {
     try {
       switch (fileExtension) {
         case 'ts':
           const code = await compileTsFile(file, projectId);
-          console.log('code--', code);
           break;
         case 'fc':
           const response = await compileFuncProgram(file, projectId);
-          console.log('response', response);
+          message.success('Compiled successfully');
           break;
       }
     } catch (error) {

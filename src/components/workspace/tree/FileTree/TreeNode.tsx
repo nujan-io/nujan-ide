@@ -33,8 +33,8 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { user } = useAuthAction();
 
   const disallowedFile = [
-    'contract.cell.js',
-    'stateInit.cell.js',
+    'contract.cell.ts',
+    'stateInit.cell.ts',
     'test.spec.js',
   ];
 

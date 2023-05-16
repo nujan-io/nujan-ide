@@ -182,23 +182,29 @@ export const ProjectTemplate = {
       },
       {
         id: '2',
-        name: 'stateInit.cell.js',
+        name: 'stateInit.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'stateInit.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(34, 64);`,
+        path: 'stateInit.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(59, 64)
+      .endCell();`,
         disableActions: true,
       },
       {
         id: '3',
-        name: 'contract.cell.js',
+        name: 'contract.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'contract.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(1, 32);
-cell.bits.writeUint(0, 64);`,
+        path: 'contract.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(1, 32) // op (op #1 = increment)
+      .storeUint(0, 64) // query id
+      .endCell()`,
         disableActions: true,
       },
       {
@@ -232,23 +238,29 @@ cell.bits.writeUint(0, 64);`,
       },
       {
         id: '2',
-        name: 'stateInit.cell.js',
+        name: 'stateInit.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'stateInit.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(34, 64);`,
+        path: 'stateInit.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(59, 64)
+      .endCell();`,
         disableActions: true,
       },
       {
         id: '3',
-        name: 'contract.cell.js',
+        name: 'contract.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'contract.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(1, 32);
-cell.bits.writeUint(0, 64);`,
+        path: 'contract.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(1, 32) // op (op #1 = increment)
+      .storeUint(0, 64) // query id
+      .endCell()`,
         disableActions: true,
       },
       {
@@ -282,23 +294,29 @@ cell.bits.writeUint(0, 64);`,
       },
       {
         id: '2',
-        name: 'stateInit.cell.js',
+        name: 'stateInit.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'stateInit.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(34, 64);`,
+        path: 'stateInit.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(59, 64)
+      .endCell();`,
         disableActions: true,
       },
       {
         id: '3',
-        name: 'contract.cell.js',
+        name: 'contract.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'contract.cell.js',
-        content: `let cell = new tonweb.boc.Cell;
-cell.bits.writeUint(1, 32);
-cell.bits.writeUint(0, 64);`,
+        path: 'contract.cell.ts',
+        content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+      .storeUint(1, 32) // op (op #1 = increment)
+      .storeUint(0, 64) // query id
+      .endCell()`,
         disableActions: true,
       },
       {

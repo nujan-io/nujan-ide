@@ -20,12 +20,12 @@ const WorkSpace: FC = () => {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
-  const [codeBOC, setCodeBOC] = useState('');
   const [isLoading, setIsloading] = useState(false);
 
   const { id: projectId, tab } = router.query;
 
   const activeFile = workspaceAction.activeFile(projectId as string);
+  const activeProject = workspaceAction.project(projectId as string);
 
   const commitItemCreation = (type: string, name: string) => {
     workspaceAction.createNewItem('', name, type, projectId as string);
@@ -86,9 +86,7 @@ const WorkSpace: FC = () => {
         {(activeMenu === 'build' || activeMenu === 'test-cases') && (
           <BuildProject
             projectId={projectId as string}
-            onCodeCompile={(_codeBOC) => {
-              setCodeBOC(_codeBOC);
-            }}
+            onCodeCompile={(_codeBOC) => {}}
           />
         )}
       </div>
@@ -109,9 +107,9 @@ const WorkSpace: FC = () => {
 
             {activeMenu === 'test-cases' && (
               <div className={s.testCaseArea}>
-                {codeBOC ? (
+                {activeProject?.contractBOC ? (
                   <TestCases
-                    codeBOC={codeBOC}
+                    codeBOC={activeProject?.contractBOC}
                     projectId={projectId as string}
                   />
                 ) : (
