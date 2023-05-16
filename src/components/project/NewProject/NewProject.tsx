@@ -36,7 +36,7 @@ const NewProject: FC = () => {
 
       form.resetFields();
       closeModal();
-      message.success(`Project '${name}' created`);
+      message.success(`Project '${projectName}' created`);
     } catch (error) {
       let messageText = 'Error in creating project';
       if (typeof error === 'string') {
