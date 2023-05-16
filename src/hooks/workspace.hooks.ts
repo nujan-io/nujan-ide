@@ -2,6 +2,7 @@ import { AuthInterface } from '@/interfaces/auth.interface';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
 import { FileInterface, fileSystem } from '@/utility/fileSystem';
+import { buildTs } from '@/utility/typescriptHelper';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
@@ -34,6 +35,7 @@ function useWorkspaceActions() {
     updateFileContent,
     updateProjectById,
     closeAllFile,
+    compileTsFile,
     isProjectEditable,
     clearWorkSpace,
   };
@@ -147,6 +149,7 @@ function useWorkspaceActions() {
       const fileData = {
         id: currentFile?.id,
         name: currentFile?.name,
+        path: currentFile?.path,
       };
       openFiles.push({ ...((fileData as any) || {}), isOpen: true });
     }
@@ -370,6 +373,26 @@ function useWorkspaceActions() {
       content: '',
       path: `${parentPath ? parentPath + '/' : ''}${name}`,
     };
+  }
+
+  async function compileTsFile(rootFile: Tree, projectId: Project['id']) {
+    if (!rootFile.name.endsWith('.ts')) {
+      throw new Error('Not a typescript file');
+    }
+
+    const tsFiles = projectFiles(projectId).filter((f) =>
+      f.name.endsWith('.ts')
+    );
+    const filesWithContent: any = {};
+
+    for (let index = 0; index < tsFiles.length; index++) {
+      const currentFile = tsFiles[index];
+      // if (currentFile.id !== file.id) continue;
+      filesWithContent[currentFile.path!!] = (
+        await getFileById(currentFile.id, projectId)
+      )?.content;
+    }
+    return buildTs(filesWithContent, rootFile.path!!);
   }
 
   function isProjectEditable(projectId: Project['id'], user: AuthInterface) {

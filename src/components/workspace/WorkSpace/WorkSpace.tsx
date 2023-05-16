@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
+import ExecuteFile from '../ExecuteFile';
 import ProjectSetting from '../ProjectSetting';
 import Tabs from '../Tabs';
 import TestCases from '../TestCases';
@@ -96,7 +97,15 @@ const WorkSpace: FC = () => {
         {isLoaded && (
           <>
             {activeMenu !== 'test-cases' && (
-              <Tabs projectId={projectId as string} />
+              <div className={s.tabsWrapper}>
+                {activeFile && (
+                  <ExecuteFile
+                    file={activeFile}
+                    projectId={projectId as string}
+                  />
+                )}
+                <Tabs projectId={projectId as string} />
+              </div>
             )}
 
             {activeMenu === 'test-cases' && (

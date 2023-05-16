@@ -102,7 +102,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         // height="90vh"
         defaultLanguage={`${fileTypeFromFileName(fileData.name)}`}
         // defaultLanguage={`func`}
-        // defaultValue={}
+        defaultValue=""
         onChange={() => {
           setIsFileDirty(true);
         }}

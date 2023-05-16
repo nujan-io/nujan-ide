@@ -1,6 +1,16 @@
 import { ProjectTemplate as ProjectTemplateData } from '@/constant/ProjectTemplate';
-import { ProjectTemplate, Tree } from '@/interfaces/workspace.interface';
+import {
+  Project,
+  ProjectTemplate,
+  Tree,
+} from '@/interfaces/workspace.interface';
 import { FileInterface } from '@/utility/fileSystem';
+import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
+import {
+  CompileResult,
+  SuccessResult,
+  compileFunc,
+} from '@ton-community/func-js';
 import { BlobReader, TextWriter, ZipReader } from '@zip.js/zip.js';
 import { RcFile } from 'antd/es/upload';
 import cloneDeep from 'lodash.clonedeep';
@@ -8,11 +18,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
-  const { createNewProject, projects, addFilesToDatabase } =
+  const { createNewProject, getFileByPath, addFilesToDatabase } =
     useWorkspaceActions();
 
   return {
     createProject,
+    compileFuncProgram,
   };
 
   async function createProject(
@@ -34,6 +45,74 @@ export function useProjectActions() {
     };
 
     createNewProject({ ...project }, files);
+  }
+
+  async function compileFuncProgram(file: Tree, projectId: Project['id']) {
+    const fileList: any = {};
+
+    let filesToProcess = [file?.path];
+
+    while (filesToProcess.length !== 0) {
+      const fileToProcess = filesToProcess.pop();
+      const file = await getFileByPath(fileToProcess, projectId);
+      if (file?.content) {
+        fileList[file.id] = file;
+      }
+      if (!file?.content) {
+        continue;
+      }
+      let compileDirectives = await extractCompilerDiretive(file.content);
+
+      compileDirectives = compileDirectives.map((d: string) => {
+        const pathParts = file?.path?.split('/');
+        if (!pathParts) {
+          return d;
+        }
+
+        // Convert relative path to absolute path by prepending the current file directory
+        if (pathParts.length > 1) {
+          let fileDirectory = pathParts
+            .slice(0, pathParts.length - 1)
+            .join('/');
+          return `${fileDirectory}/${d}`;
+        }
+
+        return d;
+      });
+      if (compileDirectives.length === 0) {
+        continue;
+      }
+      filesToProcess.push(...compileDirectives);
+    }
+    const filesCollection: Tree[] = Object.values(fileList);
+    let buildResult: CompileResult = await compileFunc({
+      targets: [file?.path!!],
+      sources: (path) => {
+        const file = filesCollection.find((f: Tree) => f.path === path);
+        if (file?.content) {
+          fileList[file.id] = file;
+        }
+        return file?.content || '';
+      },
+    });
+
+    if (buildResult.status === 'error') {
+      throw buildResult.message;
+    }
+
+    const abi = await generateABI(fileList);
+
+    return { abi: abi, contractBOC: (buildResult as SuccessResult).codeBoc };
+  }
+
+  async function generateABI(fileList: any) {
+    const unresolvedPromises = Object.values(fileList).map(
+      async (file: any) => {
+        return await parseGetters(file.content);
+      }
+    );
+    const results = await Promise.all(unresolvedPromises);
+    return results[0];
   }
 }
 
@@ -70,6 +149,7 @@ const importUserFile = async (file: RcFile) => {
   const files: Tree[] = [];
 
   const fileDirectoryMap: { [key: string]: string } = {};
+
   // for storing file in indexed DB
   const filesWithId: FileInterface[] = [];
   for (const entry of sysrootArchiveEntries) {

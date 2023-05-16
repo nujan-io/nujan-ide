@@ -11,6 +11,8 @@ export interface Tree {
   updatedAt?: Date;
 }
 
+export type ProjectTemplate = 'tonBlank' | 'tonCounter' | 'import';
+
 interface ProjectFiles {
   [id: string]: Tree[];
 }

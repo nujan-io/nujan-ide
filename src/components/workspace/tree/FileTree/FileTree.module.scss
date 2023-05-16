@@ -18,6 +18,12 @@
     justify-content: space-between;
     width: 100%;
     padding-right: 0.6rem;
+    > span {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      display: inline-block;
+    }
   }
   &:hover {
     background-color: #000;

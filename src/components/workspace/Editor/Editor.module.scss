@@ -1,7 +1,11 @@
 .container {
   height: calc(100vh - 43px);
+
   .editor {
     height: 100%;
+    > div {
+      padding-top: 1rem;
+    }
   }
   .saveFile {
     position: absolute;
