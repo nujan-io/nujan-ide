@@ -1,7 +1,7 @@
 import { AuthInterface } from '@/interfaces/auth.interface';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
-import { fileSystem } from '@/utility/fileSystem';
+import { FileInterface, fileSystem } from '@/utility/fileSystem';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
@@ -19,6 +19,7 @@ function useWorkspaceActions() {
     project,
     projectFiles,
     updateProjectFiles,
+    addFilesToDatabase,
     openFile,
     renameItem,
     deleteItem,
@@ -116,6 +117,10 @@ function useWorkspaceActions() {
     updateStateByKey({
       projectFiles: { ...workspace.projectFiles, [projectId]: project },
     });
+  }
+
+  function addFilesToDatabase(files: FileInterface[]) {
+    fileSystem.files.bulkAdd(files);
   }
 
   function getFile(id: Tree['id'], projectId: string) {
