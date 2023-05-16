@@ -18,8 +18,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
-  const { createNewProject, getFileByPath, addFilesToDatabase } =
-    useWorkspaceActions();
+  const {
+    createNewProject,
+    getFileByPath,
+    addFilesToDatabase,
+    updateProjectById,
+  } = useWorkspaceActions();
 
   return {
     createProject,
@@ -101,8 +105,13 @@ export function useProjectActions() {
     }
 
     const abi = await generateABI(fileList);
+    const data: Partial<Project> = {
+      abi: abi,
+      contractBOC: (buildResult as SuccessResult).codeBoc,
+    };
 
-    return { abi: abi, contractBOC: (buildResult as SuccessResult).codeBoc };
+    updateProjectById(data, projectId);
+    return data;
   }
 
   async function generateABI(fileList: any) {

@@ -12,13 +12,8 @@ import s from './BuildProject.module.scss';
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
-  onABIGenerated: (abi: ABI[]) => void;
 }
-const BuildProject: FC<Props> = ({
-  projectId,
-  onCodeCompile,
-  onABIGenerated,
-}) => {
+const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const [isLoading, setIsLoading] = useState('');
   const [buildOutput, setBuildoutput] = useState<{
     contractBOC: string | null;
@@ -51,15 +46,20 @@ const BuildProject: FC<Props> = ({
     setIsLoading('build');
   };
 
-  const deploy = async () => {
-    if (!buildOutput?.contractBOC || !buildOutput?.dataCell) {
-      return;
-    }
-
+  const initDeploy = async () => {
     try {
       setIsLoading('deploy');
+      createStateInitCell();
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  const deploy = async () => {
+    console.log('activeProject?.contractBOC', activeProject?.contractBOC);
+    try {
       const _contractAddress = await deployContract(
-        buildOutput?.contractBOC,
+        activeProject?.contractBOC as string,
         buildOutput?.dataCell as any
       );
       if (!_contractAddress) {
@@ -74,7 +74,6 @@ const BuildProject: FC<Props> = ({
       );
     } catch (error: any) {
       console.log(error);
-      // message.error(error.response?.data?.message);
     } finally {
       setIsLoading('');
     }
@@ -141,6 +140,12 @@ const BuildProject: FC<Props> = ({
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
   }, []);
+
+  useEffect(() => {
+    if (!buildOutput?.dataCell) return;
+    deploy();
+  }, [buildOutput?.dataCell]);
+
   return (
     <div className={s.root}>
       <h3 className={s.heading}>Deploy</h3>
@@ -164,11 +169,12 @@ const BuildProject: FC<Props> = ({
       <Button
         type="primary"
         loading={isLoading == 'deploy'}
-        onClick={deploy}
-        disabled={!buildOutput?.contractBOC}
+        onClick={initDeploy}
+        disabled={!activeProject?.contractBOC}
       >
         Deploy
       </Button>
+      {!activeProject?.contractBOC && <p>Build your contract before deploy</p>}
       <br />
       <br />
 
@@ -177,7 +183,7 @@ const BuildProject: FC<Props> = ({
           <ContractInteraction
             contractAddress={activeProject?.contractAddress!!}
             projectId={projectId}
-            abi={abi}
+            abi={activeProject?.abi || []}
           />
         </div>
       )}

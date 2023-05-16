@@ -13,12 +13,12 @@ interface Props {
 const ExecuteFile: FC<Props> = ({ file, projectId }) => {
   const { compileTsFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
+  const fileExtension = file.name.split('.').pop();
 
   const allowedFile = ['ts', 'fc'];
 
   const buildFile = async () => {
     try {
-      const fileExtension = file.name.split('.').pop();
       switch (fileExtension) {
         case 'ts':
           const code = await compileTsFile(file, projectId);
@@ -56,7 +56,7 @@ const ExecuteFile: FC<Props> = ({ file, projectId }) => {
         }}
       >
         <AppIcon name="Play" />
-        Run
+        {fileExtension === 'fc' ? 'Compile' : 'Run'}
       </Button>
     </>
   );

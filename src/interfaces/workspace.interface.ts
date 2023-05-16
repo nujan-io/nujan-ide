@@ -23,6 +23,8 @@ export interface Project {
   name: string;
   template: string;
   contractAddress?: string;
+  contractBOC?: string;
+  abi?: ABI[];
   isPublic?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
