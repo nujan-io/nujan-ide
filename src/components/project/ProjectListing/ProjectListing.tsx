@@ -1,13 +1,11 @@
 import { HowToUse } from '@/components/shared';
 import AppIcon from '@/components/ui/icon';
-import { AppConfig } from '@/config/AppConfig';
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import Image from 'next/image';
 import Link from 'next/link';
-import Router from 'next/router';
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
 import NewProject from '../NewProject';
 import s from './ProjectListing.module.scss';
 
@@ -33,12 +31,6 @@ const ProjectListing: FC = () => {
       setProjectToDelete(null);
     }
   };
-
-  useEffect(() => {
-    if (!user.walletAddress) {
-      Router.push(AppConfig.loginPath);
-    }
-  }, [user.walletAddress]);
 
   return (
     <div className={s.root}>

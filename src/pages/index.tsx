@@ -1,9 +1,9 @@
-import { UserOnboarding } from '@/components/shared';
+import { Dashboard } from '@/components/dashboard';
 
 export default function Home() {
   return (
     <>
-      <UserOnboarding />
+      <Dashboard />
     </>
   );
 }

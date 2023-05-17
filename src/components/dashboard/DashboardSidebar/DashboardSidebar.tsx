@@ -1,5 +1,4 @@
 import { AppLogo } from '@/components/ui';
-import AppIcon from '@/components/ui/icon';
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { FC } from 'react';
@@ -23,22 +22,6 @@ const DashboardSidebar: FC<Props> = ({ className }) => {
             Welcome 👋
             {/* <br /> {session?.user?.name} */}
           </span>
-        </div>
-        <div className={`${s.item} ${s.logoutContainer}`}>
-          <div>
-            <div
-              className={s.logout}
-              onClick={() => {
-                logout();
-                if (tonConnector.connected) {
-                  tonConnector.disconnect();
-                }
-              }}
-            >
-              <AppIcon name="Logout" />
-              <span className={s.label}>Logout</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

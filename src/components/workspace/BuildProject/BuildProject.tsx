@@ -1,54 +1,42 @@
+import TonAuth from '@/components/auth/TonAuth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { ABI, Tree } from '@/interfaces/workspace.interface';
+import { NetworkEnvironment, Tree } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
 import { useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Select, message } from 'antd';
+import { Button, Form, Select, message } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import s from './BuildProject.module.scss';
-
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
 }
 const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const [isLoading, setIsLoading] = useState('');
+  const [environment, setEnvironment] = useState<NetworkEnvironment>('sandbox');
   const [buildOutput, setBuildoutput] = useState<{
     contractBOC: string | null;
     dataCell: Cell | null;
   } | null>(null);
-  const [abi, setABI] = useState<ABI[]>([]);
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
   const [tonConnector] = useTonConnectUI();
 
   const { Option } = Select;
 
-  const {
-    projectFiles,
-    getFileByPath,
-    getFileContent,
-    updateProjectById,
-    project,
-  } = useWorkspaceActions();
+  const { projectFiles, getFileByPath, updateProjectById, project } =
+    useWorkspaceActions();
   const { deployContract } = useContractAction();
 
   const activeProject = project(projectId);
 
-  const onFormFinish = async ({ fileId }: { fileId: Tree['id'] }) => {
-    const file = getProjectFiles().find((f) => f.id === fileId);
-    setBuildoutput(null);
-    if (!file?.id) {
-      message.error('File not found');
-      return;
-    }
-    setIsLoading('build');
-  };
-
   const initDeploy = async () => {
     try {
+      if (!tonConnector.connected && environment !== 'sandbox') {
+        throw 'Please connect to wallet';
+      }
       setIsLoading('deploy');
       await createStateInitCell();
     } catch (error: any) {
@@ -171,18 +159,21 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         src="/html/tonweb.html"
         sandbox="allow-scripts"
       />
+      <Form.Item label="Environment" className={s.formItem}>
+        <Select
+          defaultValue="sandbox"
+          onChange={(value) => setEnvironment(value as NetworkEnvironment)}
+          options={[
+            { value: 'sandbox', label: 'Sandbox' },
+            { value: 'testnet', label: 'Testnet' },
+            { value: 'mainnet', label: 'Mainnet' },
+          ]}
+        />
+      </Form.Item>
 
-      {activeProject?.contractAddress!! && (
-        <div className={`${s.contractAddress} wrap`}>
-          <Link
-            href={`https://testnet.tonscan.org/address/${activeProject?.contractAddress}`}
-            target="_blank"
-          >
-            View Deployed Contract
-          </Link>
-        </div>
-      )}
+      {environment !== 'sandbox' && <TonAuth />}
 
+      <br />
       <Button
         type="primary"
         loading={isLoading == 'deploy'}
@@ -194,8 +185,17 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       {!activeProject?.contractBOC && (
         <p className={s.info}>Build your contract before deploy</p>
       )}
-      <br />
-      <br />
+
+      {activeProject?.contractAddress!! && (
+        <div className={`${s.contractAddress} wrap`}>
+          <Link
+            href={`https://testnet.tonscan.org/address/${activeProject?.contractAddress}`}
+            target="_blank"
+          >
+            View Deployed Contract
+          </Link>
+        </div>
+      )}
 
       {activeProject?.id && tonConnector && activeProject?.contractAddress && (
         <div className={s.contractInteraction}>

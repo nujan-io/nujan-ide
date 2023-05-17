@@ -5,7 +5,7 @@
   overflow-y: auto;
   .heading {
     opacity: 0.6;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
     font-weight: 600;
     border-bottom: 3px solid #a6a5a5;
     padding-bottom: 0.3rem;
@@ -15,9 +15,12 @@
     width: 1px;
     height: 1px;
   }
+  .formItem {
+    margin-bottom: 0.4rem;
+  }
   .contractAddress {
     max-width: 195px;
-    margin-bottom: 1rem;
+    margin: 1rem 0;
     font-size: 0.9rem;
   }
   .contractInteraction {

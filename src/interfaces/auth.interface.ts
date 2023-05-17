@@ -1,6 +1,6 @@
 export interface AuthInterface {
   id?: string;
-  walletAddress: string;
+  walletAddress?: string;
   token?: string;
 }
 
