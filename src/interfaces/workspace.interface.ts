@@ -13,7 +13,7 @@ export interface Tree {
 
 export type ProjectTemplate = 'tonBlank' | 'tonCounter' | 'import';
 
-export type NetworkEnvironment = 'testnet' | 'mainnet' | 'sandbox';
+export type NetworkEnvironment = 'TESTNET' | 'MAINNET' | 'SANDBOX';
 
 interface ProjectFiles {
   [id: string]: Tree[];

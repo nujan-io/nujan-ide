@@ -1,5 +1,10 @@
-import { AppConfig } from '@/config/AppConfig';
+import { NetworkEnvironment } from '@/interfaces/workspace.interface';
 import { getHttpEndpoint, Network } from '@orbs-network/ton-access';
+import {
+  Blockchain,
+  SandboxContract,
+  TreasuryContract,
+} from '@ton-community/sandbox';
 import { SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
@@ -8,7 +13,10 @@ import {
   Address,
   beginCell,
   Cell,
+  Contract,
   contractAddress,
+  ContractProvider,
+  Sender,
   storeStateInit,
   toNano,
   TupleItem,
@@ -22,19 +30,40 @@ export function useContractAction() {
     sendMessage,
     callGetter,
   };
-  async function deployContract(codeBOC: string, dataCell: any) {
+  async function deployContract(
+    codeBOC: string,
+    dataCell: string,
+    network: Network | Partial<NetworkEnvironment>,
+    sandboxBlockchain: Blockchain | null = null,
+    wallet: SandboxContract<TreasuryContract>
+  ): Promise<{ address: string; contract?: SandboxContract<UserContract> }> {
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     // Amount to send to contract. Gas fee
     const value = toNano('0.002');
-
     const stateInit: StateInit = {
       code: codeCell,
-      data: Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0],
+      data: Cell.fromBoc(Buffer.from(dataCell, 'base64'))[0],
     };
+
+    if (network.toUpperCase() == 'SANDBOX' && sandboxBlockchain) {
+      const _userContract = UserContract.createForDeploy(
+        stateInit.code as Cell,
+        stateInit.data as Cell
+      );
+      const userContract = sandboxBlockchain.openContract(_userContract);
+      const response = await userContract.sendData(wallet.getSender());
+
+      message.success('Contract Deployed');
+      return {
+        address: _userContract.address.toString(),
+        contract: userContract,
+      };
+    }
+
     const _contractAddress = contractAddress(0, stateInit);
     const endpoint = await getHttpEndpoint({
-      network: AppConfig.network as Network,
+      network: network as Network,
     });
 
     const client = new TonClient({ endpoint });
@@ -43,7 +72,7 @@ export function useContractAction() {
       message.error(
         'Contract is already deployed for same codebase and initial state. Update code or initial state.'
       );
-      return _contractAddress.toString();
+      return { address: _contractAddress.toString() };
     }
 
     let initCell = beginCell().store(storeStateInit(stateInit)).endCell();
@@ -62,16 +91,33 @@ export function useContractAction() {
       const deployResponse = await tonConnector.sendTransaction(params);
       message.success('Contract Deployed');
 
-      return _contractAddress.toString();
+      return { address: _contractAddress.toString() };
     } catch (error) {
+      console.log('error', error);
       message.error('Not client');
     } finally {
     }
-    return '';
+    return { address: _contractAddress.toString() };
   }
 
-  async function sendMessage(dataCell: number, contractAddress: string) {
-    const messageBody = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
+  async function sendMessage(
+    dataCell: string,
+    contractAddress: string,
+    contract: SandboxContract<UserContract> | null = null,
+    network: Network | Partial<NetworkEnvironment>,
+    wallet: SandboxContract<TreasuryContract>
+  ) {
+    const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
+    console.log('contract 567', contract);
+    if (network === 'SANDBOX') {
+      if (!contract) {
+        message.error('Contract is not deployed');
+        return;
+      }
+      const call = await contract.sendData(wallet.getSender(), _dataCell);
+      console.log(call, 'call');
+      return;
+    }
     try {
       const params: SendTransactionRequest = {
         validUntil: Date.now() + 1000000,
@@ -79,7 +125,7 @@ export function useContractAction() {
           {
             address: contractAddress,
             amount: toNano('0.02').toString(),
-            payload: messageBody.toBoc().toString('base64'),
+            payload: _dataCell.toBoc().toString('base64'),
           },
         ],
       };
@@ -95,12 +141,18 @@ export function useContractAction() {
   async function callGetter(
     contractAddress: string,
     methodName: string,
-    stack?: TupleItem[]
+    contract: SandboxContract<UserContract> | null = null,
+    stack?: TupleItem[],
+    network?: Network | Partial<NetworkEnvironment>
   ) {
-    const endpoint = await getHttpEndpoint({
-      network: 'testnet',
-    });
+    if (network === 'SANDBOX' && contract) {
+      const call = await contract.getData(methodName, stack);
+      return call.stack.readBigNumber().toString();
+    }
 
+    const endpoint = await getHttpEndpoint({
+      network: network?.toLocaleLowerCase() as Network,
+    });
     const client = new TonClient({ endpoint });
     const call = await client.runMethod(
       Address.parse(contractAddress),
@@ -108,5 +160,38 @@ export function useContractAction() {
       stack
     );
     return call.stack.readBigNumber().toString();
+  }
+}
+
+export class UserContract implements Contract {
+  constructor(
+    readonly address: Address,
+    readonly init?: { code: Cell; data: Cell }
+  ) {}
+
+  static createForDeploy(code: Cell, data: Cell) {
+    const workchain = 0;
+    const address = contractAddress(workchain, { code, data });
+    return new UserContract(address, { code, data });
+  }
+
+  async sendData(
+    provider: ContractProvider,
+    via: Sender,
+    body: Cell = Cell.EMPTY
+  ) {
+    await provider.internal(via, {
+      value: '0.02',
+      bounce: false,
+      body,
+    });
+  }
+
+  async getData(
+    provider: ContractProvider,
+    methodName: string,
+    stackInput: TupleItem[] = []
+  ) {
+    return provider.get(methodName, stackInput);
   }
 }

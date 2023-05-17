@@ -1,5 +1,10 @@
-import { useContractAction } from '@/hooks/contract.hooks';
-import { ABI, ABIParameter } from '@/interfaces/workspace.interface';
+import { UserContract, useContractAction } from '@/hooks/contract.hooks';
+import {
+  ABI,
+  ABIParameter,
+  NetworkEnvironment,
+} from '@/interfaces/workspace.interface';
+import { SandboxContract } from '@ton-community/sandbox';
 import { Button, Form, Input } from 'antd';
 import { FC, useState } from 'react';
 import s from './ABIUi.module.scss';
@@ -7,8 +12,15 @@ import s from './ABIUi.module.scss';
 interface Props {
   abi: ABI;
   contractAddress: string;
+  network: NetworkEnvironment;
+  contract: SandboxContract<UserContract> | null;
 }
-const ABIUi: FC<Props> = ({ abi, contractAddress }) => {
+const ABIUi: FC<Props> = ({
+  abi,
+  contractAddress,
+  network,
+  contract = null,
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
 
@@ -20,12 +32,15 @@ const ABIUi: FC<Props> = ({ abi, contractAddress }) => {
     });
     try {
       setIsLoading(true);
+
       const getterReponse = await callGetter(
         contractAddress,
         abi.name,
-        stack as any
+        contract as any,
+        stack as any,
+        network
       );
-      setResponseMessage(getterReponse);
+      setResponseMessage(getterReponse || '');
     } catch (error) {
       console.log('error', error);
     } finally {

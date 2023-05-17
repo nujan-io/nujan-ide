@@ -1,7 +1,8 @@
-import { useContractAction } from '@/hooks/contract.hooks';
+import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { ABI } from '@/interfaces/workspace.interface';
+import { ABI, NetworkEnvironment } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
+import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -12,11 +13,17 @@ interface Props {
   contractAddress: string;
   projectId: string;
   abi: ABI[];
+  network: NetworkEnvironment;
+  contract: SandboxContract<UserContract> | null;
+  wallet: SandboxContract<TreasuryContract>;
 }
 const ContractInteraction: FC<Props> = ({
   contractAddress,
   projectId,
   abi,
+  network,
+  contract = null,
+  wallet,
 }) => {
   const [tonConnector] = useTonConnectUI();
   const [isLoading, setIsLoading] = useState('');
@@ -93,12 +100,12 @@ const ContractInteraction: FC<Props> = ({
       }
 
       try {
-        if (!tonConnector) {
+        if (!tonConnector && network !== 'SANDBOX') {
           message.warning('Wallet not connected');
           return;
         }
 
-        await sendMessage(event.data.data, contractAddress);
+        await send(event.data.data);
       } catch (error) {
         console.log('error', error);
       } finally {
@@ -108,7 +115,12 @@ const ContractInteraction: FC<Props> = ({
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []);
+  }, [isLoading, tonConnector, network, contractAddress, contract]);
+
+  const send = async (data: string) => {
+    console.log('contract inside 2', contract);
+    sendMessage(data, contractAddress, contract, network, wallet);
+  };
 
   if (!contractAddress) {
     return <></>;
@@ -135,7 +147,13 @@ const ContractInteraction: FC<Props> = ({
         <>
           <h3 className={s.label}>Getter:</h3>
           {abi.map((item, i) => (
-            <ABIUi abi={item} key={i} contractAddress={contractAddress} />
+            <ABIUi
+              abi={item}
+              key={i}
+              contractAddress={contractAddress}
+              network={network}
+              contract={contract}
+            />
           ))}
         </>
       )}

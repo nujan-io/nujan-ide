@@ -37,7 +37,7 @@ const WorkspaceSidebar: FC<Props> = ({
       icon: 'Code',
     },
     {
-      label: 'Compile',
+      label: 'Deploy',
       value: 'build',
       icon: 'Beaker',
     },

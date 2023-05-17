@@ -1,9 +1,15 @@
 import TonAuth from '@/components/auth/TonAuth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { NetworkEnvironment, Tree } from '@/interfaces/workspace.interface';
+import { NetworkEnvironment } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
-import { useTonConnectUI } from '@tonconnect/ui-react';
+import { Network } from '@orbs-network/ton-access';
+import {
+  Blockchain,
+  SandboxContract,
+  TreasuryContract,
+} from '@ton-community/sandbox';
+import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select, message } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -16,13 +22,20 @@ interface Props {
 }
 const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const [isLoading, setIsLoading] = useState('');
-  const [environment, setEnvironment] = useState<NetworkEnvironment>('sandbox');
+  const [environment, setEnvironment] = useState<NetworkEnvironment>('SANDBOX');
   const [buildOutput, setBuildoutput] = useState<{
     contractBOC: string | null;
     dataCell: Cell | null;
   } | null>(null);
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
   const [tonConnector] = useTonConnectUI();
+  const chain = tonConnector.wallet?.account.chain;
+  const [sandboxBlockchain, setSandboxBlockchain] = useState<Blockchain | null>(
+    null
+  );
+  const [contract, setContract] = useState<any>('');
+  const [sandboxWallet, setSandboxWallet] =
+    useState<SandboxContract<TreasuryContract>>();
 
   const { Option } = Select;
 
@@ -34,8 +47,11 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   const initDeploy = async () => {
     try {
-      if (!tonConnector.connected && environment !== 'sandbox') {
-        throw 'Please connect to wallet';
+      if (!tonConnector.connected && environment !== 'SANDBOX') {
+        throw 'Please connect wallet';
+      }
+      if (chain && environment !== 'SANDBOX' && CHAIN[environment] !== chain) {
+        throw `Please connect wallet to ${environment}`;
       }
       setIsLoading('deploy');
       await createStateInitCell();
@@ -52,12 +68,18 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   const deploy = async () => {
     try {
-      const _contractAddress = await deployContract(
+      const { address: _contractAddress, contract } = await deployContract(
         activeProject?.contractBOC as string,
-        buildOutput?.dataCell as any
+        buildOutput?.dataCell as any,
+        environment.toLowerCase() as Network,
+        sandboxBlockchain,
+        sandboxWallet!!
       );
       if (!_contractAddress) {
         return;
+      }
+      if (contract) {
+        setContract(contract);
       }
 
       updateProjectById(
@@ -104,21 +126,18 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
     );
   };
 
-  const getProjectFiles = () => {
-    const _projectFiles = projectFiles(projectId);
-    let files: Tree[] = [];
-    if (!_projectFiles) {
-      return [];
-    }
-
-    files = _projectFiles.filter(
-      (file) =>
-        file.type !== 'directory' &&
-        /^(contracts\/\w+.fc)$/.test(file.path || '')
-    );
-
-    return files;
+  const createSandbox = async () => {
+    const blockchain = await Blockchain.create();
+    const wallet = await blockchain.treasury('user');
+    setSandboxWallet(wallet);
+    setSandboxBlockchain(blockchain);
   };
+
+  useEffect(() => {
+    if (environment === 'SANDBOX') {
+      createSandbox();
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (
@@ -146,7 +165,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   }, []);
 
   useEffect(() => {
-    if (!buildOutput?.dataCell) return;
+    if (!buildOutput?.dataCell || !isLoading) return;
     deploy();
   }, [buildOutput?.dataCell]);
 
@@ -161,17 +180,17 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       />
       <Form.Item label="Environment" className={s.formItem}>
         <Select
-          defaultValue="sandbox"
+          defaultValue="SANDBOX"
           onChange={(value) => setEnvironment(value as NetworkEnvironment)}
           options={[
-            { value: 'sandbox', label: 'Sandbox' },
-            { value: 'testnet', label: 'Testnet' },
-            { value: 'mainnet', label: 'Mainnet' },
+            { value: 'SANDBOX', label: 'Sandbox' },
+            { value: 'TESTNET', label: 'Testnet' },
+            { value: 'MAINNET', label: 'Mainnet' },
           ]}
         />
       </Form.Item>
 
-      {environment !== 'sandbox' && <TonAuth />}
+      {environment !== 'SANDBOX' && <TonAuth />}
 
       <br />
       <Button
@@ -186,10 +205,12 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         <p className={s.info}>Build your contract before deploy</p>
       )}
 
-      {activeProject?.contractAddress!! && (
+      {activeProject?.contractAddress!! && environment !== 'SANDBOX' && (
         <div className={`${s.contractAddress} wrap`}>
           <Link
-            href={`https://testnet.tonscan.org/address/${activeProject?.contractAddress}`}
+            href={`https://${
+              chain === CHAIN.TESTNET ? 'testnet.' : ''
+            }tonscan.org/address/${activeProject?.contractAddress}`}
             target="_blank"
           >
             View Deployed Contract
@@ -203,6 +224,9 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
             contractAddress={activeProject?.contractAddress!!}
             projectId={projectId}
             abi={activeProject?.abi || []}
+            network={environment}
+            contract={contract}
+            wallet={sandboxWallet!!}
           />
         </div>
       )}
