@@ -35,3 +35,12 @@ export const encodeBase64 = (data: string) => {
 export const decodeBase64 = (data: string) => {
   return Buffer.from(data, 'base64').toString('ascii');
 };
+
+export const objectToJSON = (obj: Object) => {
+  let input: any = {};
+  for (const [p, val] of Object.entries(obj)) {
+    // convert all values to string. This would need to parse the json to string. Otherwise would fail for big number.
+    input[p] = val.toString();
+  }
+  return input;
+};

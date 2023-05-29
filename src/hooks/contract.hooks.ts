@@ -108,14 +108,12 @@ export function useContractAction() {
     wallet: SandboxContract<TreasuryContract>
   ) {
     const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
-    console.log('contract 567', contract);
     if (network === 'SANDBOX') {
       if (!contract) {
         message.error('Contract is not deployed');
         return;
       }
       const call = await contract.sendData(wallet.getSender(), _dataCell);
-      console.log(call, 'call');
       return;
     }
     try {
@@ -147,7 +145,7 @@ export function useContractAction() {
   ) {
     if (network === 'SANDBOX' && contract) {
       const call = await contract.getData(methodName, stack);
-      return call.stack.readBigNumber().toString();
+      return call.stack.peek();
     }
 
     const endpoint = await getHttpEndpoint({
@@ -159,7 +157,8 @@ export function useContractAction() {
       methodName,
       stack
     );
-    return call.stack.readBigNumber().toString();
+
+    return call.stack.peek();
   }
 }
 

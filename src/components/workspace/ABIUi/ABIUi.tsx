@@ -4,9 +4,11 @@ import {
   ABIParameter,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
+import { objectToJSON } from '@/utility/utils';
 import { SandboxContract } from '@ton-community/sandbox';
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 import { FC, useState } from 'react';
+import { TupleItem } from 'ton-core';
 import s from './ABIUi.module.scss';
 
 interface Props {
@@ -22,7 +24,9 @@ const ABIUi: FC<Props> = ({
   contract = null,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [responseMessage, setResponseMessage] = useState('');
+  const [responseMessage, setResponseMessage] = useState<TupleItem | null>(
+    null
+  );
 
   const { callGetter } = useContractAction();
 
@@ -32,6 +36,7 @@ const ABIUi: FC<Props> = ({
     });
     try {
       setIsLoading(true);
+      setResponseMessage(null);
 
       const getterReponse = await callGetter(
         contractAddress,
@@ -40,8 +45,16 @@ const ABIUi: FC<Props> = ({
         stack as any,
         network
       );
-      setResponseMessage(getterReponse || '');
-    } catch (error) {
+
+      if (getterReponse) {
+        setResponseMessage(objectToJSON(getterReponse as any));
+      }
+    } catch (error: any) {
+      if (error.message.includes('no healthy nodes for')) {
+        message.error(
+          'No healthy nodes for this network. Redeploy your contract.'
+        );
+      }
       console.log('error', error);
     } finally {
       setIsLoading(false);
@@ -71,7 +84,7 @@ const ABIUi: FC<Props> = ({
           {abi.name}
         </Button>
         {responseMessage && (
-          <div className={s.abiResponse}>Respose: {responseMessage}</div>
+          <div className={s.abiResponse}>{JSON.stringify(responseMessage)}</div>
         )}
       </Form>
     </div>
