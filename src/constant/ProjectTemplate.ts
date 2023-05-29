@@ -169,6 +169,45 @@ describe("Counter tests", async () => {
 });
 `;
 
+export const commonProjectFiles = [
+  {
+    id: '2',
+    name: 'stateInit.cell.ts',
+    parent: null,
+    type: 'file' as const,
+    path: 'stateInit.cell.ts',
+    content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+.storeUint(59, 64)
+.endCell();`,
+    disableActions: true,
+  },
+  {
+    id: '3',
+    name: 'contract.cell.ts',
+    parent: null,
+    type: 'file' as const,
+    path: 'contract.cell.ts',
+    content: `import { beginCell } from "ton-core";
+
+const cell = beginCell()
+.storeUint(1, 32) // op (op #1 = increment)
+.storeUint(0, 64) // query id
+.endCell()`,
+    disableActions: true,
+  },
+  {
+    id: '4',
+    name: 'test.spec.js',
+    parent: null,
+    type: 'file' as const,
+    path: 'test.spec.js',
+    content: testCaseCounter,
+    disableActions: true,
+  },
+];
+
 export const ProjectTemplate = {
   tonBlank: {
     func: [
@@ -237,42 +276,6 @@ const cell = beginCell()
         content: contractTsSample,
       },
       {
-        id: '2',
-        name: 'stateInit.cell.ts',
-        parent: null,
-        type: 'file' as const,
-        path: 'stateInit.cell.ts',
-        content: `import { beginCell } from "ton-core";
-
-const cell = beginCell()
-      .storeUint(59, 64)
-      .endCell();`,
-        disableActions: true,
-      },
-      {
-        id: '3',
-        name: 'contract.cell.ts',
-        parent: null,
-        type: 'file' as const,
-        path: 'contract.cell.ts',
-        content: `import { beginCell } from "ton-core";
-
-const cell = beginCell()
-      .storeUint(1, 32) // op (op #1 = increment)
-      .storeUint(0, 64) // query id
-      .endCell()`,
-        disableActions: true,
-      },
-      {
-        id: '4',
-        name: 'test.spec.js',
-        parent: null,
-        type: 'file' as const,
-        path: 'test.spec.js',
-        content: testCaseCounter,
-        disableActions: true,
-      },
-      {
         id: '5',
         name: 'stdlib.fc',
         parent: null,
@@ -280,6 +283,7 @@ const cell = beginCell()
         path: 'stdlib.fc',
         content: decodeBase64(stdlibContent),
       },
+      ...commonProjectFiles,
     ],
   },
   chatBot: {

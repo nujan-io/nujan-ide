@@ -1,4 +1,7 @@
-import { ProjectTemplate as ProjectTemplateData } from '@/constant/ProjectTemplate';
+import {
+  ProjectTemplate as ProjectTemplateData,
+  commonProjectFiles,
+} from '@/constant/ProjectTemplate';
 import {
   Project,
   ProjectTemplate,
@@ -125,11 +128,17 @@ export function useProjectActions() {
   }
 }
 
-const createTemplateBasedProject = (template: 'tonBlank' | 'tonCounter') => {
-  let files: Tree[] = cloneDeep(ProjectTemplateData[template])['func'];
+const createTemplateBasedProject = (
+  template: 'tonBlank' | 'tonCounter' | 'import',
+  files: Tree[] = []
+) => {
+  let _files: Tree[] = cloneDeep(files);
+  if (files.length === 0 && template !== 'import') {
+    _files = ProjectTemplateData[template]['func'];
+  }
   const filesWithId: FileInterface[] = [];
 
-  files = files.map((file) => {
+  _files = _files.map((file) => {
     if (file.type !== 'file') {
       return file;
     }
@@ -141,7 +150,7 @@ const createTemplateBasedProject = (template: 'tonBlank' | 'tonCounter') => {
       content: '',
     };
   });
-  return { files, filesWithId };
+  return { files: _files, filesWithId };
 };
 
 const importUserFile = async (file: RcFile) => {
@@ -201,5 +210,11 @@ const importUserFile = async (file: RcFile) => {
     filesWithId.push({ id: fileId, content: fileContent });
     files.push(currentFile);
   }
-  return { files, filesWithId };
+
+  const commonFiles = createTemplateBasedProject('import', commonProjectFiles);
+
+  return {
+    files: [...files, ...commonFiles.files],
+    filesWithId: [...filesWithId, ...commonFiles.filesWithId],
+  };
 };
