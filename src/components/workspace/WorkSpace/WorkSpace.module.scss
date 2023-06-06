@@ -1,6 +1,7 @@
 .root {
   display: flex;
   height: 100vh;
+  overflow: hidden;
   .sidebar {
     flex: 0 0 70px;
     width: 70px;
@@ -10,6 +11,8 @@
     flex: 0 0 250px;
     width: 250px;
     background-color: #393939;
+    overflow-y: auto;
+    overflow-x: hidden;
     div[class*='ant-spin-nested-loading'] {
       height: 4rem;
     }

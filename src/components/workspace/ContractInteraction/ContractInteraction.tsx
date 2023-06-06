@@ -44,23 +44,33 @@ const ContractInteraction: FC<Props> = ({
     if (!contractCellContent?.content?.includes('cell')) {
       throw 'cell variable is missing in file contract.cell.ts';
     }
-    const jsOutout = await buildTs(
-      { 'contract.cell.ts': contractCellContent?.content },
-      'contract.cell.ts'
-    );
+    try {
+      const jsOutout = await buildTs(
+        {
+          'contract.cell.ts': contractCellContent?.content,
+          'cell.ts': 'import cell from "./contract.cell.ts"; cell;',
+        },
+        'cell.ts'
+      );
+      const finalJsoutput = jsOutout[0].code
+        .replace(/^import\s+{/, 'const {')
+        .replace(/}\s+from\s.+/, '} = window.TonCore;');
 
-    const finalJsoutput = jsOutout[0].code
-      .replace(/^import\s+{/, 'const {')
-      .replace(/}\s+from\s.+/, '} = window.TonCore;');
-
-    cellBuilderRef.current.contentWindow.postMessage(
-      {
-        name: 'nujan-ton-ide',
-        type: 'abi-data',
-        code: finalJsoutput,
-      },
-      '*'
-    );
+      cellBuilderRef.current.contentWindow.postMessage(
+        {
+          name: 'nujan-ton-ide',
+          type: 'abi-data',
+          code: finalJsoutput,
+        },
+        '*'
+      );
+    } catch (error: any) {
+      if (error.message.includes("'default' is not exported by ")) {
+        throw "'default' is not exported by contract.cell.ts";
+      }
+      message.error('Something went wrong. Check browser console for details.');
+      throw error;
+    }
   };
 
   const onSubmit = async (formValues: any) => {
@@ -74,6 +84,7 @@ const ContractInteraction: FC<Props> = ({
       await createCell();
     } catch (error: any) {
       setIsLoading('');
+      console.log(error);
       if (typeof error === 'string') {
         message.error(error);
         return;
@@ -106,6 +117,7 @@ const ContractInteraction: FC<Props> = ({
         }
 
         await send(event.data.data);
+        message.success('Message sent successfully');
       } catch (error) {
         console.log('error', error);
       } finally {
@@ -118,7 +130,6 @@ const ContractInteraction: FC<Props> = ({
   }, [isLoading, tonConnector, network, contractAddress, contract]);
 
   const send = async (data: string) => {
-    console.log('contract inside 2', contract);
     sendMessage(data, contractAddress, contract, network, wallet);
   };
 

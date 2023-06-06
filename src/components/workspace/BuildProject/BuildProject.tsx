@@ -102,28 +102,38 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       projectId
     );
     if (stateInitContent && !stateInitContent.content) {
-      throw 'State init data is missing in file stateInit.cell.js';
+      throw 'State init data is missing in file stateInit.cell.ts';
     }
     if (!stateInitContent?.content?.includes('cell')) {
       throw 'cell variable is missing in file stateInit.cell.ts';
     }
-    const jsOutout = await buildTs(
-      { 'stateInit.cell.ts': stateInitContent?.content },
-      'stateInit.cell.ts'
-    );
+    try {
+      const jsOutout = await buildTs(
+        {
+          'stateInit.cell.ts': stateInitContent?.content,
+          'cell.ts': 'import cell from "./stateInit.cell.ts"; cell;',
+        },
+        'cell.ts'
+      );
+      const finalJsoutput = jsOutout[0].code
+        .replace(/^import\s+{/, 'const {')
+        .replace(/}\s+from\s.+/, '} = window.TonCore;');
 
-    const finalJsoutput = jsOutout[0].code
-      .replace(/^import\s+{/, 'const {')
-      .replace(/}\s+from\s.+/, '} = window.TonCore;');
-
-    cellBuilderRef.current.contentWindow.postMessage(
-      {
-        name: 'nujan-ton-ide',
-        type: 'state-init-data',
-        code: finalJsoutput,
-      },
-      '*'
-    );
+      cellBuilderRef.current.contentWindow.postMessage(
+        {
+          name: 'nujan-ton-ide',
+          type: 'state-init-data',
+          code: finalJsoutput,
+        },
+        '*'
+      );
+    } catch (error: any) {
+      if (error.message.includes("'default' is not exported by ")) {
+        throw "'default' is not exported by stateInit.cell.ts";
+      }
+      message.error('Something went wrong. Check browser console for details.');
+      throw error;
+    }
   };
 
   const createSandbox = async () => {
