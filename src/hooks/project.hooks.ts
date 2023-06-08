@@ -52,6 +52,7 @@ export function useProjectActions() {
     };
 
     createNewProject({ ...project }, files);
+    return projectId;
   }
 
   async function compileFuncProgram(file: Tree, projectId: Project['id']) {

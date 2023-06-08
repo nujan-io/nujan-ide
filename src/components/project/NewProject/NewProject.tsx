@@ -6,6 +6,7 @@ import { useForm } from 'antd/lib/form/Form';
 import { FC, useState } from 'react';
 
 import { useProjectActions } from '@/hooks/project.hooks';
+import Router from 'next/router';
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
@@ -32,11 +33,16 @@ const NewProject: FC = () => {
         throw `Project '${projectName}' already exists`;
       }
 
-      createProject(projectName, values.template, values?.file?.file);
+      const projectId = await createProject(
+        projectName,
+        values.template,
+        values?.file?.file
+      );
 
       form.resetFields();
       closeModal();
       message.success(`Project '${projectName}' created`);
+      Router.push(`/project/${projectId}`);
     } catch (error) {
       let messageText = 'Error in creating project';
       if (typeof error === 'string') {
