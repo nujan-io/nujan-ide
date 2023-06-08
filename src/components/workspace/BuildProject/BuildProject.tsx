@@ -215,7 +215,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         <ExecuteFile
           file={currentActiveFile}
           projectId={projectId as string}
-          label={environment === 'SANDBOX' ? 'Run' : 'Build'}
+          label={environment === 'SANDBOX' ? 'Deploy' : 'Build'}
           onCompile={() => {
             if (environment == 'SANDBOX') {
               initDeploy();
