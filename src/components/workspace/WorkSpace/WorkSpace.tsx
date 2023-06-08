@@ -1,5 +1,6 @@
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
@@ -31,7 +32,14 @@ const WorkSpace: FC = () => {
   };
 
   useEffect(() => {
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        EventEmitter.emit('SAVE_FILE', () => {});
+      }
+    });
     return () => {
+      document.removeEventListener('keydown', () => {});
       workspaceAction.closeAllFile();
     };
   }, []);

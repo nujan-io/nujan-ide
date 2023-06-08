@@ -1,9 +1,9 @@
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import { fileTypeFromFileName } from '@/utility/utils';
 import EditorDefault from '@monaco-editor/react';
-import { Button, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
 import s from './Editor.module.scss';
 
@@ -14,37 +14,72 @@ interface Props {
 }
 
 const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
-  const { updateFileContent, isProjectEditable, getFileContent } =
-    useWorkspaceActions();
+  const {
+    updateFileContent,
+    isProjectEditable,
+    getFileContent,
+    updateOpenFile,
+  } = useWorkspaceActions();
   const { user } = useAuthAction();
 
-  const [isFileDirty, setIsFileDirty] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
-  const [loop, setLoop] = useState(0);
-  const fileData = file;
+
+  // Using this extra state to trigger save file from js event
+  const [saveFileCounter, setSaveFileCounter] = useState(1);
+  const [initialFile, setInitialFile] = useState<Pick<
+    Tree,
+    'id' | 'content'
+  > | null>(null);
 
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
 
-  const saveFile = (isManual = false) => {
+  const saveFile = () => {
     if (!file.id) return;
     try {
       updateFileContent(file.id, editorRef.current.getValue());
-      if (isManual) {
-        message.success('File saved');
-      }
-      setIsFileDirty(false);
     } catch (error) {}
   };
 
   useEffect(() => {
-    const timer = setInterval(() => setLoop(Math.random()), 5000);
-    return () => clearInterval(timer);
+    setIsLoaded(true);
   }, []);
 
+  useEffect(() => {
+    const saveFileDebouce = setTimeout(() => {
+      saveFile();
+    }, 300);
+
+    return () => clearTimeout(saveFileDebouce);
+  }, [saveFileCounter]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    EventEmitter.on('SAVE_FILE', () => {
+      setSaveFileCounter((prev) => prev + 1);
+    });
+    return () => {
+      EventEmitter.off('SAVE_FILE');
+    };
+  }, [isLoaded]);
+
   const fetchFileContent = async () => {
+    if (!file.id || file.id === initialFile?.id) return;
     const content = await getFileContent(file.id);
     editorRef.current.setValue(content);
+    setInitialFile({ id: file.id, content });
+  };
+
+  const markFileDirty = () => {
+    if (
+      file.id !== initialFile?.id ||
+      !initialFile?.content ||
+      initialFile.content === editorRef.current.getValue()
+    ) {
+      return;
+    }
+    updateOpenFile(file.id, { isDirty: true });
   };
 
   useEffect(() => {
@@ -52,19 +87,12 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       return;
     }
     fetchFileContent();
-    // if (fileTypeFromFileName(fileData.name) === 'func') {
+    // if (fileTypeFromFileName(file.name) === 'func') {
     //   monacoRef.current.setTheme('func-theme');
     // } else {
     //   monacoRef.current.setTheme('vs-dark');
     // }
   }, [file, isEditorInitialized]);
-
-  useEffect(() => {
-    if (!isFileDirty) {
-      return;
-    }
-    saveFile();
-  }, [loop]);
 
   useEffect(() => {
     if (!monacoRef.current) {
@@ -87,25 +115,15 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   return (
     <div className={`${s.container} ${className}`}>
-      <Button
-        className={s.saveFile}
-        onClick={() => {
-          saveFile(true);
-        }}
-      >
-        Save
-      </Button>
       <EditorDefault
         className={s.editor}
-        path={fileData.id ? fileData.id : ''}
+        path={file.id ? file.id : ''}
         theme="vs-dark"
         // height="90vh"
-        defaultLanguage={`${fileTypeFromFileName(fileData.name)}`}
+        defaultLanguage={`${fileTypeFromFileName(file.name)}`}
         // defaultLanguage={`func`}
         defaultValue=""
-        onChange={() => {
-          setIsFileDirty(true);
-        }}
+        onChange={markFileDirty}
         options={{
           fontSize: 14,
           bracketPairColorization: {

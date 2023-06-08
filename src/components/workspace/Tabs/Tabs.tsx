@@ -41,8 +41,12 @@ const Tabs: FC<Props> = ({ projectId }) => {
             key={item.id}
           >
             {item.name}
-            <span className={s.close} onClick={(e) => closeTab(e, item.id!)}>
-              <AppIcon name="Close" />
+            <span
+              className={`${s.close} ${item.isDirty ? s.isDirty : ''}`}
+              onClick={(e) => closeTab(e, item.id!)}
+            >
+              <span className={s.fileDirtyIcon}></span>
+              <AppIcon name="Close" className={s.closeIcon} />
             </span>
           </div>
         ))}

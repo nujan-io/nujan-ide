@@ -6,7 +6,7 @@ export interface Tree {
   isOpen?: boolean;
   path?: string;
   content?: string;
-  isModified?: boolean;
+  isDirty?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

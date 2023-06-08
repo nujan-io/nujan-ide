@@ -22,6 +22,7 @@ function useWorkspaceActions() {
     updateProjectFiles,
     addFilesToDatabase,
     openFile,
+    updateOpenFile,
     renameItem,
     deleteItem,
     moveFile,
@@ -156,6 +157,19 @@ function useWorkspaceActions() {
     updateStateByKey({ openFiles });
   }
 
+  function updateOpenFile(id: Tree['id'], data: Partial<Tree>) {
+    const openFiles = openedFiles().map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          ...data,
+        };
+      }
+      return item;
+    });
+    updateStateByKey({ openFiles });
+  }
+
   function onFileRename(fileId: Tree['id'], name: string) {
     let files = cloneDeep(openedFiles());
     if (!files) return;
@@ -206,6 +220,7 @@ function useWorkspaceActions() {
 
   function updateFileContent(id: Tree['id'], content: string) {
     fileSystem.files.update(id, { content });
+    updateOpenFile(id, { isDirty: false });
   }
 
   async function updateProjectById(updateObject: any, projectId: string) {

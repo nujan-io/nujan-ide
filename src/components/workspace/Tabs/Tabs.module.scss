@@ -35,7 +35,21 @@
     }
     &:hover {
       .close {
-        visibility: visible;
+        &:not(.isDirty) {
+          .closeIcon {
+            visibility: visible !important;
+          }
+        }
+        &:hover {
+          &.isDirty {
+            .fileDirtyIcon {
+              visibility: hidden;
+            }
+            .closeIcon {
+              visibility: visible;
+            }
+          }
+        }
       }
     }
 
@@ -46,16 +60,43 @@
         visibility: visible;
       }
     }
+
     .close {
       display: inline-flex;
       margin-left: 5px;
       margin-top: 2px;
-      visibility: hidden;
       border-radius: 5px;
       padding: 1px;
+      position: relative;
+
       &:hover {
         background-color: #403d3d;
       }
+      &.isDirty {
+        .closeIcon {
+          visibility: hidden;
+        }
+        .fileDirtyIcon {
+          visibility: visible;
+        }
+      }
+    }
+
+    .fileDirtyIcon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      margin-right: 5px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      margin: auto;
+      pointer-events: none;
+      visibility: hidden;
     }
   }
 }
