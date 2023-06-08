@@ -1,4 +1,3 @@
-import { HowToUse } from '@/components/shared';
 import AppIcon from '@/components/ui/icon';
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
@@ -63,7 +62,6 @@ const ProjectListing: FC = () => {
           </Link>
         ))}
       </div>
-      <HowToUse />
     </div>
   );
 };
