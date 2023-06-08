@@ -1,4 +1,3 @@
-import AppIcon from '@/components/ui/icon';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
@@ -7,17 +6,25 @@ import { FC } from 'react';
 import s from './ExecuteFile.module.scss';
 
 interface Props {
-  file: Tree;
+  file: Tree | undefined;
   projectId: Project['id'];
+  onCompile?: () => void;
+  label?: string;
 }
-const ExecuteFile: FC<Props> = ({ file, projectId }) => {
+const ExecuteFile: FC<Props> = ({
+  file,
+  projectId,
+  onCompile,
+  label = 'Compile',
+}) => {
   const { compileTsFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
-  const fileExtension = file.name.split('.').pop();
+  const fileExtension = file?.name?.split('.').pop();
 
   const allowedFile = ['fc'];
 
   const buildFile = async () => {
+    if (!file) return;
     try {
       switch (fileExtension) {
         case 'ts':
@@ -25,7 +32,10 @@ const ExecuteFile: FC<Props> = ({ file, projectId }) => {
           break;
         case 'fc':
           const response = await compileFuncProgram(file, projectId);
-          message.success('Compiled successfully');
+          if (onCompile) {
+            onCompile();
+          }
+          message.success('Built successfully');
           break;
       }
     } catch (error) {
@@ -41,6 +51,7 @@ const ExecuteFile: FC<Props> = ({ file, projectId }) => {
   };
 
   const isFileAllowed = () => {
+    if (!file) return false;
     if (file.name.split('.').pop() === undefined) return false;
     return allowedFile.includes(file.name.split('.').pop() as string);
   };
@@ -48,14 +59,15 @@ const ExecuteFile: FC<Props> = ({ file, projectId }) => {
   return (
     <>
       <Button
+        type="primary"
         className={s.tsAction}
         disabled={!isFileAllowed()}
         onClick={() => {
           buildFile();
         }}
+        title={label === 'Deploy' ? 'Build and Deploy' : 'Build'}
       >
-        <AppIcon name="Play" />
-        {fileExtension === 'fc' ? 'Compile' : 'Run'}
+        {label} {file ? file.name : '<no file selected>'}
       </Button>
     </>
   );

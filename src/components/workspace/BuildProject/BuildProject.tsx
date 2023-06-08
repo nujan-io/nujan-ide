@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
+import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import s from './BuildProject.module.scss';
 interface Props {
   projectId: string;
@@ -39,8 +40,16 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   const { Option } = Select;
 
-  const { projectFiles, getFileByPath, updateProjectById, project } =
-    useWorkspaceActions();
+  const {
+    projectFiles,
+    getFileByPath,
+    updateProjectById,
+    project,
+    activeFile,
+  } = useWorkspaceActions();
+
+  const currentActiveFile = activeFile(projectId as string);
+
   const { deployContract } = useContractAction();
 
   const activeProject = project(projectId);
@@ -181,7 +190,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   return (
     <div className={s.root}>
-      <h3 className={s.heading}>Deploy</h3>
+      <h3 className={s.heading}>Build & Deploy</h3>
       <iframe
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
@@ -202,15 +211,28 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
       {environment !== 'SANDBOX' && <TonAuth />}
 
-      <br />
-      <Button
-        type="primary"
-        loading={isLoading == 'deploy'}
-        onClick={initDeploy}
-        disabled={!activeProject?.contractBOC}
-      >
-        Deploy
-      </Button>
+      <div className={s.actionWrapper}>
+        <ExecuteFile
+          file={currentActiveFile}
+          projectId={projectId as string}
+          label={environment === 'SANDBOX' ? 'Run' : 'Build'}
+          onCompile={() => {
+            if (environment == 'SANDBOX') {
+              initDeploy();
+            }
+          }}
+        />
+        {environment !== 'SANDBOX' && (
+          <Button
+            type="primary"
+            loading={isLoading == 'deploy'}
+            onClick={initDeploy}
+            disabled={!currentActiveFile || !activeProject?.contractBOC}
+          >
+            Deploy
+          </Button>
+        )}
+      </div>
       {!activeProject?.contractBOC && (
         <p className={s.info}>Build your contract before deploy</p>
       )}
