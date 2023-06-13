@@ -8,6 +8,7 @@ import {
 import { SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
+import BN from 'bn.js';
 import { StateInit, TonClient } from 'ton';
 import {
   Address,
@@ -53,8 +54,9 @@ export function useContractAction() {
       );
       const userContract = sandboxBlockchain.openContract(_userContract);
       const response = await userContract.sendData(wallet.getSender());
-
-      message.success('Contract Deployed');
+      if (network.toUpperCase() !== 'SANDBOX') {
+        message.success('Contract Deployed');
+      }
       return {
         address: _userContract.address.toString(),
         contract: userContract,
@@ -143,8 +145,22 @@ export function useContractAction() {
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
   ) {
+    const parsedStack = stack?.map((item) => {
+      switch (item.type) {
+        case 'int':
+          return { type: item.type, value: new BN(item.value.toString()) };
+        default:
+          return {
+            type: item.type,
+            cell: Cell.fromBoc(
+              Buffer.from((item as any).value.toString(), 'base64')
+            )[0],
+          };
+      }
+    });
+
     if (network === 'SANDBOX' && contract) {
-      const call = await contract.getData(methodName, stack);
+      const call = await contract.getData(methodName, parsedStack as any);
       return call.stack.peek();
     }
 

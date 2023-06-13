@@ -3,9 +3,10 @@ import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import { fileTypeFromFileName } from '@/utility/utils';
-import EditorDefault from '@monaco-editor/react';
+import EditorDefault, { loader } from '@monaco-editor/react';
 import { FC, useEffect, useRef, useState } from 'react';
 import s from './Editor.module.scss';
+import { editorOnMount } from './EditorOnMount';
 
 interface Props {
   file: Tree;
@@ -43,7 +44,24 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   };
 
   useEffect(() => {
-    setIsLoaded(true);
+    async function loadMonacoEditor() {
+      let monaco = await import('monaco-editor');
+
+      (window as any).MonacoEnvironment.getWorkerUrl = (
+        _: string,
+        label: string
+      ) => {
+        // an example of returning a worker url for json language
+        if (label === 'typescript') {
+          return '/_next/static/ts.worker.js';
+        }
+
+        return '/_next/static/editor.worker.js';
+      };
+      loader.config({ monaco });
+      await loader.init();
+    }
+    loadMonacoEditor().then(() => setIsLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -113,11 +131,15 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monacoRef.current]);
 
+  if (!isLoaded) {
+    return <div className={`${s.container} ${className}`}>Loading...</div>;
+  }
+
   return (
     <div className={`${s.container} ${className}`}>
       <EditorDefault
         className={s.editor}
-        path={file.id ? file.id : ''}
+        path={file.id ? file.id + file.name : ''}
         theme="vs-dark"
         // height="90vh"
         defaultLanguage={`${fileTypeFromFileName(file.name)}`}
@@ -134,202 +156,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         onMount={async (editor, monaco) => {
           editorRef.current = editor;
           monacoRef.current = monaco.editor;
+
           setIsEditorInitialized(true);
-          monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-            experimentalDecorators: false,
-          });
-
-          const keywords = [
-            'impure',
-            'inline',
-            'global',
-            'return',
-            'cell',
-            'slice',
-            'if',
-            'while',
-          ];
-
-          let globalMethods = ['get_data', 'set_data', 'begin_cell'];
-
-          const types = ['int', 'var'];
-
-          const messageMethods = ['recv_internal', 'recv_external'];
-
-          monaco.languages.register({ id: 'func' });
-          monaco.languages.setMonarchTokensProvider('func', {
-            keywords: keywords,
-            globalMethods,
-            messageMethods,
-            types,
-            symbols: /[=><!~?:&|+\-*\/\^%]+/,
-            escapes:
-              /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
-            operators: [
-              '=',
-              '>',
-              '<',
-              '!',
-              '~',
-              '?',
-              ':',
-              '==',
-              '<=',
-              '>=',
-              '!=',
-              '&&',
-              '||',
-              '++',
-              '--',
-              '+',
-              '-',
-              '*',
-              '/',
-              '&',
-              '|',
-              '^',
-              '%',
-              '<<',
-              '>>',
-              '>>>',
-              '+=',
-              '-=',
-              '*=',
-              '/=',
-              '&=',
-              '|=',
-              '^=',
-              '%=',
-              '<<=',
-              '>>=',
-              '>>>=',
-            ],
-            tokenizer: {
-              root: [
-                // identifiers and keywords
-                [
-                  /[a-z_$][\w$]*/,
-                  {
-                    cases: {
-                      '@globalMethods': 'string',
-                      '@types': 'type.keyword',
-                      '@messageMethods': 'annotation',
-                      '@keywords': 'keyword',
-                      '@default': 'identifier',
-                    },
-                  },
-                ],
-                [/[A-Z][\w\$]*/, 'type.identifier'],
-
-                // whitespace
-                { include: '@whitespace' },
-
-                // delimiters and operators
-                [/[{}()\[\]]/, '@brackets'],
-
-                [/[<>](?!@symbols)/, '@brackets'],
-                [
-                  /@symbols/,
-                  { cases: { '@operators': 'operator', '@default': '' } },
-                ],
-
-                // numbers
-                [/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
-                [/0[xX][0-9a-fA-F]+/, 'number.hex'],
-                [/\d+/, 'number'],
-                [/(;;.*\n)+/, 'comment'],
-
-                // delimiter: after number because of .\d floats
-                [/[;,.]/, 'delimiter'],
-                [/(^#include.*\;)/, 'include'],
-
-                // strings
-                // [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
-                // [
-                //   /"/,
-                //   { token: 'string.quote', bracket: '@open', next: '@string' },
-                // ],
-
-                // characters
-                // [/'[^\\']'/, 'string'],
-                // [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
-                // [/'/, 'string.invalid'],
-              ],
-
-              string: [
-                // [/[^\\"]+/, 'string'],
-                // [/@escapes/, 'string.escape'],
-                // [/\\./, 'string.escape.invalid'],
-              ],
-
-              whitespace: [
-                [/[ \t\r\n]+/, 'white'],
-                [/\;\;.*$/, 'comment'],
-              ],
-            },
-          });
-
-          monaco.editor.defineTheme('func-theme', {
-            base: 'vs-dark',
-            inherit: true,
-            rules: [
-              {
-                token: 'keyword',
-                foreground: '#f97583',
-                fontStyle: 'bold',
-              },
-              {
-                token: '@brackets',
-                foreground: '#ff0000',
-              },
-              {
-                token: 'string',
-                foreground: '#009966',
-              },
-              {
-                token: 'variable',
-                foreground: '#006699',
-              },
-              {
-                token: 'include',
-                foreground: '#3bd0e9',
-              },
-            ],
-            colors: {},
-          });
-
-          monaco.languages.registerCompletionItemProvider('func', {
-            provideCompletionItems: (model, position) => {
-              var word = model.getWordUntilPosition(position);
-              var range = {
-                startLineNumber: position.lineNumber,
-                endLineNumber: position.lineNumber,
-                startColumn: word.startColumn,
-                endColumn: word.endColumn,
-              };
-              const suggestions = [
-                ...keywords.map((k) => {
-                  return {
-                    label: k,
-                    kind: monaco.languages.CompletionItemKind.Keyword,
-                    insertText: k,
-                    range,
-                  };
-                }),
-                ...globalMethods.map((k) => {
-                  return {
-                    label: k,
-                    kind: monaco.languages.CompletionItemKind.Function,
-                    insertText: k,
-                    range,
-                  };
-                }),
-              ];
-
-              return { suggestions: suggestions };
-            },
-            // triggerCharacters: ['/'],
-          });
+          editorOnMount(editor, monaco);
         }}
       />
     </div>
