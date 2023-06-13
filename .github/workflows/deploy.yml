@@ -1,0 +1,36 @@
+name: Deploy CI
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install vercel cli in global
+        run: npm install -g vercel@25.1.0
+      - uses: amondnet/vercel-action@v20
+        id: now-deployment-staging
+        if: github.ref != 'refs/heads/main'
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          scope: ${{ secrets.VERCEL_SCOPE }}
+          alias-domains: |
+            nujan-ide-{{BRANCH}}.vercel.app
+      - uses: amondnet/vercel-action@v20
+        id: now-deployment-production
+        if: github.ref == 'refs/heads/main'
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          scope: ${{ secrets.VERCEL_SCOPE }}
+          vercel-args: "${{ github.ref == 'refs/heads/master' && '--prod' || '' }}"
+          alias-domains: |
+            nujan-ide.vercel.app
