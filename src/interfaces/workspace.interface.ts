@@ -49,3 +49,5 @@ export interface ABI {
   name: string;
   parameters: ABIParameter[];
 }
+
+export type ParameterType = 'address' | 'cell' | 'slice' | 'int';

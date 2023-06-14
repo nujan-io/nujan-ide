@@ -233,9 +233,9 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
           </Button>
         )}
       </div>
-      {!activeProject?.contractBOC && (
+      {/* {!activeProject?.contractBOC && (
         <p className={s.info}>Build your contract before deploy</p>
-      )}
+      )} */}
 
       {activeProject?.contractAddress!! && environment !== 'SANDBOX' && (
         <div className={`${s.contractAddress} wrap`}>

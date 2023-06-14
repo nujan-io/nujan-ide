@@ -1,5 +1,8 @@
-import { NetworkEnvironment } from '@/interfaces/workspace.interface';
-import { getHttpEndpoint, Network } from '@orbs-network/ton-access';
+import {
+  NetworkEnvironment,
+  ParameterType,
+} from '@/interfaces/workspace.interface';
+import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
 import {
   Blockchain,
   SandboxContract,
@@ -12,15 +15,15 @@ import BN from 'bn.js';
 import { StateInit, TonClient } from 'ton';
 import {
   Address,
-  beginCell,
   Cell,
   Contract,
-  contractAddress,
   ContractProvider,
   Sender,
+  TupleItem,
+  beginCell,
+  contractAddress,
   storeStateInit,
   toNano,
-  TupleItem,
 } from 'ton-core';
 
 export function useContractAction() {
@@ -146,13 +149,23 @@ export function useContractAction() {
     network?: Network | Partial<NetworkEnvironment>
   ) {
     const parsedStack = stack?.map((item) => {
-      switch (item.type) {
+      switch (item.type as ParameterType) {
         case 'int':
-          return { type: item.type, value: new BN(item.value.toString()) };
+          return {
+            type: item.type,
+            value: new BN((item as any).value.toString()),
+          };
+        case 'address':
+          return {
+            type: 'slice',
+            cell: beginCell()
+              .storeAddress(Address.parse((item as any).value))
+              .endCell(),
+          };
         default:
           return {
             type: item.type,
-            cell: Cell.fromBoc(
+            value: Cell.fromBoc(
               Buffer.from((item as any).value.toString(), 'base64')
             )[0],
           };
@@ -161,7 +174,7 @@ export function useContractAction() {
 
     if (network === 'SANDBOX' && contract) {
       const call = await contract.getData(methodName, parsedStack as any);
-      return call.stack.peek();
+      return parseReponse(call.stack.peek());
     }
 
     const endpoint = await getHttpEndpoint({
@@ -174,7 +187,7 @@ export function useContractAction() {
       stack
     );
 
-    return call.stack.peek();
+    return parseReponse(call.stack.peek());
   }
 }
 
@@ -208,5 +221,32 @@ export class UserContract implements Contract {
     stackInput: TupleItem[] = []
   ) {
     return provider.get(methodName, stackInput);
+  }
+}
+
+function parseReponse(tupleItem: TupleItem) {
+  if (tupleItem.type === 'null') return;
+
+  if (['cell', 'slice', 'builder'].includes(tupleItem.type)) {
+    const cell = (tupleItem as any).cell as Cell;
+    try {
+      if (cell.beginParse().remainingBits === 267) {
+        return {
+          type: 'address',
+          value: cell.beginParse().loadAddress().toString(),
+        };
+      }
+      return {
+        type: 'base64',
+        value: cell.toBoc().toString('base64'),
+      };
+    } catch (e) {
+      console.log(e);
+      // Ignore
+    }
+  } else if (tupleItem.type === 'int') {
+    return { type: 'int', value: (tupleItem as any).value.toString() };
+  } else {
+    return { type: 'raw', value: String((tupleItem as any).value) };
   }
 }

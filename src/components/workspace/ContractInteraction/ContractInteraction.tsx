@@ -156,7 +156,7 @@ const ContractInteraction: FC<Props> = ({
 
       {abi && abi.length > 0 && (
         <>
-          <h3 className={s.label}>Getter:</h3>
+          <h3 className={s.label}>Getters ({abi.length}):</h3>
           {abi.map((item, i) => (
             <ABIUi
               abi={item}
@@ -176,6 +176,7 @@ const ContractInteraction: FC<Props> = ({
           type="default"
           htmlType="submit"
           loading={isLoading === 'setter'}
+          className={s.sendMessage}
         >
           Send Internal Message
         </Button>

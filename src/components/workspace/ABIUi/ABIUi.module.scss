@@ -1,5 +1,9 @@
 .root {
   margin: 1rem 0;
+  border: 1px solid #555050;
+  border-radius: 5px;
+  background-color: #363535;
+  padding: 5px;
   .formItemABI {
     margin-bottom: 3px;
   }
@@ -7,14 +11,16 @@
     word-break: break-word;
   }
   .btnAction {
-    background-color: #478d23 !important;
+    background-color: #4f912c !important;
     color: #fff !important;
     border: 0 !important;
     font-weight: 500;
+    width: 100%;
   }
   .abiResponse {
     font-weight: 500;
-    color: #478d23;
+    color: #a0e67d;
     margin-top: 0.5rem;
+    padding: 5px;
   }
 }
