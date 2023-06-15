@@ -10,6 +10,10 @@ export const editorOnMount = (
   monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
     experimentalDecorators: false,
   });
+  // Supress typescript import errors
+  monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    diagnosticCodesToIgnore: [2307],
+  });
 
   const keywords = [
     'impure',
