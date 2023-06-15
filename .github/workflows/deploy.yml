@@ -34,3 +34,4 @@ jobs:
           vercel-args: "${{ github.ref == 'refs/heads/master' && '--prod' || '' }}"
           alias-domains: |
             nujan-ide.vercel.app
+            ide.nujan.io
