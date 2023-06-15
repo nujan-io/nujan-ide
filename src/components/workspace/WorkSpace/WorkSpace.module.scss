@@ -11,7 +11,7 @@
     flex: 0 0 250px;
     width: 250px;
     background-color: #393939;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     div[class*='ant-spin-nested-loading'] {
       height: 4rem;
