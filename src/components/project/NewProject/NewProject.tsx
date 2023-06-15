@@ -3,9 +3,10 @@ import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { UploadOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 
 import { useProjectActions } from '@/hooks/project.hooks';
+import EventEmitter from '@/utility/eventEmitter';
 import Router from 'next/router';
 import s from './NewProject.module.scss';
 
@@ -58,16 +59,33 @@ const NewProject: FC = () => {
     setIsActive(false);
   };
 
+  useEffect(() => {
+    EventEmitter.on('ONBOARDOING_NEW_PROJECT', () => {
+      setIsActive(true);
+    });
+    return () => {
+      EventEmitter.off('ONBOARDOING_NEW_PROJECT');
+    };
+  }, []);
+
   return (
     <>
-      <div className={`${s.root}`} onClick={() => setIsActive(true)}>
+      <div
+        className={`${s.root} onboarding-new-project`}
+        onClick={() => setIsActive(true)}
+      >
         <span>
           {' '}
           <AppIcon name="Plus" className={s.newIcon} /> <br />
           New Project
         </span>
       </div>
-      <Modal open={isActive} onCancel={closeModal} footer={null}>
+      <Modal
+        className="onboarding-new-project-form"
+        open={isActive}
+        onCancel={closeModal}
+        footer={null}
+      >
         <span className={s.title}>New Project</span>
         <Form
           form={form}
@@ -86,7 +104,7 @@ const NewProject: FC = () => {
               { required: true, message: 'Please input your project name!' },
             ]}
           >
-            <Input placeholder="Ex. NFT Project" />
+            <Input placeholder="Ex. Counter" />
           </Form.Item>
 
           <Form.Item

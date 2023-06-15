@@ -38,6 +38,7 @@
     "react-dnd": "^16.0.1",
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
+    "react-joyride": "^2.5.4",
     "recoil": "^0.7.7",
     "recoil-persist": "^4.2.0",
     "sass": "^1.58.3",

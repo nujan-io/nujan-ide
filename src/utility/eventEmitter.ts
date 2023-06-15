@@ -8,7 +8,7 @@ const EventEmitter = {
     eventEmitter.once(event, fn),
   off: (event: any, fn?: ((...args: any[]) => void) | undefined) =>
     eventEmitter.off(event, fn),
-  emit: (event: any, payload: any) => eventEmitter.emit(event, payload),
+  emit: (event: any, payload: any = null) => eventEmitter.emit(event, payload),
 };
 
 Object.freeze(EventEmitter);

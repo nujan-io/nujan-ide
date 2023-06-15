@@ -1,6 +1,6 @@
 import { AppLogo } from '@/components/ui';
-import { useAuthAction } from '@/hooks/auth.hooks';
-import { useTonConnectUI } from '@tonconnect/ui-react';
+import AppIcon from '@/components/ui/icon';
+import { useUserOnboardingAction } from '@/hooks/userOnboarding.hooks';
 import { FC } from 'react';
 import s from './DashboardSidebar.module.scss';
 
@@ -9,18 +9,21 @@ interface Props {
 }
 
 const DashboardSidebar: FC<Props> = ({ className }) => {
-  const { logout } = useAuthAction();
-  const [tonConnector] = useTonConnectUI();
+  const { startOnboarding } = useUserOnboardingAction();
 
   return (
     <div className={`${s.root} ${className}`}>
-      <AppLogo className={s.brandLogo} />
+      <AppLogo className={`${s.brandLogo}`} />
 
       <div className={s.menuItems}>
         <div>
-          <span className={s.name}>
-            Welcome 👋
-            {/* <br /> {session?.user?.name} */}
+          <span className={`${s.name} ${s.item}`}>Welcome 👋</span>
+          <span
+            className={`${s.name} ${s.item}`}
+            onClick={() => startOnboarding(0)}
+          >
+            <AppIcon name="Play" />
+            Start help wizard
           </span>
         </div>
       </div>

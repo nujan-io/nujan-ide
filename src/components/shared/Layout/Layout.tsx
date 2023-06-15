@@ -1,4 +1,5 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
+import UserOnboardingWizard from '../UserOnboardingWizard';
 import s from './Layout.module.scss';
 
 interface Props {
@@ -6,7 +7,20 @@ interface Props {
   children: React.ReactNode;
 }
 export const Layout: FC<Props> = ({ className, children }) => {
-  return <main className={s.root}>{children}</main>;
+  const [isLoaded, setIsLoaded] = useState(false);
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  if (!isLoaded) {
+    return <></>;
+  }
+  return (
+    <>
+      <UserOnboardingWizard />
+      <main className={s.root}>{children}</main>
+    </>
+  );
 };
 
 export default Layout;

@@ -17,6 +17,7 @@ import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
+
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -53,7 +54,7 @@ const WorkSpace: FC = () => {
 
   return (
     <div className={`${s.root} show-file-icons`}>
-      <div className={s.sidebar}>
+      <div className={`${s.sidebar} onboarding-workspace-sidebar`}>
         <WorkspaceSidebar
           activeMenu={activeMenu}
           projectId={projectId as string}
@@ -70,7 +71,7 @@ const WorkSpace: FC = () => {
           <ProjectSetting projectId={projectId as Project['id']} />
         )}
         {isLoaded && activeMenu === 'code' && (
-          <>
+          <div className="onboarding-file-explorer">
             <div className={s.globalAction}>
               <span>Project</span>
               <ItemAction
@@ -88,7 +89,7 @@ const WorkSpace: FC = () => {
               </Spin>
             )}
             <FileTree projectId={projectId as string} />
-          </>
+          </div>
         )}
         {(activeMenu === 'build' || activeMenu === 'test-cases') && (
           <BuildProject
@@ -97,7 +98,7 @@ const WorkSpace: FC = () => {
           />
         )}
       </div>
-      <div className={s.workArea}>
+      <div className={`${s.workArea} onboarding-code-editor`}>
         {isLoaded && (
           <>
             {activeMenu !== 'test-cases' && (

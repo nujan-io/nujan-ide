@@ -189,7 +189,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   }, [buildOutput?.dataCell]);
 
   return (
-    <div className={s.root}>
+    <div className={`${s.root} onboarding-build-deploy`}>
       <h3 className={s.heading}>Build & Deploy</h3>
       <iframe
         className={s.cellBuilderRef}

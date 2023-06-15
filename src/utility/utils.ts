@@ -44,3 +44,9 @@ export const objectToJSON = (obj: Object) => {
   }
   return input;
 };
+
+export const delay = (timeout: number) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+};
