@@ -53,7 +53,7 @@ export const userOnboardingSteps = {
     {
       target: '.onboarding-file-explorer',
       disableBeacon: true,
-      placement: 'right' as Placement,
+      placement: 'right-start' as Placement,
       title: 'File Explorer',
       content: (
         <div>

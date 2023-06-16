@@ -11,8 +11,11 @@
     flex: 0 0 250px;
     width: 250px;
     background-color: #393939;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
-    overflow-x: hidden;
+    :global(.onboarding-active) & {
+      overflow: initial !important;
+    }
     div[class*='ant-spin-nested-loading'] {
       height: 4rem;
     }
