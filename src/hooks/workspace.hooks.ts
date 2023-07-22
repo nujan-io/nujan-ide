@@ -318,6 +318,7 @@ function useWorkspaceActions() {
     projectId: string
   ) {
     const item = searchNode(id as string, projectId, 'parent');
+    const currentItem = searchNode(id as string, projectId);
     if (isFileExists(name, projectId, item.node?.parent || '')) {
       return;
     }
@@ -326,7 +327,7 @@ function useWorkspaceActions() {
       type,
       name,
       id as string,
-      item.node?.path || ''
+      currentItem.node?.path || ''
     );
     if (type === 'file') {
       await fileSystem.files.add({ id: newItem.id, content: '' });
