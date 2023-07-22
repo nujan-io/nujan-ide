@@ -1,11 +1,13 @@
 .root {
   font-size: 0.8rem;
-  border-top: 1px solid #6a6a6a;
+  // border-top: 1px solid #6a6a6a;
   margin-top: 0rem;
   .cellBuilderRef {
     visibility: hidden;
     width: 1px;
     height: 1px;
+    float: left;
+    border: 0;
   }
   .label {
     opacity: 0.8;

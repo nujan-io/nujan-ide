@@ -5,30 +5,41 @@ import { Button, message } from 'antd';
 import { FC } from 'react';
 import s from './ExecuteFile.module.scss';
 
+type ButtonClick =
+  | React.MouseEvent<HTMLButtonElement, MouseEvent>
+  | React.MouseEvent<HTMLAnchorElement, MouseEvent>;
 interface Props {
   file: Tree | undefined;
   projectId: Project['id'];
   onCompile?: () => void;
+  onClick?: (e: ButtonClick, data: string) => void;
   label?: string;
+  description?: string;
+  allowedFile: string[];
 }
 const ExecuteFile: FC<Props> = ({
   file,
   projectId,
   onCompile,
+  onClick,
   label = 'Compile',
+  description = '',
+  allowedFile = [],
 }) => {
   const { compileTsFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
-  const fileExtension = file?.name?.split('.').pop();
+  const fileExtension = file?.name?.split('.').slice(1).join('.');
 
-  const allowedFile = ['fc'];
-
-  const buildFile = async () => {
+  const buildFile = async (e: ButtonClick) => {
     if (!file) return;
     try {
       switch (fileExtension) {
         case 'ts':
           const code = await compileTsFile(file, projectId);
+          break;
+        case 'spec.ts':
+          if (!onClick || !file.path) return;
+          onClick(e, file.path);
           break;
         case 'fc':
           const response = await compileFuncProgram(file, projectId);
@@ -52,24 +63,23 @@ const ExecuteFile: FC<Props> = ({
 
   const isFileAllowed = () => {
     if (!file) return false;
-    if (file.name.split('.').pop() === undefined) return false;
-    return allowedFile.includes(file.name.split('.').pop() as string);
+    if (fileExtension === undefined) return false;
+    return allowedFile.includes(fileExtension as string);
   };
 
   return (
-    <>
+    <div className={s.root}>
+      {description && <p className={s.desc}>{description}</p>}
       <Button
         type="primary"
-        className={s.tsAction}
+        className={`${s.action} w-100`}
         disabled={!isFileAllowed()}
-        onClick={() => {
-          buildFile();
-        }}
-        title={label === 'Deploy' ? 'Build and Deploy' : 'Build'}
+        onClick={buildFile}
+        title={`${label}: ${file?.name}`}
       >
         {label} {file ? file.name : '<no file selected>'}
       </Button>
-    </>
+    </div>
   );
 };
 

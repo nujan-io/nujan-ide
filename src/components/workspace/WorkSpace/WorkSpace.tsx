@@ -91,36 +91,26 @@ const WorkSpace: FC = () => {
             <FileTree projectId={projectId as string} />
           </div>
         )}
-        {(activeMenu === 'build' || activeMenu === 'test-cases') && (
+        {activeMenu === 'build' && (
           <BuildProject
             projectId={projectId as string}
             onCodeCompile={(_codeBOC) => {}}
           />
         )}
+        {activeMenu === 'test-cases' && (
+          <div className={s.testCaseArea}>
+            <TestCases projectId={projectId as string} />
+          </div>
+        )}
       </div>
       <div className={`${s.workArea} onboarding-code-editor`}>
         {isLoaded && (
           <>
-            {activeMenu !== 'test-cases' && (
-              <div className={s.tabsWrapper}>
-                <Tabs projectId={projectId as string} />
-              </div>
-            )}
+            <div className={s.tabsWrapper}>
+              <Tabs projectId={projectId as string} />
+            </div>
 
-            {activeMenu === 'test-cases' && (
-              <div className={s.testCaseArea}>
-                {activeProject?.contractBOC ? (
-                  <TestCases
-                    codeBOC={activeProject?.contractBOC}
-                    projectId={projectId as string}
-                  />
-                ) : (
-                  <h3>Build Your project first to run test cases</h3>
-                )}
-              </div>
-            )}
-
-            {activeFile && activeMenu !== 'test-cases' && (
+            {activeFile && (
               <Editor
                 file={activeFile as any}
                 projectId={projectId as string}

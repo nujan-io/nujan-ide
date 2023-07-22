@@ -1,8 +1,17 @@
-.tsAction {
-  // height: 2.7rem;
-  // border: 0 !important;
-  // border-radius: 0;
-  // border-right: 1px solid #2c2b2b !important;
-  // display: flex;
-  // align-items: center;
+.root {
+  border-bottom: 1px solid #6a6a6a;
+  padding-bottom: 1rem;
+  .desc {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  .action {
+    span {
+      word-wrap: break-word;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+  }
 }

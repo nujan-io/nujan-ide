@@ -5,13 +5,30 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Web</title>
+    <title>Test Cases</title>
     <link href="https://unpkg.com/jest-lite@1.0.0-alpha.4/dist/prettify.css" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet" />
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #222;
+        }
+
+        .jest-lite-report {
+            --spacing: 0.5rem;
+            font-family: Poppins;
+            font-size: 0.9rem;
+            background: transparent;
+        }
+
+        .jest-lite-report__status {
+            padding: 0.05rem 0.2rem;
+        }
+
+        .jest-lite-report__status--pass {
+            background: var(--color-pass);
         }
     </style>
 </head>
@@ -19,7 +36,6 @@
 <body>
     <div id="result"></div>
 
-    <script src="https://cdn.jsdelivr.net/gh/toncenter/tonweb@master/dist/tonweb.js"></script>
     <script src="https://unpkg.com/jest-lite@1.0.0-alpha.4/dist/core.js"></script>
     <script src="https://unpkg.com/jest-lite@1.0.0-alpha.4/dist/prettify.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/ton-core.js"></script>
@@ -27,16 +43,40 @@
 
 
     <script>
+        let { Cell } = window.TonCore;
+        let contractCode = '';
+        const {
+            core: { describe, it, expect, run, beforeAll, beforeEach },
+            prettify,
+        } = window.jestLite
+
+        function bocToCell(codeBoc) {
+            return Cell.fromBoc(Buffer.from(codeBoc, 'base64'))[0];
+        }
+
         window.addEventListener('message', async function (event) {
             if (!event.data || typeof event.data !== "object" || !event.data?.type || event.data?.name !== 'nujan-ton-ide' || event.data?.type !== 'test-cases') {
                 return;
             }
-            const code = `async function main() {
+            contractCode = `async function main() {
                 ${event.data.code}
                 prettify.toHTML(run(), document.getElementById('result'))
             } main()`;
-            const output = await eval(code);
+            executeCodeInIframe(contractCode)
         });
+
+        function executeCodeInIframe(codeInput) {
+
+            let script = document.getElementById('dynamicScript');
+
+            if (!script) {
+                script = document.createElement('script');
+                script.id = 'dynamicScript';
+                document.body.appendChild(script);
+            }
+
+            script.textContent = codeInput;
+        }
     </script>
 </body>
 

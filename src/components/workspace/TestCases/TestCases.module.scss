@@ -1,7 +1,10 @@
 .root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   .testResult {
     border: 0;
     width: 100%;
-    height: 90vh;
+    height: 100%;
   }
 }

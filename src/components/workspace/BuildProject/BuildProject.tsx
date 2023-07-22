@@ -215,7 +215,9 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         <ExecuteFile
           file={currentActiveFile}
           projectId={projectId as string}
-          label={environment === 'SANDBOX' ? 'Deploy' : 'Build'}
+          label={environment === 'SANDBOX' ? 'Build and Deploy' : 'Build'}
+          description="Write a contract in a file with the extension .fc, and open it in a new tab to build it."
+          allowedFile={['fc']}
           onCompile={() => {
             if (environment == 'SANDBOX') {
               initDeploy();

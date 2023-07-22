@@ -41,6 +41,11 @@ const WorkspaceSidebar: FC<Props> = ({
       value: 'build',
       icon: 'Beaker',
     },
+    {
+      label: 'Unit Test',
+      value: 'test-cases',
+      icon: 'TestCases',
+    },
   ];
 
   return (

@@ -55,7 +55,10 @@ export function useProjectActions() {
     return projectId;
   }
 
-  async function compileFuncProgram(file: Tree, projectId: Project['id']) {
+  async function compileFuncProgram(
+    file: Pick<Tree, 'path'>,
+    projectId: Project['id']
+  ) {
     const fileList: any = {};
 
     let filesToProcess = [file?.path];

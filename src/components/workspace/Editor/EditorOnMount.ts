@@ -13,6 +13,7 @@ export const editorOnMount = (
   // Supress typescript import errors
   monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
     diagnosticCodesToIgnore: [2307],
+    noSemanticValidation: true,
   });
 
   const keywords = [
