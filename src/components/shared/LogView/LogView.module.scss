@@ -1,0 +1,38 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  .tab {
+    display: inline-flex;
+    color: rgb(130, 129, 129);
+    margin-left: 1rem;
+    border-bottom: 1px solid rgb(76, 76, 76);
+  }
+  .item {
+    display: flex;
+    gap: 5px;
+  }
+  .type {
+    font-weight: bold;
+    color: #fff;
+    text-transform: uppercase;
+    &__info {
+      color: #2196f3;
+    }
+    &__warning {
+      color: #ffc107;
+    }
+    &__success {
+      color: #4caf50;
+    }
+    &__error {
+      color: #f44336;
+    }
+  }
+  .timestamp {
+    color: #666;
+  }
+}

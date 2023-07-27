@@ -1,0 +1,13 @@
+.root {
+  height: 10rem;
+  padding-top: 0.7rem;
+  background-color: #151515;
+  .tab {
+    display: inline-flex;
+    color: rgb(130, 129, 129);
+    margin-left: 0.5rem;
+    border-bottom: 1px solid rgb(76, 76, 76);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+}
