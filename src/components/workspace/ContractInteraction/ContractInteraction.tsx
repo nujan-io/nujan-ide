@@ -1,4 +1,5 @@
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ABI, NetworkEnvironment } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
@@ -29,6 +30,7 @@ const ContractInteraction: FC<Props> = ({
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
   const { getFileByPath } = useWorkspaceActions();
+  const { createLog } = useLogActivity();
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
@@ -68,7 +70,10 @@ const ContractInteraction: FC<Props> = ({
       if (error.message.includes("'default' is not exported by ")) {
         throw "'default' is not exported by contract.cell.ts";
       }
-      message.error('Something went wrong. Check browser console for details.');
+      createLog(
+        'Something went wrong. Check browser console for details.',
+        'error'
+      );
       throw error;
     }
   };
@@ -86,11 +91,11 @@ const ContractInteraction: FC<Props> = ({
       setIsLoading('');
       console.log(error);
       if (typeof error === 'string') {
-        message.error(error);
+        createLog(error, 'error');
         return;
       }
       if (error.message.includes('Wrong AccessKey used for')) {
-        message.error('Contract address changed. Relogin required.');
+        createLog('Contract address changed. Relogin required.', 'error');
       }
     } finally {
     }
@@ -117,7 +122,7 @@ const ContractInteraction: FC<Props> = ({
         }
 
         await send(event.data.data);
-        message.success('Message sent successfully');
+        createLog('Message sent successfully', 'success');
       } catch (error) {
         console.log('error', error);
       } finally {

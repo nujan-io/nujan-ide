@@ -1,8 +1,10 @@
 import TonAuth from '@/components/auth/TonAuth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { NetworkEnvironment } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
+import { getContractLINK } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import {
   Blockchain,
@@ -10,7 +12,7 @@ import {
   TreasuryContract,
 } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Form, Select, message } from 'antd';
+import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
@@ -23,6 +25,7 @@ interface Props {
 }
 const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const [isLoading, setIsLoading] = useState('');
+  const { createLog } = useLogActivity();
   const [environment, setEnvironment] = useState<NetworkEnvironment>('SANDBOX');
   const [buildOutput, setBuildoutput] = useState<{
     contractBOC: string | null;
@@ -68,7 +71,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       console.log(error);
       setIsLoading('');
       if (typeof error === 'string') {
-        message.error(error);
+        createLog(error, 'error');
         return;
       }
     } finally {
@@ -76,6 +79,10 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   };
 
   const deploy = async () => {
+    createLog(
+      `Deploying contract with code BOC -  ${activeProject?.contractBOC}`,
+      'info'
+    );
     try {
       const { address: _contractAddress, contract } = await deployContract(
         activeProject?.contractBOC as string,
@@ -83,6 +90,14 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         environment.toLowerCase() as Network,
         sandboxBlockchain,
         sandboxWallet!!
+      );
+      console.log(_contractAddress);
+      createLog(
+        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress} - ${getContractLINK(
+          _contractAddress,
+          environment
+        )}`,
+        'success'
       );
       if (!_contractAddress) {
         return;
@@ -140,14 +155,25 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       if (error.message.includes("'default' is not exported by ")) {
         throw "'default' is not exported by stateInit.cell.ts";
       }
-      message.error('Something went wrong. Check browser console for details.');
+      createLog(
+        'Something went wrong. Check browser console for details.',
+        'error'
+      );
       throw error;
     }
   };
 
   const createSandbox = async () => {
+    if (sandboxBlockchain) {
+      return;
+    }
     const blockchain = await Blockchain.create();
     const wallet = await blockchain.treasury('user');
+    createLog(
+      `Sanbox account created. Address: <i>${wallet.address.toString()}</i>`,
+      'info',
+      false
+    );
     setSandboxWallet(wallet);
     setSandboxBlockchain(blockchain);
   };

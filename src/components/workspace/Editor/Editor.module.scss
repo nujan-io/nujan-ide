@@ -1,10 +1,10 @@
 .container {
-  height: calc(100vh - 43px);
+  height: calc(100vh - 15rem);
 
   .editor {
     height: 100%;
     > div {
-      padding-top: 1rem;
+      // padding-top: 1rem;
     }
   }
   .saveFile {

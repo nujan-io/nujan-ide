@@ -37,7 +37,7 @@ const BottomPanel: FC = () => {
   };
 
   const filterLogs = debounce((searchTerm) => {
-    setFilter({ text: searchTerm, type: 'info' });
+    setFilter({ text: searchTerm, type: filter.type });
   }, 200);
 
   return (

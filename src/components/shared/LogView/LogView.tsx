@@ -32,8 +32,11 @@ const LogView: FC<Props> = ({ type, text }) => {
           key={index}
           className={`${s.item} ${s[`type__${type.toLowerCase()}`]}`}
         >
-          <span>[{type}] : </span>
-          <span className={s.text}>{text}</span>
+          <span>[{type}] - </span>
+          <span
+            className={`${s.text} wrap-text`}
+            dangerouslySetInnerHTML={{ __html: text }}
+          />
           <span className={s.timestamp}>{formatTimestamp(timestamp)}</span>
         </div>
       ))}

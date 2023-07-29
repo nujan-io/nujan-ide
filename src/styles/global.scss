@@ -58,3 +58,9 @@ a {
 .w-100 {
   width: 100%;
 }
+
+.wrap-text {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}

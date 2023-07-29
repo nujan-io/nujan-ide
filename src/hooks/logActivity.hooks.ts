@@ -27,13 +27,25 @@ export function useLogActivity() {
     });
   }
 
-  function createLog(text: string, type: LogType = 'info'): void {
+  function createLog(
+    text: string,
+    type: LogType = 'info',
+    allowDuplicate = true
+  ): void {
+    if (
+      !allowDuplicate &&
+      log.some((entry) => entry.text === text && entry.type === type)
+    ) {
+      return;
+    }
     const logEntry: LogEntry = {
       text,
       type,
       timestamp: new Date().toISOString(),
     };
-    setLog((oldLog) => [...oldLog, logEntry]);
+    setLog((oldLog) => {
+      return [...oldLog, logEntry];
+    });
   }
 
   function clearLog(): void {

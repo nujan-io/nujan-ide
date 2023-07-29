@@ -1,3 +1,4 @@
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
@@ -28,6 +29,8 @@ const ExecuteFile: FC<Props> = ({
 }) => {
   const { compileTsFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
+  const { createLog } = useLogActivity();
+
   const fileExtension = file?.name?.split('.').slice(1).join('.');
 
   const buildFile = async (e: ButtonClick) => {
@@ -43,15 +46,16 @@ const ExecuteFile: FC<Props> = ({
           break;
         case 'fc':
           const response = await compileFuncProgram(file, projectId);
+          console.log('response', response);
           if (onCompile) {
             onCompile();
           }
-          message.success('Built successfully');
+          createLog('Built successfully', 'success');
           break;
       }
     } catch (error) {
       if (typeof error === 'string') {
-        message.error(error);
+        createLog(error, 'error');
         return;
       }
       message.error(

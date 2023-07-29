@@ -36,6 +36,9 @@ const WorkSpace: FC = () => {
   };
 
   useEffect(() => {
+    if (activeProject) {
+      createLog(`Project '${activeProject?.name}' is opened`);
+    }
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -43,7 +46,6 @@ const WorkSpace: FC = () => {
       }
     });
     const originalConsoleLog = console.log;
-    createLog(`Project '${activeProject?.name}' is opened`);
 
     console.log = (...args) => {
       originalConsoleLog(...args); // Call the original console.log

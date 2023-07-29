@@ -6,6 +6,7 @@
   font-size: 0.9rem;
   padding: 0.5rem;
   height: 100%;
+  width: 100%;
   overflow-y: auto;
 
   .tab {
@@ -15,8 +16,7 @@
     border-bottom: 1px solid rgb(76, 76, 76);
   }
   .item {
-    display: flex;
-    gap: 5px;
+    display: block;
     margin: 0.2rem 0;
   }
   .type {
@@ -36,7 +36,10 @@
       color: #f44336;
     }
   }
+
   .timestamp {
     color: #666;
+    display: inline-block;
+    margin-left: 0.5rem;
   }
 }

@@ -1,4 +1,5 @@
 import { FileExtensionToFileType, FileType } from '@/enum/file';
+import { NetworkEnvironment } from '@/interfaces/workspace.interface';
 
 export function fileTypeFromFileName(name: string): FileType {
   return fileTypeForExtension(name.split('.').pop() || '');
@@ -58,4 +59,32 @@ export const debounce = <T extends DebounceFn>(callback: T, delay: number) => {
     clearTimeout(timer);
     timer = setTimeout(() => callback(...args), delay);
   };
+};
+
+export const getContractLINK = (
+  contractAddress: string,
+  chainNetwork: NetworkEnvironment
+) => {
+  if (chainNetwork === 'SANDBOX') {
+    return '';
+  }
+  return `
+  <a
+    href="${getContractURL(contractAddress, chainNetwork)}"
+    target="_blank"
+  >
+    View Deployed Contract
+  </a>`;
+};
+
+export const getContractURL = (
+  contractAddress: string,
+  chainNetwork: NetworkEnvironment
+) => {
+  if (chainNetwork === 'SANDBOX') {
+    return contractAddress;
+  }
+  return `https://${
+    chainNetwork === 'TESTNET' ? 'testnet.' : ''
+  }tonscan.org/address/${contractAddress}`;
 };

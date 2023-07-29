@@ -21,7 +21,7 @@
     }
   }
   .workArea {
-    width: 100%;
+    width: calc(100% - 320px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
