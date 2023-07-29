@@ -36,12 +36,13 @@ export function useProjectActions() {
   async function createProject(
     name: string,
     template: ProjectTemplate,
-    file: RcFile | null
+    file: RcFile | null,
+    defaultFiles?: Tree[]
   ) {
     const { files, filesWithId } =
-      template === 'import'
+      template === 'import' && defaultFiles?.length == 0
         ? await importUserFile(file as RcFile)
-        : createTemplateBasedProject(template);
+        : createTemplateBasedProject(template, defaultFiles);
 
     addFilesToDatabase(filesWithId);
     const projectId = uuidv4();

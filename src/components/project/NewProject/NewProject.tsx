@@ -6,8 +6,10 @@ import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useState } from 'react';
 
 import { useProjectActions } from '@/hooks/project.hooks';
+import { Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
-import Router from 'next/router';
+import { downloadRepo } from '@/utility/gitRepoDownloader';
+import { useRouter } from 'next/router';
 import s from './NewProject.module.scss';
 
 const NewProject: FC = () => {
@@ -15,6 +17,9 @@ const NewProject: FC = () => {
   const { projects } = useWorkspaceActions();
   const { createProject } = useProjectActions();
   const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
+  const { importURL } = router.query;
 
   const [form] = useForm();
 
@@ -25,8 +30,14 @@ const NewProject: FC = () => {
     // { label: 'Chat Bot Contract', value: 'chatBot' },
   ];
 
+  const importOptions = [
+    { label: 'From Github', value: 'github', default: true },
+    { label: 'From local', value: 'local' },
+  ];
+
   const onFormFinish = async (values: any) => {
-    const projectName = values.name;
+    const { name: projectName, importType, githubUrl } = values;
+    let files: Tree[] = [];
 
     try {
       setIsLoading(true);
@@ -34,20 +45,27 @@ const NewProject: FC = () => {
         throw `Project '${projectName}' already exists`;
       }
 
+      if (importType === 'github') {
+        files = await downloadRepo(githubUrl);
+      }
+
       const projectId = await createProject(
         projectName,
         values.template,
-        values?.file?.file
+        values?.file?.file,
+        files
       );
 
       form.resetFields();
       closeModal();
       message.success(`Project '${projectName}' created`);
-      Router.push(`/project/${projectId}`);
-    } catch (error) {
+      router.push(`/project/${projectId}`);
+    } catch (error: any) {
       let messageText = 'Error in creating project';
       if (typeof error === 'string') {
         messageText = error;
+      } else {
+        messageText = error?.message || messageText;
       }
       message.error(messageText);
     } finally {
@@ -55,9 +73,81 @@ const NewProject: FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (!importURL || (!form && !isActive)) {
+      return;
+    }
+
+    form.setFieldsValue({
+      template: 'import',
+      importType: 'github',
+      githubUrl: importURL,
+    });
+    setIsActive(true);
+    const finalQueryParam = router.query;
+    delete finalQueryParam.importURL;
+    router.replace({ query: finalQueryParam });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importURL, form]);
+
   const closeModal = () => {
     setIsActive(false);
   };
+
+  const projectImport = (fieldGetter: any) => (
+    <div className="">
+      <Form.Item
+        label="Import Type"
+        name="importType"
+        className={s.formItem}
+        rules={[{ required: true }]}
+      >
+        <Radio.Group options={importOptions} optionType="button" />
+      </Form.Item>
+      <Form.Item
+        noStyle
+        shouldUpdate={(prevValues, currentValues) =>
+          prevValues.importType !== currentValues.importType
+        }
+      >
+        {() =>
+          fieldGetter('importType') === 'local' ? (
+            <Form.Item
+              label="Select contract zip file"
+              name="file"
+              className={s.formItem}
+              rules={[{ required: true }]}
+            >
+              <Upload
+                accept=".zip"
+                multiple={false}
+                maxCount={1}
+                beforeUpload={(file) => {
+                  return false;
+                }}
+              >
+                <Button icon={<UploadOutlined />}>Select File</Button>
+              </Upload>
+            </Form.Item>
+          ) : (
+            <Form.Item
+              label="Github Repository URL"
+              name="githubUrl"
+              className={s.formItem}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please input your Github Repository URL',
+                },
+              ]}
+            >
+              <Input placeholder="Ex. https://github.com/nujan-io/ton-contracts/" />
+            </Form.Item>
+          )
+        }
+      </Form.Item>
+    </div>
+  );
 
   useEffect(() => {
     EventEmitter.on('ONBOARDOING_NEW_PROJECT', () => {
@@ -108,7 +198,7 @@ const NewProject: FC = () => {
           </Form.Item>
 
           <Form.Item
-            label="Select Template"
+            label="Select Template/Import"
             name="template"
             className={s.formItem}
           >
@@ -122,27 +212,9 @@ const NewProject: FC = () => {
             }
           >
             {({ getFieldValue }) =>
-              getFieldValue('template') === 'import' ? (
-                <div>
-                  <Form.Item
-                    label="Select contract zip file"
-                    name="file"
-                    className={s.formItem}
-                    rules={[{ required: true }]}
-                  >
-                    <Upload
-                      accept=".zip"
-                      multiple={false}
-                      maxCount={1}
-                      beforeUpload={(file) => {
-                        return false;
-                      }}
-                    >
-                      <Button icon={<UploadOutlined />}>Select File</Button>
-                    </Upload>
-                  </Form.Item>
-                </div>
-              ) : null
+              getFieldValue('template') === 'import'
+                ? projectImport(getFieldValue)
+                : null
             }
           </Form.Item>
 
