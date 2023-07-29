@@ -1,6 +1,4 @@
 .root {
-  height: 10rem;
-  padding-top: 0.7rem;
   background-color: #151515;
   .tab {
     display: inline-flex;
@@ -9,5 +7,37 @@
     border-bottom: 1px solid rgb(76, 76, 76);
     text-transform: uppercase;
     font-size: 0.9rem;
+  }
+  .view {
+    // overflow-y: auto;
+    height: 9rem;
+    padding: 0.5rem;
+  }
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+    .filterText {
+      max-width: 200px;
+    }
+  }
+  .tabsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 0.7rem 0 0.5rem;
+    margin: 1rem 0 0 0;
+
+    .actions {
+    }
+    .clearLog {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 50%;
+      padding: 0.2rem;
+      &:hover {
+        background-color: var(--grey);
+      }
+    }
   }
 }

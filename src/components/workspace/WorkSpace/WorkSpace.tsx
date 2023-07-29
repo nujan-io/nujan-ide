@@ -1,9 +1,11 @@
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import BottomPanel from '../BottomPanel/BottomPanel';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
 import ProjectSetting from '../ProjectSetting';
@@ -17,6 +19,7 @@ import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
+  const { createLog, clearLog } = useLogActivity();
 
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
@@ -39,9 +42,23 @@ const WorkSpace: FC = () => {
         EventEmitter.emit('SAVE_FILE', () => {});
       }
     });
+    const originalConsoleLog = console.log;
+    createLog(`Project '${activeProject?.name}' is opened`);
+
+    console.log = (...args) => {
+      originalConsoleLog(...args); // Call the original console.log
+      const _log = args.join(' ');
+      if (!_log.includes('DEBUG')) {
+        return;
+      }
+      createLog(_log);
+    };
+
     return () => {
+      console.log = originalConsoleLog;
       document.removeEventListener('keydown', () => {});
       workspaceAction.closeAllFile();
+      clearLog();
     };
   }, []);
 
@@ -110,12 +127,17 @@ const WorkSpace: FC = () => {
               <Tabs projectId={projectId as string} />
             </div>
 
-            {activeFile && (
-              <Editor
-                file={activeFile as any}
-                projectId={projectId as string}
-              />
-            )}
+            <div style={{ height: '100%' }}>
+              {activeFile && (
+                <Editor
+                  file={activeFile as any}
+                  projectId={projectId as string}
+                />
+              )}
+            </div>
+            <div>
+              <BottomPanel />
+            </div>
           </>
         )}
       </div>

@@ -1,10 +1,13 @@
 .root {
   display: flex;
   flex-direction: column;
-  padding: 8px;
   border-radius: 4px;
   margin-bottom: 8px;
   font-size: 0.9rem;
+  padding: 0.5rem;
+  height: 100%;
+  overflow-y: auto;
+
   .tab {
     display: inline-flex;
     color: rgb(130, 129, 129);
@@ -14,6 +17,7 @@
   .item {
     display: flex;
     gap: 5px;
+    margin: 0.2rem 0;
   }
   .type {
     font-weight: bold;

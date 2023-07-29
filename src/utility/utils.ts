@@ -50,3 +50,12 @@ export const delay = (timeout: number) => {
     setTimeout(resolve, timeout);
   });
 };
+
+type DebounceFn = (...args: any[]) => void;
+export const debounce = <T extends DebounceFn>(callback: T, delay: number) => {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => callback(...args), delay);
+  };
+};
