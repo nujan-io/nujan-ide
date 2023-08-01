@@ -16,6 +16,8 @@ import { CiBeaker1 } from 'react-icons/ci';
 import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2 } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
+import { HiDocumentText } from 'react-icons/hi';
+import { MdFeedback } from 'react-icons/md';
 import { SiTestcafe } from 'react-icons/si';
 import { VscGist } from 'react-icons/vsc';
 import Plus from './Plus';
@@ -38,7 +40,9 @@ export type AppIconType =
   | 'Setting'
   | 'Clone'
   | 'Delete'
-  | 'Play';
+  | 'Play'
+  | 'Document'
+  | 'Feedback';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -64,6 +68,8 @@ const Components = {
   Plus,
   Delete: AiOutlineDelete,
   Play: BsFillPlayFill,
+  Document: HiDocumentText,
+  Feedback: MdFeedback,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {
