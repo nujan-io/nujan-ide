@@ -128,9 +128,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
     if (stateInitContent && !stateInitContent.content) {
       throw 'State init data is missing in file stateInit.cell.ts';
     }
-    if (!stateInitContent?.content?.includes('cell')) {
-      throw 'cell variable is missing in file stateInit.cell.ts';
-    }
+
     try {
       const jsOutout = await buildTs(
         {
