@@ -185,6 +185,11 @@ const NewProject: FC = () => {
           autoComplete="off"
           initialValues={{ template: 'tonCounter' }}
           requiredMark="optional"
+          onFieldsChange={(changedField) => {
+            if (changedField[0].value === 'import') {
+              form.setFieldsValue({ importType: 'github' });
+            }
+          }}
         >
           <Form.Item
             label="Name"
