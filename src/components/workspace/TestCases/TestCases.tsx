@@ -1,3 +1,4 @@
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { FC, useEffect, useRef, useState } from 'react';
@@ -10,6 +11,8 @@ interface Props {
 const TestCases: FC<Props> = ({ projectId }) => {
   const [executionCount, setExecutionCount] = useState(0);
   const [isExecutedOnce, setIsExecutedOnce] = useState(false);
+  const { createLog } = useLogActivity();
+
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
   const { getFileByPath, compileTsFile, activeFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
@@ -26,23 +29,58 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     if (!cellBuilderRef.current?.contentWindow) return;
 
+    // TODO: Handle toHaveTransaction
+    const linesToRemove = [
+      /import\s+['"]@ton-community\/test-utils['"];/g,
+      /import\s+\{[^}]+\}\s+from\s+['"]@ton-community\/blueprint['"];/g,
+      /expect\(.*\)\.toHaveTransaction\(\s*{[^}]+}\s*\);/g,
+    ];
+
+    linesToRemove.forEach((pattern) => {
+      testCaseCode = testCaseCode.replace(pattern, '');
+    });
+
     const compileBlockExp = /compile[^(]*\(([^)]*)\)/;
 
     const contractCompileBlock = testCaseCode.match(compileBlockExp);
     const contractPath = contractCompileBlock?.[1].replace(/['"]/g, '');
+    if (!contractPath) {
+      createLog('Please specify contract path', 'error');
+      return;
+    }
+    const contractFile = await getFileByPath(contractPath, projectId);
+    if (!contractFile) {
+      createLog(
+        `Contract file not found - ${contractPath}. Define correct absolute path. Ex. contracts/main.fc`,
+        'error'
+      );
+      return;
+    }
 
     let contractBOC = undefined;
 
     if (contractPath && contractPath.includes('.fc')) {
-      const contract = await compileFuncProgram(
-        { path: contractPath },
-        projectId
-      );
-      contractBOC = contract?.contractBOC;
-      testCaseCode = testCaseCode.replace(
-        contractCompileBlock[0],
-        `bocToCell("${contractBOC}")`
-      );
+      try {
+        const contract = await compileFuncProgram(
+          { path: contractPath },
+          projectId
+        );
+        contractBOC = contract?.contractBOC;
+        testCaseCode = testCaseCode.replace(
+          contractCompileBlock[0],
+          `bocToCell("${contractBOC}")`
+        );
+      } catch (error: any) {
+        let _error = '';
+        if (typeof error === 'string') {
+          _error = error;
+        } else if (error?.message) {
+          _error = error.message;
+        }
+        if (error) {
+          createLog(error, 'error');
+        }
+      }
     }
 
     testCaseCode = testCaseCode
@@ -51,14 +89,16 @@ const TestCases: FC<Props> = ({ projectId }) => {
       .replace(/}\s*from\s*'@ton-community\/sandbox';/, '} = window.Sandbox;')
       .replace(/}\s*from\s*'ton-core';/, '} = window.TonCore;');
 
-    cellBuilderRef.current.contentWindow.postMessage(
-      {
-        name: 'nujan-ton-ide',
-        type: 'test-cases',
-        code: testCaseCode,
-      },
-      '*'
-    );
+    try {
+      cellBuilderRef.current.contentWindow.postMessage(
+        {
+          name: 'nujan-ton-ide',
+          type: 'test-cases',
+          code: testCaseCode,
+        },
+        '*'
+      );
+    } catch (error) {}
   };
 
   const reloadTestCases = () => {

@@ -59,7 +59,7 @@ export const userOnboardingSteps = {
         <div>
           <p>You can manage your files and folder here.</p>
           <p>
-            <b>contract.cell.ts:</b> Contains a cell which will be used for
+            <b>message.cell.ts:</b> Contains a cell which will be used for
             sending internal message to deployed contract.
           </p>
           <p>

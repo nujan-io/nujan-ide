@@ -131,7 +131,7 @@ function useWorkspaceActions() {
   }
 
   function openFile(id: Tree['id'], projectId: string) {
-    const openFiles = openedFiles().map((item) => {
+    const openFiles = openedFiles(projectId).map((item) => {
       return {
         ...item,
         isOpen: false,
@@ -154,11 +154,18 @@ function useWorkspaceActions() {
       };
       openFiles.push({ ...((fileData as any) || {}), isOpen: true });
     }
-    updateStateByKey({ openFiles });
+
+    updateStateByKey({
+      openFiles: { ...workspace.openFiles, [projectId]: openFiles },
+    });
   }
 
-  function updateOpenFile(id: Tree['id'], data: Partial<Tree>) {
-    const openFiles = openedFiles().map((item) => {
+  function updateOpenFile(
+    id: Tree['id'],
+    data: Partial<Tree>,
+    projectId: Project['id']
+  ) {
+    const openFiles = openedFiles(projectId).map((item) => {
       if (item.id === id) {
         return {
           ...item,
@@ -167,24 +174,33 @@ function useWorkspaceActions() {
       }
       return item;
     });
-    updateStateByKey({ openFiles });
+    updateStateByKey({
+      openFiles: workspace.openFiles,
+      [projectId]: openFiles,
+    });
   }
 
-  function onFileRename(fileId: Tree['id'], name: string) {
-    let files = cloneDeep(openedFiles());
+  function onFileRename(
+    fileId: Tree['id'],
+    name: string,
+    projectId: Project['id']
+  ) {
+    let files = cloneDeep(openedFiles(projectId));
     if (!files) return;
     const fileToChange = files.find((item) => item.id === fileId);
     if (!fileToChange) return;
     fileToChange.name = name;
-    updateStateByKey({ openFiles: files });
+    updateStateByKey({
+      openFiles: { ...workspace.openFiles, [projectId]: files },
+    });
   }
 
-  function openedFiles() {
-    return workspace.openFiles;
+  function openedFiles(projectId: Project['id']) {
+    return workspace.openFiles[projectId] || [];
   }
 
   function activeFile(projectId: string) {
-    const file = openedFiles().find((item) => item.isOpen);
+    const file = openedFiles(projectId).find((item) => item.isOpen);
     if (!file) {
       return undefined;
     }
@@ -218,9 +234,13 @@ function useWorkspaceActions() {
     return { ...file, content: fileContent?.content };
   }
 
-  function updateFileContent(id: Tree['id'], content: string) {
+  function updateFileContent(
+    id: Tree['id'],
+    content: string,
+    projectId: Project['id']
+  ) {
     fileSystem.files.update(id, { content });
-    updateOpenFile(id, { isDirty: false });
+    updateOpenFile(id, { isDirty: false }, projectId);
   }
 
   async function updateProjectById(updateObject: any, projectId: string) {
@@ -230,8 +250,8 @@ function useWorkspaceActions() {
     });
   }
 
-  function closeFile(id: string) {
-    let openFiles = workspace.openFiles.filter((item) => item.id !== id);
+  function closeFile(id: string, projectId: Project['id']) {
+    let openFiles = openedFiles(projectId).filter((item) => item.id !== id);
     openFiles = openFiles.map((item) => {
       return {
         ...item,
@@ -245,10 +265,10 @@ function useWorkspaceActions() {
   }
 
   function closeAllFile() {
-    updateStateByKey({ openFiles: [] });
+    // updateStateByKey({ openFiles: [] });
   }
 
-  function renameItem(id: string, name: string, projectId: string) {
+  async function renameItem(id: string, name: string, projectId: string) {
     const item = searchNode(id, projectId);
     if (!item.node) {
       return;
@@ -266,7 +286,7 @@ function useWorkspaceActions() {
     }
     item.node.path = newPath;
     updateProjectFiles(item.project, projectId);
-    onFileRename(id, name);
+    onFileRename(id, name, projectId);
   }
 
   function deleteItem(id: Tree['id'], projectId: string) {
@@ -279,7 +299,7 @@ function useWorkspaceActions() {
       (file: any) => file.id !== id && file.parent !== id
     );
 
-    closeFile(id);
+    closeFile(id, projectId);
     updateProjectFiles(item.project, projectId);
   }
 
@@ -418,6 +438,6 @@ function useWorkspaceActions() {
   }
 
   function clearWorkSpace() {
-    updateStateByKey({ openFiles: [], projectFiles: null, projects: [] });
+    updateStateByKey({ openFiles: {}, projectFiles: null, projects: [] });
   }
 }

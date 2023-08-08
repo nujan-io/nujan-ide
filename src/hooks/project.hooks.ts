@@ -39,10 +39,27 @@ export function useProjectActions() {
     file: RcFile | null,
     defaultFiles?: Tree[]
   ) {
-    const { files, filesWithId } =
+    let { files, filesWithId } =
       template === 'import' && defaultFiles?.length == 0
         ? await importUserFile(file as RcFile)
         : createTemplateBasedProject(template, defaultFiles);
+
+    const convertedFileObject = files.reduce((acc: any, current) => {
+      acc[current.name] = current;
+      return acc;
+    }, {});
+
+    if (
+      !convertedFileObject['stateInit.cell.ts'] ||
+      !convertedFileObject['message.cell.ts']
+    ) {
+      const commonFiles = createTemplateBasedProject(
+        'import',
+        commonProjectFiles
+      );
+      files = [...files, ...commonFiles.files];
+      filesWithId = [...filesWithId, ...commonFiles.filesWithId];
+    }
 
     addFilesToDatabase(filesWithId);
     const projectId = uuidv4();

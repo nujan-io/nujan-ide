@@ -134,10 +134,10 @@ export default cell;`,
   },
   {
     id: '101',
-    name: 'contract.cell.ts',
+    name: 'message.cell.ts',
     parent: null,
     type: 'file' as const,
-    path: 'contract.cell.ts',
+    path: 'message.cell.ts',
     content: `import { beginCell } from "ton-core";
 
 const cell = beginCell().endCell();
@@ -221,10 +221,10 @@ export default cell;`,
       },
       {
         id: '3',
-        name: 'contract.cell.ts',
+        name: 'message.cell.ts',
         parent: null,
         type: 'file' as const,
-        path: 'contract.cell.ts',
+        path: 'message.cell.ts',
         content: `import { beginCell } from "ton-core";
 
 const cell = beginCell()

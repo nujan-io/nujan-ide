@@ -37,20 +37,20 @@ const ContractInteraction: FC<Props> = ({
   const createCell = async () => {
     if (!cellBuilderRef.current?.contentWindow) return;
     const contractCellContent = await getFileByPath(
-      'contract.cell.ts',
+      'message.cell.ts',
       projectId
     );
     if (contractCellContent && !contractCellContent.content) {
-      throw 'Cell data is missing in file contract.cell.ts';
+      throw 'Cell data is missing in file message.cell.ts';
     }
     if (!contractCellContent?.content?.includes('cell')) {
-      throw 'cell variable is missing in file contract.cell.ts';
+      throw 'cell variable is missing in file message.cell.ts';
     }
     try {
       const jsOutout = await buildTs(
         {
-          'contract.cell.ts': contractCellContent?.content,
-          'cell.ts': 'import cell from "./contract.cell.ts"; cell;',
+          'message.cell.ts': contractCellContent?.content,
+          'cell.ts': 'import cell from "./message.cell.ts"; cell;',
         },
         'cell.ts'
       );
@@ -67,8 +67,9 @@ const ContractInteraction: FC<Props> = ({
         '*'
       );
     } catch (error: any) {
+      setIsLoading('');
       if (error.message.includes("'default' is not exported by ")) {
-        throw "'default' is not exported by contract.cell.ts";
+        throw "'default' is not exported by message.cell.ts";
       }
       createLog(
         'Something went wrong. Check browser console for details.',
@@ -98,6 +99,7 @@ const ContractInteraction: FC<Props> = ({
         createLog('Contract address changed. Relogin required.', 'error');
       }
     } finally {
+      setIsLoading('');
     }
   };
 
@@ -174,7 +176,7 @@ const ContractInteraction: FC<Props> = ({
       )}
       <br />
       <h3 className={s.label}>Setter:</h3>
-      <p>Update values in contract.cell.ts and send message</p>
+      <p>Update values in message.cell.ts and send message</p>
       <Form className={s.form} onFinish={onSubmit}>
         <Button
           type="default"

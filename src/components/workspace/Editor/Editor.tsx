@@ -20,7 +20,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     isProjectEditable,
     getFileContent,
     updateOpenFile,
+    openedFiles,
   } = useWorkspaceActions();
+
   const { user } = useAuthAction();
 
   const [isLoaded, setIsLoaded] = useState(false);
@@ -39,7 +41,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const saveFile = () => {
     if (!file.id) return;
     try {
-      updateFileContent(file.id, editorRef.current.getValue());
+      updateFileContent(file.id, editorRef.current.getValue(), projectId);
     } catch (error) {}
   };
 
@@ -51,7 +53,6 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         _: string,
         label: string
       ) => {
-        // an example of returning a worker url for json language
         if (label === 'typescript') {
           return '/_next/static/ts.worker.js';
         }
@@ -84,8 +85,13 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   const fetchFileContent = async () => {
     if (!file.id || file.id === initialFile?.id) return;
-    const content = await getFileContent(file.id);
-    editorRef.current.setValue(content);
+    let content = await getFileContent(file.id);
+    let modelContent = editorRef.current.getValue();
+    if (modelContent) {
+      content = modelContent;
+    } else {
+      editorRef.current.setValue(content);
+    }
     setInitialFile({ id: file.id, content });
   };
 
@@ -97,7 +103,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     ) {
       return;
     }
-    updateOpenFile(file.id, { isDirty: true });
+    updateOpenFile(file.id, { isDirty: true }, projectId);
   };
 
   useEffect(() => {
@@ -139,7 +145,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     <div className={`${s.container} ${className}`}>
       <EditorDefault
         className={s.editor}
-        path={file.id ? file.id + file.name : ''}
+        path={file.id ? `${projectId}/${file.id}}` : ''}
         theme="vs-dark"
         // height="90vh"
         defaultLanguage={`${fileTypeFromFileName(file.name)}`}

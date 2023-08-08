@@ -11,7 +11,7 @@ interface Props {
 
 const Tabs: FC<Props> = ({ projectId }) => {
   const { openedFiles, openFile, closeFile } = useWorkspaceActions();
-  const openedFilesList = openedFiles();
+  const openedFilesList = openedFiles(projectId);
 
   const updateActiveTab = (node: Tree) => {
     openFile(node.id, projectId);
@@ -20,7 +20,7 @@ const Tabs: FC<Props> = ({ projectId }) => {
   const closeTab = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
-    closeFile(id);
+    closeFile(id, projectId);
   };
 
   if (openedFilesList.length === 0) {

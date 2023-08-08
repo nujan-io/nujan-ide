@@ -33,7 +33,7 @@ export interface Project {
 }
 
 export type WorkspaceState = {
-  openFiles: Tree[];
+  openFiles: ProjectFiles;
   projectFiles: ProjectFiles | null;
   projects: Project[];
   activeProjectId: string;

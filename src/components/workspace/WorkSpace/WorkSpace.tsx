@@ -59,7 +59,7 @@ const WorkSpace: FC = () => {
     return () => {
       console.log = originalConsoleLog;
       document.removeEventListener('keydown', () => {});
-      workspaceAction.closeAllFile();
+      // workspaceAction.closeAllFile();
       clearLog();
     };
   }, []);

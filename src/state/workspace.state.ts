@@ -8,7 +8,7 @@ const { persistAtom } = recoilPersist();
 export const workspaceState = atom<WorkspaceState>({
   key: 'workspaceState',
   default: {
-    openFiles: [],
+    openFiles: {},
     projectFiles: null,
     projects: [],
     activeProjectId: '1',
