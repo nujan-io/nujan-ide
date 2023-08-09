@@ -19,7 +19,7 @@ const NewProject: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const { importURL } = router.query;
+  const { importURL, name: projectName } = router.query;
 
   const [form] = useForm();
 
@@ -81,14 +81,16 @@ const NewProject: FC = () => {
     form.setFieldsValue({
       template: 'import',
       importType: 'github',
-      githubUrl: importURL,
+      githubUrl: importURL || '',
+      name: projectName || '',
     });
     setIsActive(true);
     const finalQueryParam = router.query;
     delete finalQueryParam.importURL;
+    delete finalQueryParam.name;
     router.replace({ query: finalQueryParam });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [importURL, form]);
+  }, [importURL, projectName, form]);
 
   const closeModal = () => {
     setIsActive(false);

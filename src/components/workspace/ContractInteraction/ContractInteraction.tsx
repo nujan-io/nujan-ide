@@ -153,10 +153,8 @@ const ContractInteraction: FC<Props> = ({
         sandbox="allow-scripts"
       />
       <p>
-        <b>
           This will be used to send internal message and call getter method on
           contract
-        </b>
       </p>
       <br />
 

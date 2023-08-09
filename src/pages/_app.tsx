@@ -27,6 +27,7 @@ export default function App({
           theme={{
             token: {
               colorPrimary: '#007fd4',
+              fontFamily: 'var(--font-body)',
             },
             algorithm: darkAlgorithm,
           }}

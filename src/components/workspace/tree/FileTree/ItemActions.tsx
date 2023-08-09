@@ -2,6 +2,7 @@ import AppIcon from '@/components/ui/icon';
 import cn from 'clsx';
 import React, { FC } from 'react';
 
+import { Tooltip } from 'antd';
 import s from './FileTree.module.scss';
 
 type actionsTypes = 'Edit' | 'NewFile' | 'NewFolder' | 'Close';
@@ -33,18 +34,22 @@ const ItemAction: FC<Props> = ({
   const actionList = [
     {
       title: 'Edit',
+      label: 'Edit',
       action: onRename,
     },
     {
       title: 'NewFile',
+      label: 'New File',
       action: onNewFile,
     },
     {
       title: 'NewFolder',
+      label: 'New Folder',
       action: onNewDirectory,
     },
     {
       title: 'Close',
+      label: 'Delete',
       action: onDelete,
     },
   ];
@@ -56,9 +61,11 @@ const ItemAction: FC<Props> = ({
           return <React.Fragment key={i} />;
         }
         return (
-          <span key={i} onClick={(e) => handleOnClick(e, item.action)}>
-            <AppIcon name={item.title as any} />
-          </span>
+          <Tooltip title={item.label} key={i}>
+            <span onClick={(e) => handleOnClick(e, item.action)}>
+              <AppIcon name={item.title as any} />
+            </span>
+          </Tooltip>
         );
       })}
     </div>
