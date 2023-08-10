@@ -175,8 +175,7 @@ function useWorkspaceActions() {
       return item;
     });
     updateStateByKey({
-      openFiles: workspace.openFiles,
-      [projectId]: openFiles,
+      openFiles: { ...workspace.openFiles, [projectId]: openFiles },
     });
   }
 
@@ -261,7 +260,9 @@ function useWorkspaceActions() {
     if (openFiles.length > 0) {
       openFiles[openFiles.length - 1].isOpen = true;
     }
-    updateStateByKey({ openFiles });
+    updateStateByKey({
+      openFiles: { ...workspace.openFiles, [projectId]: openFiles },
+    });
   }
 
   function closeAllFile() {
