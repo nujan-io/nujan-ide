@@ -18,6 +18,11 @@
     justify-content: space-between;
     width: 100%;
     padding-right: 0.6rem;
+    &.systemFile {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
     > span {
       text-overflow: ellipsis;
       overflow: hidden;

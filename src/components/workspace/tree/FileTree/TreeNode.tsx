@@ -69,8 +69,12 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     setIsEditing(false);
   };
 
+  const isSystemFile = (fileName: string) => {
+    return disallowedFile.includes(fileName);
+  };
+
   const getAllowedActions = () => {
-    if (disallowedFile.includes(node.text)) {
+    if (isSystemFile(node.text)) {
       return [];
     }
     if (node.droppable) {
@@ -112,7 +116,11 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
         onClick={handleClick}
       >
         {!isEditing && (
-          <div className={s.item}>
+          <div
+            className={`${s.item} ${
+              isSystemFile(node.text) ? s.systemFile : ''
+            }`}
+          >
             <span>{node.text}</span>
             {isProjectEditable(projectId as string, user) && (
               <ItemAction
