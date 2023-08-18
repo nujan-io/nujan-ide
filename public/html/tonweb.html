@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Web</title>
+    <title>TON</title>
 </head>
 
 <body>
@@ -21,13 +21,32 @@
                 const boc = await cell.toBoc();
                 return boc;
             } main()`;
-            const cellValue = await eval(d);
-            const response = {
-                name: 'nujan-ton-ide',
-                data: cellValue,
-                type: event.data?.type
+            try {
+                const cellValue = await eval(d);
+
+                const response = {
+                    name: 'nujan-ton-ide',
+                    data: cellValue,
+                    type: event.data?.type
+                }
+                window.parent.postMessage(response, "*");
+            } catch (error) {
+                let errorStack = error.stack.split('\n');
+                errorStack = errorStack.filter(line => line.trim() !== "" && !line.includes("tonweb.html")).map((item) => {
+                    if (item.includes('ton-core.js')) {
+                        return item.replace('https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/', '');
+                    }
+                    return item;
+                })
+                const _error = `Error: ${error.message} \n${errorStack.join('\n')}`;
+                const response = {
+                    name: 'nujan-ton-ide',
+                    error: _error,
+                    type: event.data?.type
+                }
+                window.parent.postMessage(response, "*");
             }
-            window.parent.postMessage(response, "*");
+
         });
     </script>
 </body>

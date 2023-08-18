@@ -68,7 +68,6 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
       setIsLoading('deploy');
       await createStateInitCell();
     } catch (error: any) {
-      console.log(error);
       setIsLoading('');
       if (typeof error === 'string') {
         createLog(error, 'error');
@@ -184,7 +183,12 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
   useEffect(() => {
     const handler = (
-      event: MessageEvent<{ name: string; type: string; data: any }>
+      event: MessageEvent<{
+        name: string;
+        type: string;
+        data: any;
+        error: string;
+      }>
     ) => {
       if (
         !event.data ||
@@ -192,6 +196,10 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         event.data?.type !== 'state-init-data' ||
         event.data?.name !== 'nujan-ton-ide'
       ) {
+        return;
+      }
+      if (event.data?.error) {
+        createLog(event.data.error, 'error');
         return;
       }
 
