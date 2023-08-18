@@ -17,7 +17,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
   const { getFileByPath, compileTsFile, activeFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
 
-  const currentActiveFile = activeFile(projectId as string);
+  const [selectedFilePath, setSelectedFilePath] = useState('');
 
   const executeTestCases = async (filePath: string) => {
     if (!isExecutedOnce) {
@@ -121,18 +121,20 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
   useEffect(() => {
     if (!executionCount) return;
-    executeTestCases(currentActiveFile?.path as string);
+    executeTestCases(selectedFilePath);
   }, [executionCount]);
 
   return (
     <div className={s.root}>
       <ExecuteFile
         projectId={projectId}
-        file={currentActiveFile}
         allowedFile={['spec.ts']}
         label={`Run`}
-        description="Write a test case in a file with the extension spec.ts, and open it in a new tab to run it."
+        description="Select .spec.ts file to run test cases"
         onClick={(e, data) => {
+          if (data) {
+            setSelectedFilePath(data);
+          }
           if (!isExecutedOnce) {
             setIsExecutedOnce(true);
           }
