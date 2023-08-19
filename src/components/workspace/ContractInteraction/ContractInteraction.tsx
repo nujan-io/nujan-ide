@@ -8,6 +8,7 @@ import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
 import ABIUi from '../ABIUi';
+import OpenFile from '../OpenFile/OpenFile';
 import s from './ContractInteraction.module.scss';
 
 interface Props {
@@ -153,8 +154,8 @@ const ContractInteraction: FC<Props> = ({
         sandbox="allow-scripts"
       />
       <p>
-          This will be used to send internal message and call getter method on
-          contract
+        This will be used to send internal message and call getter method on
+        contract
       </p>
       <br />
 
@@ -173,8 +174,16 @@ const ContractInteraction: FC<Props> = ({
         </>
       )}
       <br />
-      <h3 className={s.label}>Setter:</h3>
-      <p>Update values in message.cell.ts and send message</p>
+      <h3 className={s.label}>Send internal message:</h3>
+      <p>
+        Update cell data in{' '}
+        <OpenFile
+          projectId={projectId}
+          name="message.cell.ts"
+          path="message.cell.ts"
+        />{' '}
+        and then send message
+      </p>
       <Form className={s.form} onFinish={onSubmit}>
         <Button
           type="default"
@@ -182,7 +191,7 @@ const ContractInteraction: FC<Props> = ({
           loading={isLoading === 'setter'}
           className={s.sendMessage}
         >
-          Send Internal Message
+          Send
         </Button>
       </Form>
     </div>

@@ -22,6 +22,7 @@ function useWorkspaceActions() {
     updateProjectFiles,
     addFilesToDatabase,
     openFile,
+    openFileByPath,
     updateOpenFile,
     renameItem,
     deleteItem,
@@ -158,6 +159,14 @@ function useWorkspaceActions() {
     updateStateByKey({
       openFiles: { ...workspace.openFiles, [projectId]: openFiles },
     });
+  }
+
+  function openFileByPath(path: string, projectId: string) {
+    const file = projectFiles(projectId).find((item) => item.path === path);
+    if (!file) {
+      return;
+    }
+    openFile(file.id, projectId);
   }
 
   function updateOpenFile(
