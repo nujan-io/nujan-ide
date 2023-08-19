@@ -34,7 +34,9 @@ const LogView: FC<Props> = ({ type, text }) => {
         >
           <span>[{type}] - </span>
           <span
-            className={`${s.text} wrap-text`}
+            className={`${s.text} ${
+              /^\[/.test(text) ? s.hasArray : ''
+            } wrap-text`}
             dangerouslySetInnerHTML={{ __html: text }}
           />
           <span className={s.timestamp}>{formatTimestamp(timestamp)}</span>

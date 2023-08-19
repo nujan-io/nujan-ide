@@ -18,6 +18,12 @@
   .item {
     display: block;
     margin: 0.2rem 0;
+    .text {
+      white-space: break-spaces;
+      &.hasArray {
+        display: block;
+      }
+    }
   }
   .type {
     font-weight: bold;
