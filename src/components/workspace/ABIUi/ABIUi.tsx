@@ -1,14 +1,13 @@
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import {
   ABI,
   ABIParameter,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
-import { objectToJSON } from '@/utility/utils';
 import { SandboxContract } from '@ton-community/sandbox';
 import { Button, Form, Input, Select, message } from 'antd';
 import { FC, useState } from 'react';
-import { TupleItem } from 'ton-core';
 import s from './ABIUi.module.scss';
 
 const { Option } = Select;
@@ -32,10 +31,7 @@ const ABIUi: FC<Props> = ({
   });
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const [responseMessage, setResponseMessage] = useState<TupleItem | null>(
-    null
-  );
+  const { createLog } = useLogActivity();
 
   const { callGetter } = useContractAction();
 
@@ -46,7 +42,6 @@ const ABIUi: FC<Props> = ({
     });
     try {
       setIsLoading(true);
-      setResponseMessage(null);
 
       const getterReponse = await callGetter(
         contractAddress,
@@ -57,7 +52,7 @@ const ABIUi: FC<Props> = ({
       );
 
       if (getterReponse) {
-        setResponseMessage(objectToJSON(getterReponse as any));
+        createLog(JSON.stringify(getterReponse, null, 4));
       }
     } catch (error: any) {
       console.log('error', error);
@@ -113,9 +108,6 @@ const ABIUi: FC<Props> = ({
         >
           {abi.name}
         </Button>
-        {responseMessage && (
-          <div className={s.abiResponse}>{JSON.stringify(responseMessage)}</div>
-        )}
       </Form>
     </div>
   );
