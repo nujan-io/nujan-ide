@@ -174,7 +174,12 @@ export function useContractAction() {
 
     if (network === 'SANDBOX' && contract) {
       const call = await contract.getData(methodName, parsedStack as any);
-      return parseReponse(call.stack.peek());
+      const responseValues = [];
+
+      while (call.stack.remaining) {
+        responseValues.push(parseReponse(call.stack.pop()));
+      }
+      return responseValues;
     }
 
     const endpoint = await getHttpEndpoint({
@@ -187,7 +192,11 @@ export function useContractAction() {
       stack
     );
 
-    return parseReponse(call.stack.peek());
+    const responseValues = [];
+    while (call.stack.remaining) {
+      responseValues.push(parseReponse(call.stack.pop()));
+    }
+    return responseValues;
   }
 }
 
@@ -230,7 +239,7 @@ function parseReponse(tupleItem: TupleItem) {
   if (['cell', 'slice', 'builder'].includes(tupleItem.type)) {
     const cell = (tupleItem as any).cell as Cell;
     try {
-      if (cell.beginParse().remainingBits === 267) {
+      if (cell.bits.length === 267) {
         return {
           type: 'address',
           value: cell.beginParse().loadAddress().toString(),
