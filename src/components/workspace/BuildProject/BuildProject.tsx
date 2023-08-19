@@ -18,12 +18,22 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
+import OpenFile from '../OpenFile/OpenFile';
 import s from './BuildProject.module.scss';
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
+  sandboxBlockchain: Blockchain;
+  contract: any;
+  updateContract: (contractInstance: any) => void;
 }
-const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
+const BuildProject: FC<Props> = ({
+  projectId,
+  onCodeCompile,
+  sandboxBlockchain,
+  contract,
+  updateContract,
+}) => {
   const [isLoading, setIsLoading] = useState('');
   const { createLog } = useLogActivity();
   const [environment, setEnvironment] = useState<NetworkEnvironment>('SANDBOX');
@@ -34,10 +44,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
   const [tonConnector] = useTonConnectUI();
   const chain = tonConnector.wallet?.account.chain;
-  const [sandboxBlockchain, setSandboxBlockchain] = useState<Blockchain | null>(
-    null
-  );
-  const [contract, setContract] = useState<any>('');
+
   const [sandboxWallet, setSandboxWallet] =
     useState<SandboxContract<TreasuryContract>>();
 
@@ -102,7 +109,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         return;
       }
       if (contract) {
-        setContract(contract);
+        updateContract(contract);
       }
 
       updateProjectById(
@@ -160,24 +167,29 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
     }
   };
 
-  const createSandbox = async () => {
-    if (sandboxBlockchain) {
-      return;
+  const isContractInteraction = () => {
+    let isValid =
+      activeProject?.id && tonConnector && activeProject?.contractAddress
+        ? true
+        : false;
+
+    if (environment === 'SANDBOX') {
+      isValid = isValid && sandboxBlockchain ? true : false;
     }
-    const blockchain = await Blockchain.create();
-    const wallet = await blockchain.treasury('user');
-    createLog(
-      `Sanbox account created. Address: <i>${wallet.address.toString()}</i>`,
-      'info',
-      false
-    );
-    setSandboxWallet(wallet);
-    setSandboxBlockchain(blockchain);
+    return isValid;
   };
 
   useEffect(() => {
     if (environment === 'SANDBOX') {
-      createSandbox();
+      (async () => {
+        const wallet = await sandboxBlockchain.treasury('user');
+        createLog(
+          `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          'info',
+          false
+        );
+        setSandboxWallet(wallet);
+      })();
     }
   }, []);
 
@@ -243,12 +255,21 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
 
       {environment !== 'SANDBOX' && <TonAuth />}
 
+      <p className={s.info}>
+        1. Update initial contract state in{' '}
+        <OpenFile
+          projectId={projectId}
+          name="stateInit.cell.ts"
+          path="stateInit.cell.ts"
+        />{' '}
+      </p>
+
       <div className={s.actionWrapper}>
         <ExecuteFile
           file={currentActiveFile}
           projectId={projectId as string}
           label={environment === 'SANDBOX' ? 'Build and Deploy' : 'Build'}
-          description="Select a contract file to build and deploy"
+          description="2. Select a contract file to build and deploy"
           allowedFile={['fc']}
           onCompile={() => {
             if (environment == 'SANDBOX') {
@@ -284,7 +305,7 @@ const BuildProject: FC<Props> = ({ projectId, onCodeCompile }) => {
         </div>
       )}
 
-      {activeProject?.id && tonConnector && activeProject?.contractAddress && (
+      {isContractInteraction() && (
         <div className={s.contractInteraction}>
           <ContractInteraction
             contractAddress={activeProject?.contractAddress!!}

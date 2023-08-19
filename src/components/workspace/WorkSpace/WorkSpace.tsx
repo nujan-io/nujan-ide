@@ -2,6 +2,7 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
+import { Blockchain } from '@ton-community/sandbox';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
@@ -25,6 +26,10 @@ const WorkSpace: FC = () => {
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsloading] = useState(false);
+  const [sandboxBlockchain, setSandboxBlockchain] = useState<Blockchain | null>(
+    null
+  );
+  const [contract, setContract] = useState<any>('');
 
   const { id: projectId, tab } = router.query;
 
@@ -35,10 +40,19 @@ const WorkSpace: FC = () => {
     workspaceAction.createNewItem('', name, type, projectId as string);
   };
 
+  const createSandbox = async () => {
+    if (sandboxBlockchain) {
+      return;
+    }
+    const blockchain = await Blockchain.create();
+    setSandboxBlockchain(blockchain);
+  };
+
   useEffect(() => {
     if (activeProject) {
       createLog(`Project '${activeProject?.name}' is opened`);
     }
+    createSandbox();
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
@@ -60,6 +74,12 @@ const WorkSpace: FC = () => {
       console.log = originalConsoleLog;
       document.removeEventListener('keydown', () => {});
       // workspaceAction.closeAllFile();
+      workspaceAction.updateProjectById(
+        {
+          contractAddress: '',
+        },
+        projectId as string
+      );
       clearLog();
     };
   }, []);
@@ -110,10 +130,15 @@ const WorkSpace: FC = () => {
             <FileTree projectId={projectId as string} />
           </div>
         )}
-        {activeMenu === 'build' && (
+        {activeMenu === 'build' && sandboxBlockchain && (
           <BuildProject
             projectId={projectId as string}
             onCodeCompile={(_codeBOC) => {}}
+            sandboxBlockchain={sandboxBlockchain}
+            contract={contract}
+            updateContract={(contractInstance) => {
+              setContract(contractInstance);
+            }}
           />
         )}
         {activeMenu === 'test-cases' && (

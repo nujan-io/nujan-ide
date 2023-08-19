@@ -39,7 +39,7 @@ export function useLogActivity() {
       return;
     }
     const logEntry: LogEntry = {
-      text: text.replace(/\n/g, '<br />').trim(),
+      text: text.trim(),
       type,
       timestamp: new Date().toISOString(),
     };
