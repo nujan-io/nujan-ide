@@ -66,7 +66,7 @@ const ExecuteFile: FC<Props> = ({
           if (onCompile) {
             onCompile();
           }
-          createLog('Built successfully', 'success');
+          createLog('Contract Built Successfully', 'success');
           break;
       }
     } catch (error) {

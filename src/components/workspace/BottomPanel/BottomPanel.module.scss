@@ -36,6 +36,10 @@
       align-items: center;
       border-radius: 50%;
       padding: 0.2rem;
+      min-width: 2rem;
+      width: 2rem;
+      height: 2rem;
+      justify-content: center;
       &:hover {
         background-color: var(--grey);
       }

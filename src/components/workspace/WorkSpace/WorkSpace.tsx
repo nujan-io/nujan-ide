@@ -72,15 +72,17 @@ const WorkSpace: FC = () => {
 
     return () => {
       console.log = originalConsoleLog;
-      document.removeEventListener('keydown', () => {});
-      // workspaceAction.closeAllFile();
-      workspaceAction.updateProjectById(
-        {
-          contractAddress: '',
-        },
-        projectId as string
-      );
-      clearLog();
+      try {
+        document.removeEventListener('keydown', () => {});
+        // workspaceAction.closeAllFile();
+        workspaceAction.updateProjectById(
+          {
+            contractAddress: '',
+          },
+          projectId as string
+        );
+        clearLog();
+      } catch (error) {}
     };
   }, []);
 

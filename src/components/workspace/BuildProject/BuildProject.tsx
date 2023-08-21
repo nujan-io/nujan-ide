@@ -99,7 +99,7 @@ const BuildProject: FC<Props> = ({
       );
       console.log(_contractAddress);
       createLog(
-        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress} - ${getContractLINK(
+        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}  ${getContractLINK(
           _contractAddress,
           environment
         )}`,
@@ -239,7 +239,7 @@ const BuildProject: FC<Props> = ({
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
         src="/html/tonweb.html"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts strict-origin-when-cross-origin"
       />
       <Form.Item label="Environment" className={s.formItem}>
         <Select

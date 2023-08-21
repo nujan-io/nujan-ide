@@ -1,6 +1,8 @@
-import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { LogType } from '@/interfaces/log.interface';
-import { FC, createRef, useEffect } from 'react';
+import EventEmitter from '@/utility/eventEmitter';
+import { FC, createRef, useEffect, useRef } from 'react';
+import 'xterm/css/xterm.css';
+
 import s from './LogView.module.scss';
 
 interface Props {
@@ -9,41 +11,86 @@ interface Props {
 }
 
 const LogView: FC<Props> = ({ type, text }) => {
-  const { getLog } = useLogActivity();
   const logViewerRef = createRef<HTMLDivElement>();
+  const isTerminalLoaded = useRef(false);
 
   const formatTimestamp = (timestamp: string | number | Date) => {
+    if (!timestamp) return '\x1b[0m \x1b[0m';
     const date = new Date(timestamp);
     return date.toLocaleTimeString();
   };
 
-  useEffect(() => {
-    if (!logViewerRef?.current) return;
-    logViewerRef.current.scrollTo({
-      top: logViewerRef.current.scrollHeight,
-      behavior: 'smooth',
-    });
-  }, [getLog, logViewerRef]);
+  const colorMap = {
+    grey: '\x1b[38;5;243m',
+    success: '\x1b[38;5;40m',
+    error: '\x1b[38;5;196m',
+    warning: '\x1b[38;5;226m',
+    info: '\x1b[38;5;33m',
+    reset: '\x1b[0m',
+  };
 
-  return (
-    <div className={s.root} ref={logViewerRef}>
-      {getLog({ text, type }).map(({ type, text, timestamp }, index) => (
-        <div
-          key={index}
-          className={`${s.item} ${s[`type__${type.toLowerCase()}`]}`}
-        >
-          <span>[{type}] - </span>
-          <span
-            className={`${s.text} ${
-              /^\[/.test(text) ? s.hasArray : ''
-            } wrap-text`}
-            dangerouslySetInnerHTML={{ __html: text }}
-          />
-          <span className={s.timestamp}>{formatTimestamp(timestamp)}</span>
-        </div>
-      ))}
-    </div>
-  );
+  useEffect(() => {
+    let terminal: any | null = null;
+
+    const initTerminal = async () => {
+      if (!logViewerRef.current) return;
+      const appTerminal = document.getElementById('app-terminal');
+
+      if (appTerminal?.children.length === 1) {
+        return;
+      }
+
+      const { Terminal } = await import('xterm');
+      const { FitAddon } = await import('xterm-addon-fit');
+      terminal = new Terminal({
+        fontSize: 17,
+        cursorBlink: false,
+        cursorStyle: 'bar',
+        disableStdin: true,
+      });
+      const fitAddon = new FitAddon();
+
+      terminal.loadAddon(fitAddon);
+
+      terminal.open(appTerminal);
+      fitAddon.fit();
+
+      EventEmitter.on('LOG_CLEAR', (data) => {
+        console.log('LOG_CLEAR', data);
+        terminal.clear();
+      });
+
+      EventEmitter.on('LOG', (data) => {
+        let timestamp = `${colorMap.grey} ${formatTimestamp(data.timestamp)} ${
+          colorMap.reset
+        }`;
+        if (!data.timestamp) {
+          timestamp = '';
+        }
+        terminal!!.writeln(
+          `${(colorMap as any)[data.type]}${data.text}${
+            colorMap.reset
+          } ${timestamp}`
+        );
+      });
+    };
+    if (typeof window === 'undefined') {
+      return;
+    }
+    if (!isTerminalLoaded.current && logViewerRef.current) {
+      (isTerminalLoaded as any).current = true;
+      initTerminal();
+    }
+
+    return () => {
+      isTerminalLoaded.current = false;
+      EventEmitter.off('LOG');
+      EventEmitter.off('LOG_CLEAR');
+      terminal?.dispose();
+    };
+  }, []);
+
+  return <div className={s.root} ref={logViewerRef} id="app-terminal"></div>;
 };
 
 export default LogView;

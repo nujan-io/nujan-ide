@@ -52,7 +52,7 @@ const ABIUi: FC<Props> = ({
       );
 
       if (getterReponse) {
-        createLog(JSON.stringify(getterReponse, null, 4));
+        createLog(JSON.stringify(getterReponse));
       }
     } catch (error: any) {
       console.log('error', error);

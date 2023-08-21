@@ -1,6 +1,7 @@
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { getFileNameFromPath } from '@/utility/utils';
 import { FC, useEffect, useRef, useState } from 'react';
 import ExecuteFile from '../ExecuteFile';
 import s from './TestCases.module.scss';
@@ -8,9 +9,9 @@ import s from './TestCases.module.scss';
 interface Props {
   projectId: string;
 }
+
 const TestCases: FC<Props> = ({ projectId }) => {
   const [executionCount, setExecutionCount] = useState(0);
-  const [isExecutedOnce, setIsExecutedOnce] = useState(false);
   const { createLog } = useLogActivity();
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
@@ -20,29 +21,27 @@ const TestCases: FC<Props> = ({ projectId }) => {
   const [selectedFilePath, setSelectedFilePath] = useState('');
 
   const executeTestCases = async (filePath: string) => {
-    if (!isExecutedOnce) {
-      return;
-    }
     const file = await getFileByPath(filePath, projectId);
     if (!file) return;
     let testCaseCode = (await compileTsFile(file, projectId))[0].code;
 
-    if (!cellBuilderRef.current?.contentWindow) return;
+    // if (!cellBuilderRef.current?.contentWindow) return;
 
     // TODO: Handle toHaveTransaction
     const linesToRemove = [
       /import\s+['"]@ton-community\/test-utils['"];/g,
       /import\s+\{[^}]+\}\s+from\s+['"]@ton-community\/blueprint['"];/g,
-      /expect\(.*\)\.toHaveTransaction\(\s*{[^}]+}\s*\);/g,
+      // /expect\(.*\)\.toHaveTransaction\(\s*{[^}]+}\s*\);/g,
     ];
 
     linesToRemove.forEach((pattern) => {
       testCaseCode = testCaseCode.replace(pattern, '');
     });
 
-    const compileBlockExp = /compile[^(]*\(([^)]*)\)/;
+    // const compileBlockExp = /compile[^(]*\(([^)]*)\)/;
+    const compileBlockExp = /compile\(['"]([^'"]+)['"]\)/g;
 
-    const contractCompileBlock = testCaseCode.match(compileBlockExp);
+    const contractCompileBlock = compileBlockExp.exec(testCaseCode);
     const contractPath = contractCompileBlock?.[1].replace(/['"]/g, '');
     if (!contractPath) {
       createLog('Please specify contract path', 'error');
@@ -67,7 +66,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
         );
         contractBOC = contract?.contractBOC;
         testCaseCode = testCaseCode.replace(
-          contractCompileBlock[0],
+          contractCompileBlock?.[0],
           `bocToCell("${contractBOC}")`
         );
       } catch (error: any) {
@@ -86,23 +85,47 @@ const TestCases: FC<Props> = ({ projectId }) => {
     testCaseCode = testCaseCode
       .replace(/import\s*\'@ton-community\/test-utils\';+$/, '')
       .replace(/import\s*{/g, 'const {')
-      .replace(/}\s*from\s*'@ton-community\/sandbox';/, '} = window.Sandbox;')
-      .replace(/}\s*from\s*'ton-core';/, '} = window.TonCore;');
+      .replace(
+        /}\s*from\s*'@ton-community\/sandbox';/,
+        '} = require("@ton-community/sandbox");'
+      )
+      .replace(/}\s*from\s*'ton-core';/, '} = require("ton-core");');
 
-    try {
-      cellBuilderRef.current.contentWindow.postMessage(
-        {
-          name: 'nujan-ton-ide',
-          type: 'test-cases',
-          code: testCaseCode,
-        },
-        '*'
-      );
-    } catch (error) {}
+    testCaseCode = `const {
+      Cell,
+    } = require("ton-core"); 
+    require("@ton-community/test-utils");
+    function bocToCell(codeBoc) {
+      return Cell.fromBoc(Buffer.from(codeBoc, "base64"))[0];
+    }
+    
+    ${testCaseCode}
+    `;
+
+    runIt(filePath, testCaseCode);
   };
 
-  const reloadTestCases = () => {
-    cellBuilderRef?.current?.contentWindow?.location.reload();
+  const runIt = async (filePath: string, codeBase: string) => {
+    const _webcontainerInstance = (window as any).webcontainerInstance;
+    filePath = getFileNameFromPath(filePath).replace('.spec.ts', '.spec.js');
+
+    if (!_webcontainerInstance) {
+      return;
+    }
+    await _webcontainerInstance.fs.writeFile(filePath, codeBase);
+
+    const response = await _webcontainerInstance.spawn('npx', [
+      'jest',
+      filePath,
+    ]);
+    response.output.pipeTo(
+      new WritableStream({
+        write(data) {
+          if (!data) return;
+          createLog(data, 'info', true, true);
+        },
+      })
+    );
   };
 
   useEffect(() => {
@@ -132,24 +155,8 @@ const TestCases: FC<Props> = ({ projectId }) => {
         label={`Run`}
         description="Select .spec.ts file to run test cases"
         onClick={(e, data) => {
-          if (data) {
-            setSelectedFilePath(data);
-          }
-          if (!isExecutedOnce) {
-            setIsExecutedOnce(true);
-          }
-          if (executionCount === 0) {
-            executeTestCases(data);
-          } else {
-            reloadTestCases();
-          }
+          executeTestCases(data);
         }}
-      />
-      <iframe
-        className={s.testResult}
-        ref={cellBuilderRef}
-        src="/html/testcases.html"
-        sandbox="allow-scripts allow-same-origin"
       />
     </div>
   );

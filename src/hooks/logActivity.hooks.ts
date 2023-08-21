@@ -1,5 +1,7 @@
 import { LogEntry, LogType } from '@/interfaces/log.interface';
 import { logState } from '@/state/log.state';
+import EventEmitter from '@/utility/eventEmitter';
+import { htmlToAnsi, isHTML } from '@/utility/utils';
 import { useRecoilState } from 'recoil';
 
 export function useLogActivity() {
@@ -30,7 +32,8 @@ export function useLogActivity() {
   function createLog(
     text: string,
     type: LogType = 'info',
-    allowDuplicate = true
+    allowDuplicate = true,
+    disableTimestamp = false
   ): void {
     if (
       !allowDuplicate &&
@@ -39,16 +42,18 @@ export function useLogActivity() {
       return;
     }
     const logEntry: LogEntry = {
-      text: text.trim(),
+      text: isHTML(text.trim()) ? htmlToAnsi(text.trim()) : text,
       type,
-      timestamp: new Date().toISOString(),
+      timestamp: !disableTimestamp ? new Date().toISOString() : '',
     };
+    EventEmitter.emit('LOG', logEntry);
     setLog((oldLog) => {
       return [...oldLog, logEntry];
     });
   }
 
   function clearLog(): void {
+    EventEmitter.emit('LOG_CLEAR');
     setLog([]);
   }
 
