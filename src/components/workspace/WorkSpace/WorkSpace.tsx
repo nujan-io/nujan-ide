@@ -1,6 +1,7 @@
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
+import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
 import { Blockchain } from '@ton-community/sandbox';
 import { Spin } from 'antd';
@@ -69,6 +70,11 @@ const WorkSpace: FC = () => {
       }
       createLog(_log);
     };
+
+    Analytics.track('Project Opened', {
+      platform: 'IDE',
+      type: 'TON-func',
+    });
 
     return () => {
       console.log = originalConsoleLog;

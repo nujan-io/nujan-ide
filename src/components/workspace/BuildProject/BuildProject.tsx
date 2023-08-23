@@ -3,6 +3,7 @@ import { useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { NetworkEnvironment } from '@/interfaces/workspace.interface';
+import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
 import { getContractLINK } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
@@ -97,7 +98,11 @@ const BuildProject: FC<Props> = ({
         sandboxBlockchain,
         sandboxWallet!!
       );
-      console.log(_contractAddress);
+      Analytics.track('Deploy project', {
+        platform: 'IDE',
+        type: 'TON-func',
+        environment: environment.toLowerCase(),
+      });
       createLog(
         `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}  ${getContractLINK(
           _contractAddress,

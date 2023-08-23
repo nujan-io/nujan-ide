@@ -1,6 +1,7 @@
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { Analytics } from '@/utility/analytics';
 import { getFileNameFromPath } from '@/utility/utils';
 import { FC, useEffect, useRef, useState } from 'react';
 import ExecuteFile from '../ExecuteFile';
@@ -126,6 +127,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
         },
       })
     );
+    Analytics.track('Execute Test Case', { platform: 'IDE', type: 'TON-func' });
   };
 
   useEffect(() => {

@@ -7,6 +7,7 @@ import { FC, useEffect, useState } from 'react';
 
 import { useProjectActions } from '@/hooks/project.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
+import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
 import { downloadRepo } from '@/utility/gitRepoDownloader';
 import { useRouter } from 'next/router';
@@ -58,6 +59,11 @@ const NewProject: FC = () => {
 
       form.resetFields();
       closeModal();
+      Analytics.track('Create project', {
+        platform: 'IDE',
+        type: 'TON-func',
+        source: importType,
+      });
       message.success(`Project '${projectName}' created`);
       router.push(`/project/${projectId}`);
     } catch (error: any) {

@@ -5,10 +5,17 @@ import { THEME } from '@tonconnect/ui';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { WebContainer } from '@webcontainer/api';
 import { ConfigProvider, theme } from 'antd';
+import mixpanel from 'mixpanel-browser';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
+
+mixpanel.init(AppConfig.analytics.MIXPANEL_TOKEN, {
+  debug: false,
+  track_pageview: AppConfig.analytics.IS_ENABLED,
+  persistence: 'localStorage',
+});
 
 export default function App({
   Component,

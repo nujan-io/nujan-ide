@@ -10,4 +10,8 @@ export const AppConfig = {
     accessTokenDuration: process.env.ACCESS_TOKEN_DURATION || '5d',
     accessTokenSecretKey: process.env.JWT_SECRET_KEY || 'YEFZVYPPATWJV3205Z89',
   },
+  analytics: {
+    MIXPANEL_TOKEN: process.env.NEXT_PUBLIC_MIXPANEL_TOKEN || '',
+    IS_ENABLED: !!process.env.NEXT_PUBLIC_ANALYTICS_ENABLED || false,
+  },
 };
