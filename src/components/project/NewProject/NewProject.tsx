@@ -62,7 +62,8 @@ const NewProject: FC = () => {
       Analytics.track('Create project', {
         platform: 'IDE',
         type: 'TON-func',
-        source: importType,
+        sourceType: importType,
+        template: values.template,
       });
       message.success(`Project '${projectName}' created`);
       router.push(`/project/${projectId}`);
