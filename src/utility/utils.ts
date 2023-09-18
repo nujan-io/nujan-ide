@@ -125,3 +125,8 @@ export const getFileNameFromPath = (filePath: string): string => {
 
   return fileName;
 };
+
+export const getFileExtension = (fileName: string) => {
+  if (!fileName) return;
+  return fileName.split('.').slice(1).join('.');
+};

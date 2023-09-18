@@ -2,11 +2,14 @@ import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
+import { highlightCodeSnippets } from '@/utility/syntaxHighlighter';
 import { fileTypeFromFileName } from '@/utility/utils';
 import EditorDefault, { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { FC, useEffect, useRef, useState } from 'react';
 import s from './Editor.module.scss';
 import { editorOnMount } from './EditorOnMount';
+type Monaco = typeof monaco;
 
 interface Props {
   file: Tree;
@@ -36,12 +39,14 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   > | null>(null);
 
   const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
+  const monacoRef = useRef<Monaco | null>(null);
 
   const saveFile = () => {
     if (!file.id) return;
+    const fileContent = editorRef?.current?.getValue() || '';
+    if (!fileContent) return;
     try {
-      updateFileContent(file.id, editorRef.current.getValue(), projectId);
+      updateFileContent(file.id, fileContent, projectId);
     } catch (error) {}
   };
 
@@ -60,9 +65,13 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         return '/_next/static/editor.worker.js';
       };
       loader.config({ monaco });
-      await loader.init();
+      // await loader.init();
+      await highlightCodeSnippets(loader);
     }
-    loadMonacoEditor().then(() => setIsLoaded(true));
+
+    loadMonacoEditor().then(() => {
+      setIsLoaded(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -96,13 +105,18 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   };
 
   const markFileDirty = () => {
+    const fileContent = editorRef.current.getValue();
     if (
       file.id !== initialFile?.id ||
       !initialFile?.content ||
-      initialFile.content === editorRef.current.getValue()
+      initialFile.content === fileContent
     ) {
       return;
     }
+    if (!fileContent) {
+      return;
+    }
+
     updateOpenFile(file.id, { isDirty: true }, projectId);
   };
 
@@ -111,11 +125,6 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       return;
     }
     fetchFileContent();
-    // if (fileTypeFromFileName(file.name) === 'func') {
-    //   monacoRef.current.setTheme('func-theme');
-    // } else {
-    //   monacoRef.current.setTheme('vs-dark');
-    // }
   }, [file, isEditorInitialized]);
 
   useEffect(() => {
@@ -123,17 +132,6 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       return;
     }
 
-    // Define and set custom theme
-
-    // monacoRef.current.defineTheme('app-theme', {
-    //   base: 'vs-dark',
-    //   inherit: true,
-    //   rules: [],
-    //   colors: {
-    //     'editor.background': '#000000',
-    //   },
-    // });
-    // monacoRef.current.setTheme('app-theme');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monacoRef.current]);
 
@@ -146,7 +144,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       <EditorDefault
         className={s.editor}
         path={file.id ? `${projectId}/${file.id}}` : ''}
-        theme="vs-dark"
+        theme="vs-theme-dark"
         // height="90vh"
         defaultLanguage={`${fileTypeFromFileName(file.name)}`}
         // defaultLanguage={`func`}
@@ -161,7 +159,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         }}
         onMount={async (editor, monaco) => {
           editorRef.current = editor;
-          monacoRef.current = monaco.editor;
+          monacoRef.current = monaco;
 
           setIsEditorInitialized(true);
           editorOnMount(editor, monaco);

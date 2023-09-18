@@ -1,9 +1,17 @@
 .root {
-  margin: 1rem 0;
-  border: 1px solid #555050;
-  border-radius: 5px;
-  background-color: #363535;
-  padding: 5px;
+  padding: 1rem 0px;
+  position: relative;
+  &:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 5rem;
+    height: 1px;
+    margin: 0 auto;
+    background-color: #373636;
+  }
   .formItemABI {
     margin-bottom: 3px;
   }

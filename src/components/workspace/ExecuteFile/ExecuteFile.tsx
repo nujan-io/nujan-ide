@@ -2,6 +2,7 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
+import { getFileExtension } from '@/utility/utils';
 import { Button, Select, message } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import s from './ExecuteFile.module.scss';
@@ -18,11 +19,6 @@ interface Props {
   description?: string;
   allowedFile: string[];
 }
-
-const getFileExtension = (fileName: string) => {
-  if (!fileName) return;
-  return fileName.split('.').slice(1).join('.');
-};
 
 const ExecuteFile: FC<Props> = ({
   // file,
