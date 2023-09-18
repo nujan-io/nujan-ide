@@ -4,7 +4,8 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { LogOptions, LogType } from '@/interfaces/log.interface';
 import { debounce } from '@/utility/utils';
 import { Tooltip } from 'antd';
-import { FC, useEffect, useState } from 'react';
+import { FC, useState } from 'react';
+import { useEffectOnce } from 'react-use';
 import s from './BottomPanel.module.scss';
 
 type logType = LogType | 'all';
@@ -41,9 +42,9 @@ const BottomPanel: FC = () => {
     setFilter({ text: searchTerm, type: filter.type });
   }, 200);
 
-  useEffect(() => {
+  useEffectOnce(() => {
     setIsLoaded(true);
-  }, []);
+  });
 
   return (
     <div className={s.root}>
@@ -69,10 +70,12 @@ const BottomPanel: FC = () => {
         </div>
       </div>
       <div className={s.view}>
-        <LogView
-          text={filter?.text || undefined}
-          type={filter.type !== 'all' ? filter.type : undefined}
-        />
+        {isLoaded && (
+          <LogView
+            text={filter?.text || undefined}
+            type={filter.type !== 'all' ? filter.type : undefined}
+          />
+        )}
       </div>
     </div>
   );

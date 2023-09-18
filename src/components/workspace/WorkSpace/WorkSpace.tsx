@@ -7,6 +7,7 @@ import { Blockchain } from '@ton-community/sandbox';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import { useEffectOnce } from 'react-use';
 import BottomPanel from '../BottomPanel/BottomPanel';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
@@ -96,8 +97,11 @@ const WorkSpace: FC = () => {
     if (tab) {
       setActiveMenu(tab as WorkSpaceMenu);
     }
-    setIsLoaded(true);
   }, [tab]);
+
+  useEffectOnce(() => {
+    setIsLoaded(true);
+  });
 
   return (
     <div className={`${s.root} show-file-icons`}>

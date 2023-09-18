@@ -1,6 +1,8 @@
 import { LogType } from '@/interfaces/log.interface';
 import EventEmitter from '@/utility/eventEmitter';
-import { FC, createRef, useEffect, useRef } from 'react';
+import { FC, createRef, useRef } from 'react';
+import { useEffectOnce } from 'react-use';
+
 import 'xterm/css/xterm.css';
 
 import s from './LogView.module.scss';
@@ -29,7 +31,7 @@ const LogView: FC<Props> = ({ type, text }) => {
     reset: '\x1b[0m',
   };
 
-  useEffect(() => {
+  useEffectOnce(() => {
     let terminal: any | null = null;
 
     const initTerminal = async () => {
@@ -88,7 +90,7 @@ const LogView: FC<Props> = ({ type, text }) => {
       EventEmitter.off('LOG_CLEAR');
       terminal?.dispose();
     };
-  }, []);
+  });
 
   return <div className={s.root} ref={logViewerRef} id="app-terminal"></div>;
 };
