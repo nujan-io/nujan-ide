@@ -1,71 +1,35 @@
-# Nujan
+![](https://res.cloudinary.com/don6qaqms/image/upload/v1696056044/k8w16co4k2nsjsrn7sup.jpg)
 
-Nujan is a web browser-based IDE (better remix for TON). Nujan is designed to write, test, compile, deploy, and interact with your smart contract. A developer can write a smart contract from anywhere, on any device without any setup, configuration, or download. Our user-friendly interface, fast compiler, and sharing feature make the process of contract deployment simple, fast, and accessible for all users.
 
-#### IDE Preview:
+# What is Nujan?
 
-![IDE Preview](https://res.cloudinary.com/cerebza/image/upload/v1679073846/nujan/ide-preview.jpg)
+Web IDE, powered by Nujan, is your ultimate browser-based IDE designed to simplify the journey of writing, testing, compiling, deploying, and interacting with smart contracts on TON. Write smart contracts from anywhere, No setups, no downloads, just pure convenience and versatility.
 
-## Project
+# What we offer 🤝 
 
-### Features:
+- User-friendly Code Editor & Syntax Highlighter
+- Efficient File Manager & Compiler
+- One-click deployment using Nujan IDE - Sandbox, Testnet, Mainnet
+- Easy Interaction with Contract
 
-- **Login via TON wallets :** Supports multiple TON wallets to log in with ease.
-- **Code Editor :** To write and edit your code easily and effortlessly.
-- **Syntax highlighter :** To highlight your code and display errors.
-- **File manager :** Handling and management of the project files are smooth and efficient
-- **Compiler :** Code is compiled in the browser using web assembly which will accelerate the compiling in the browser
-- **Writing test cases :** To write and run test cases on web so that we can minimize contract bugs.
-- **Deploy :** Easy one-click deployment using Nujan IDE
-- **Interaction with the contract :** You can update the state and call-getter method with our easy-to-use contract interaction UI.
-- **Code sharing :** Share your code with other developers to get instant feedback to enhance your project and embed it on any website.
-- **Project clone :** Clone public project to avoid duplication of efforts.
-- **Sync code to the server :** Helps to save your project safely in the clouds, makes it accessible from any device.
+# We Are Live on 🤩
 
-For testcase we have compiled: [TON standalone library](https://github.com/rahulyadav-57/ton-standalone-libraries)
+We are pleased to announce that our project is now live, and you can access it at [ide.nujan.io](https://ide.nujan.io/)
 
-#### Built with
 
-- Next.js
-- TON libraries
-- FunC
-- Monaco editor
-- MongoDB
-- Tree Sitter
+## IDE Preview
 
-## Getting Started
+![IDE Preview](https://res.cloudinary.com/don6qaqms/image/upload/v1696057097/lx7lfzeh0uanrafv8xrz.jpg)
+## 📖 Documentation
 
-Run the development server:
+The documentation for Nujan can be found at [docs.nujan.io](https://docs.nujan.io/)
 
-```bash
-npm run dev
-```
 
-Build for a production:
+## Feedback
 
-```bash
-npm run build
-```
+If you have any feedback, [please reach out to us](https://docs.google.com/forms/d/e/1FAIpQLScrneLuw7qST4FhgEEdUK3c2wXBTn0WmiTBZyMOMi_xnXvRDA/viewform )
 
-Run the production server:
-
-```bash
-npm run start
-```
-
-## Future Roadmap:
-
-- Improving UI/UX
-- Verify code directly from Nujan
-- Code Autocompletion
-- Real-time collaboration
-- Static analysis
-- Debugging
-- Download and import the project
-- Git support
-- Pre-built templates for most used code - like NFT marketplace
-- Bounty platform - Micro task-based module to incentivize developers to learn FunC
+We have put significant effort into developing and refining our codebase, and we invite developers, collaborators, and enthusiasts to explore our repository. Your feedback, contributions, and engagement with our project are highly valued as we continue to evolve and improve our platform. Thank you for your interest, and we look forward to building a vibrant and productive community around our GitHub repository.
 
 ## License
-
 [Business Source License 1.1](https://github.com/rahulyadav-57/ton-ide/blob/main/LICENSE)
