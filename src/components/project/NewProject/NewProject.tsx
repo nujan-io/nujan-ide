@@ -24,6 +24,11 @@ const NewProject: FC = () => {
 
   const [form] = useForm();
 
+  const language = [
+    { label: 'Tact', value: 'tact', default: true },
+    { label: 'Func', value: 'func' },
+  ];
+
   const templatedList = [
     { label: 'Blank Contract', value: 'tonBlank' },
     { label: 'Counter Contract', value: 'tonCounter' },
@@ -37,7 +42,7 @@ const NewProject: FC = () => {
   ];
 
   const onFormFinish = async (values: any) => {
-    const { name: projectName, importType, githubUrl } = values;
+    const { name: projectName, importType, githubUrl, language } = values;
     let files: Tree[] = [];
 
     try {
@@ -52,6 +57,7 @@ const NewProject: FC = () => {
 
       const projectId = await createProject(
         projectName,
+        language,
         values.template,
         values?.file?.file,
         files
@@ -61,7 +67,7 @@ const NewProject: FC = () => {
       closeModal();
       Analytics.track('Create project', {
         platform: 'IDE',
-        type: 'TON-func',
+        type: `TON - ${language}`,
         sourceType: importType,
         template: values.template,
       });
@@ -192,7 +198,7 @@ const NewProject: FC = () => {
           layout="vertical"
           onFinish={onFormFinish}
           autoComplete="off"
-          initialValues={{ template: 'tonCounter' }}
+          initialValues={{ template: 'tonCounter', language: 'tact' }}
           requiredMark="optional"
           onFieldsChange={(changedField) => {
             if (changedField[0].value === 'import') {
@@ -200,21 +206,32 @@ const NewProject: FC = () => {
             }
           }}
         >
-          <Form.Item
-            label="Name"
-            name="name"
-            className={s.formItem}
-            rules={[
-              { required: true, message: 'Please input your project name!' },
-            ]}
-          >
-            <Input placeholder="Ex. Counter" />
-          </Form.Item>
+          <div className="top-header">
+            <Form.Item
+              label="Name"
+              name="name"
+              className={s.formItem}
+              rules={[
+                { required: true, message: 'Please input your project name!' },
+              ]}
+            >
+              <Input placeholder="Ex. Counter" />
+            </Form.Item>
+
+            <Form.Item
+              label="Language"
+              name="language"
+              className={s.formItem}
+              rules={[{ required: true }]}
+            >
+              <Radio.Group options={language} optionType="button" />
+            </Form.Item>
+          </div>
 
           <Form.Item
             label="Select Template/Import"
             name="template"
-            className={s.formItem}
+            className={`${s.formItem} template-selector`}
           >
             <Radio.Group options={templatedList} optionType="button" />
           </Form.Item>

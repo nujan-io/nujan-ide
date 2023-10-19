@@ -3,6 +3,7 @@ import {
   commonProjectFiles,
 } from '@/constant/ProjectTemplate';
 import {
+  ContractLanguage,
   Project,
   ProjectTemplate,
   Tree,
@@ -35,14 +36,15 @@ export function useProjectActions() {
 
   async function createProject(
     name: string,
+    language: ContractLanguage,
     template: ProjectTemplate,
     file: RcFile | null,
     defaultFiles?: Tree[]
   ) {
     let { files, filesWithId } =
       template === 'import' && defaultFiles?.length == 0
-        ? await importUserFile(file as RcFile)
-        : createTemplateBasedProject(template, defaultFiles);
+        ? await importUserFile(file as RcFile, language)
+        : createTemplateBasedProject(template, language, defaultFiles);
 
     const convertedFileObject = files.reduce((acc: any, current) => {
       acc[current.name] = current;
@@ -55,6 +57,7 @@ export function useProjectActions() {
     ) {
       const commonFiles = createTemplateBasedProject(
         'import',
+        language,
         commonProjectFiles
       );
       files = [...files, ...commonFiles.files];
@@ -65,8 +68,9 @@ export function useProjectActions() {
     const projectId = uuidv4();
     const project = {
       id: projectId,
-      name: name,
-      template: template,
+      name,
+      language,
+      template,
     };
 
     createNewProject({ ...project }, files);
@@ -131,7 +135,7 @@ export function useProjectActions() {
 
     const abi = await generateABI(fileList);
     const data: Partial<Project> = {
-      abi: abi,
+      abi: { getters: abi as any, setters: [] },
       contractBOC: (buildResult as SuccessResult).codeBoc,
     };
 
@@ -152,11 +156,12 @@ export function useProjectActions() {
 
 const createTemplateBasedProject = (
   template: 'tonBlank' | 'tonCounter' | 'import',
+  language: ContractLanguage = 'tact',
   files: Tree[] = []
 ) => {
   let _files: Tree[] = cloneDeep(files);
   if (files.length === 0 && template !== 'import') {
-    _files = ProjectTemplateData[template]['func'];
+    _files = ProjectTemplateData[template][language];
   }
   const filesWithId: FileInterface[] = [];
 
@@ -175,7 +180,10 @@ const createTemplateBasedProject = (
   return { files: _files, filesWithId };
 };
 
-const importUserFile = async (file: RcFile) => {
+const importUserFile = async (
+  file: RcFile,
+  language: ContractLanguage = 'tact'
+) => {
   const sysrootArchiveReader = new ZipReader(new BlobReader(file));
   const sysrootArchiveEntries = await sysrootArchiveReader.getEntries();
   const filesToSkip = [
@@ -233,7 +241,11 @@ const importUserFile = async (file: RcFile) => {
     files.push(currentFile);
   }
 
-  const commonFiles = createTemplateBasedProject('import', commonProjectFiles);
+  const commonFiles = createTemplateBasedProject(
+    'import',
+    language,
+    commonProjectFiles
+  );
 
   return {
     files: [...files, ...commonFiles.files],
