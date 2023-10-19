@@ -7,6 +7,7 @@ export enum FileType {
   CSS = 'css',
   C = 'c',
   FC = 'func',
+  TACT = 'tact',
   Cpp = 'cpp',
   Rust = 'rust',
   Wat = 'wat',
@@ -29,4 +30,5 @@ export enum FileExtensionToFileType {
   jsx = FileType.JavaScriptReact,
   rs = FileType.Rust,
   fc = FileType.FC,
+  tact = FileType.TACT,
 }

@@ -59,6 +59,7 @@ const ProjectListing: FC = () => {
             </div>
 
             <span className={s.name}>{item.name}</span>
+            <span className={s.language}>{item.language || 'func'}</span>
           </Link>
         ))}
       </div>

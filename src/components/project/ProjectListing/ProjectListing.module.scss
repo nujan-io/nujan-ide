@@ -38,6 +38,12 @@
       font-weight: 500;
       margin-top: 1rem;
     }
+    .language {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      opacity: 0.5;
+    }
   }
   .deleting {
     animation: fade 1s ease-in-out infinite;
