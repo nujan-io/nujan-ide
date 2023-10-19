@@ -1,13 +1,23 @@
 import { vscodeOneDark } from '@/assets/vscode-one-dark';
+import { ContractLanguage } from '@/interfaces/workspace.interface';
 import { wireTmGrammars } from 'monaco-editor-textmate';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Registry } from 'monaco-textmate';
 import { loadWASM } from 'onigasm';
-import ftmLanguage from '../assets/ton/func/ftmLanguage.json';
+import funcTMLanguage from '../assets/ton/func/tmLanguage.json';
+import tactTMLanguage from '../assets/ton/tact/tmLanguage.json';
 
 let onigasmLoaded = false;
 
-export async function highlightCodeSnippets(loader: any): Promise<any> {
+export async function highlightCodeSnippets(
+  loader: any,
+  language: ContractLanguage
+): Promise<any> {
+  let ftmLanguage = {
+    func: funcTMLanguage,
+    tact: tactTMLanguage,
+  };
+
   if (!onigasmLoaded) {
     try {
       await loadWASM(
@@ -22,14 +32,14 @@ export async function highlightCodeSnippets(loader: any): Promise<any> {
       getGrammarDefinition: async () => {
         return {
           format: 'json',
-          content: ftmLanguage,
+          content: ftmLanguage[language],
         };
       },
     });
 
     const grammars = new Map();
-    grammars.set('func', 'source.func');
-    monaco.languages.register({ id: 'func' });
+    grammars.set(language, `source.${language}`);
+    monaco.languages.register({ id: language });
     monaco.editor.defineTheme('vs-theme-dark', vscodeOneDark);
     monaco.editor.setTheme('vs-theme-dark');
 
@@ -40,7 +50,7 @@ export async function highlightCodeSnippets(loader: any): Promise<any> {
       },
     };
     monaco.languages.setLanguageConfiguration(
-      'func',
+      language,
       funcLanguageConfiguration
     );
 

@@ -66,7 +66,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       };
       loader.config({ monaco });
       // await loader.init();
-      await highlightCodeSnippets(loader);
+      await highlightCodeSnippets(loader, fileTypeFromFileName(file.name));
     }
 
     loadMonacoEditor().then(() => {
