@@ -2,11 +2,19 @@
 
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const withTM = require("next-transpile-modules")(["monaco-editor"]);
+const webpack = require("webpack");
 
 const nextConfig = withTM({
   reactStrictMode: true,
   webpack: (config, options) => {
     config.resolve.fallback = { fs: false };
+
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+        resource.request = resource.request.replace(/^node:/, "");
+      })
+    );
+
     if (!options.isServer) {
       config.plugins.push(
         new MonacoWebpackPlugin({

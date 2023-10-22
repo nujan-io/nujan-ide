@@ -7,11 +7,7 @@ import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
 import { getContractLINK } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
-import {
-  Blockchain,
-  SandboxContract,
-  TreasuryContract,
-} from '@ton-community/sandbox';
+import { Blockchain } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
@@ -21,17 +17,18 @@ import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import OpenFile from '../OpenFile/OpenFile';
 import s from './BuildProject.module.scss';
+
+import { globalWorkspace } from '../globalWorkspace';
+
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
-  sandboxBlockchain: Blockchain;
   contract: any;
   updateContract: (contractInstance: any) => void;
 }
 const BuildProject: FC<Props> = ({
   projectId,
   onCodeCompile,
-  sandboxBlockchain,
   contract,
   updateContract,
 }) => {
@@ -46,8 +43,7 @@ const BuildProject: FC<Props> = ({
   const [tonConnector] = useTonConnectUI();
   const chain = tonConnector.wallet?.account.chain;
 
-  const [sandboxWallet, setSandboxWallet] =
-    useState<SandboxContract<TreasuryContract>>();
+  const { sandboxBlockchain } = globalWorkspace;
 
   const { Option } = Select;
 
@@ -91,13 +87,25 @@ const BuildProject: FC<Props> = ({
       'info'
     );
     try {
+      if (sandboxBlockchain && environment === 'SANDBOX') {
+        const blockchain = await Blockchain.create();
+        globalWorkspace.sandboxBlockchain = blockchain;
+
+        const wallet = await blockchain.treasury('user');
+        globalWorkspace.sandboxWallet = wallet;
+        createLog(
+          `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          'info',
+          false
+        );
+      }
       const { address: _contractAddress, contract } = await deployContract(
         activeProject?.contractBOC as string,
         buildOutput?.dataCell as any,
         environment.toLowerCase() as Network,
-        sandboxBlockchain,
-        sandboxWallet!!
+        activeProject!!
       );
+
       Analytics.track('Deploy project', {
         platform: 'IDE',
         type: 'TON-func',
@@ -141,26 +149,42 @@ const BuildProject: FC<Props> = ({
     }
 
     try {
-      const jsOutout = await buildTs(
-        {
-          'stateInit.cell.ts': stateInitContent?.content,
-          'cell.ts': 'import cell from "./stateInit.cell.ts"; cell;',
-        },
-        'cell.ts'
-      );
+      let jsOutout = [{ code: '' }];
+
+      if (activeProject?.language == 'tact') {
+        jsOutout = await buildTs(
+          {
+            'tact.ts': activeProject?.contractScript?.toString(),
+          },
+          'tact.ts'
+        );
+      } else {
+        jsOutout = await buildTs(
+          {
+            'stateInit.cell.ts': stateInitContent?.content,
+            'cell.ts': 'import cell from "./stateInit.cell.ts"; cell;',
+          },
+          'cell.ts'
+        );
+      }
+
       const finalJsoutput = jsOutout[0].code
         .replace(/^import\s+{/, 'const {')
-        .replace(/}\s+from\s.+/, '} = window.TonCore;');
+        .replace(/}\s+from\s.+/, '} = window.TonCore;')
+        .replace(/^\s*export\s+\{[^}]*\};\s*/m, '');
 
       cellBuilderRef.current.contentWindow.postMessage(
         {
           name: 'nujan-ton-ide',
           type: 'state-init-data',
           code: finalJsoutput,
+          language: activeProject?.language,
+          contractName: activeProject?.contractName,
         },
         '*'
       );
     } catch (error: any) {
+      // setIsLoading('');
       if (error.message.includes("'default' is not exported by ")) {
         throw "'default' is not exported by stateInit.cell.ts";
       }
@@ -179,24 +203,10 @@ const BuildProject: FC<Props> = ({
         : false;
 
     if (environment === 'SANDBOX') {
-      isValid = isValid && sandboxBlockchain ? true : false;
+      isValid = isValid && globalWorkspace.sandboxBlockchain ? true : false;
     }
     return isValid;
   };
-
-  useEffect(() => {
-    if (environment === 'SANDBOX') {
-      (async () => {
-        const wallet = await sandboxBlockchain.treasury('user');
-        createLog(
-          `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
-          'info',
-          false
-        );
-        setSandboxWallet(wallet);
-      })();
-    }
-  }, []);
 
   useEffect(() => {
     const handler = (
@@ -219,11 +229,10 @@ const BuildProject: FC<Props> = ({
         createLog(event.data.error, 'error');
         return;
       }
-
       setBuildoutput((t: any) => {
         return {
           ...t,
-          dataCell: event.data.data,
+          dataCell: event.data.data || '//',
         };
       });
     };
@@ -233,7 +242,9 @@ const BuildProject: FC<Props> = ({
   }, []);
 
   useEffect(() => {
-    if (!buildOutput?.dataCell || !isLoading) return;
+    if (!buildOutput?.dataCell || !isLoading) {
+      return;
+    }
     deploy();
   }, [buildOutput?.dataCell]);
 
@@ -241,10 +252,10 @@ const BuildProject: FC<Props> = ({
     <div className={`${s.root} onboarding-build-deploy`}>
       <h3 className={s.heading}>Build & Deploy</h3>
       <iframe
-        className={s.cellBuilderRef}
+        className={`${s.cellBuilderRef} cell-builder-ref`}
         ref={cellBuilderRef}
         src="/html/tonweb.html"
-        sandbox="allow-scripts strict-origin-when-cross-origin"
+        sandbox="allow-scripts  allow-same-origin"
       />
       <Form.Item label="Environment" className={s.formItem}>
         <Select
@@ -260,42 +271,50 @@ const BuildProject: FC<Props> = ({
 
       {environment !== 'SANDBOX' && <TonAuth />}
 
-      <p className={s.info}>
-        1. Update initial contract state in{' '}
-        <OpenFile
-          projectId={projectId}
-          name="stateInit.cell.ts"
-          path="stateInit.cell.ts"
-        />{' '}
-      </p>
+      {activeProject?.language !== 'tact' && (
+        <p className={s.info}>
+          - Update initial contract state in{' '}
+          <OpenFile
+            projectId={projectId}
+            name="stateInit.cell.ts"
+            path="stateInit.cell.ts"
+          />{' '}
+        </p>
+      )}
 
       <div className={s.actionWrapper}>
         <ExecuteFile
           file={currentActiveFile}
           projectId={projectId as string}
-          label={environment === 'SANDBOX' ? 'Build and Deploy' : 'Build'}
-          description="2. Select a contract file to build and deploy"
-          allowedFile={['fc']}
+          label={
+            environment === 'SANDBOX' && activeProject?.language !== 'tact'
+              ? 'Build and Deploy'
+              : 'Build'
+          }
+          description="- Select a contract file to build and deploy"
+          allowedFile={['fc', 'tact']}
           onCompile={() => {
-            if (environment == 'SANDBOX') {
+            if (
+              environment == 'SANDBOX' &&
+              activeProject?.language !== 'tact'
+            ) {
               initDeploy();
             }
           }}
         />
-        {environment !== 'SANDBOX' && (
-          <Button
-            type="primary"
-            loading={isLoading == 'deploy'}
-            onClick={initDeploy}
-            disabled={!currentActiveFile || !activeProject?.contractBOC}
-          >
-            Deploy
-          </Button>
-        )}
+
+        {(activeProject?.contractBOC && environment !== 'SANDBOX') ||
+          (activeProject?.language == 'tact' && (
+            <Button
+              type="primary"
+              loading={isLoading == 'deploy'}
+              onClick={initDeploy}
+              disabled={!currentActiveFile || !activeProject?.contractBOC}
+            >
+              Deploy
+            </Button>
+          ))}
       </div>
-      {/* {!activeProject?.contractBOC && (
-        <p className={s.info}>Build your contract before deploy</p>
-      )} */}
 
       {activeProject?.contractAddress!! && environment !== 'SANDBOX' && (
         <div className={`${s.contractAddress} wrap`}>
@@ -315,10 +334,10 @@ const BuildProject: FC<Props> = ({
           <ContractInteraction
             contractAddress={activeProject?.contractAddress!!}
             projectId={projectId}
-            abi={activeProject?.abi || []}
+            abi={activeProject?.abi || null}
             network={environment}
             contract={contract}
-            wallet={sandboxWallet!!}
+            language={activeProject?.language}
           />
         </div>
       )}

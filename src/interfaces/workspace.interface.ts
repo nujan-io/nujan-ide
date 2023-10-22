@@ -21,6 +21,12 @@ interface ProjectFiles {
   [id: string]: Tree[];
 }
 
+interface initParams {
+  name: string;
+  type: string;
+  optional: boolean;
+}
+
 export interface Project {
   id: string;
   userId?: string;
@@ -30,6 +36,9 @@ export interface Project {
   contractAddress?: string;
   contractBOC?: string;
   abi?: ABI;
+  contractScript?: Buffer;
+  initParams?: initParams[];
+  contractName?: string;
   isPublic?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -50,6 +59,7 @@ export interface ABIParameter {
 
 export interface ABIField {
   name: string;
+  parameters: ABIParameter[];
   arguments: ABIParameter[];
   returnTypes: ABIParameter;
 }

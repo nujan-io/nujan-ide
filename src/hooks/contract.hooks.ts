@@ -1,13 +1,11 @@
+import { globalWorkspace } from '@/components/workspace/globalWorkspace';
 import {
   NetworkEnvironment,
   ParameterType,
+  Project,
 } from '@/interfaces/workspace.interface';
 import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
-import {
-  Blockchain,
-  SandboxContract,
-  TreasuryContract,
-} from '@ton-community/sandbox';
+import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
 import { SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
@@ -38,32 +36,68 @@ export function useContractAction() {
     codeBOC: string,
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
-    sandboxBlockchain: Blockchain | null = null,
-    wallet: SandboxContract<TreasuryContract>
+    project: Project
   ): Promise<{ address: string; contract?: SandboxContract<UserContract> }> {
+    const { sandboxBlockchain, sandboxWallet } = globalWorkspace;
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     // Amount to send to contract. Gas fee
     const value = toNano('0.002');
-    const stateInit: StateInit = {
-      code: codeCell,
-      data: Cell.fromBoc(Buffer.from(dataCell, 'base64'))[0],
-    };
-
-    if (network.toUpperCase() == 'SANDBOX' && sandboxBlockchain) {
-      const _userContract = UserContract.createForDeploy(
-        stateInit.code as Cell,
-        stateInit.data as Cell
-      );
-      const userContract = sandboxBlockchain.openContract(_userContract);
-      const response = await userContract.sendData(wallet.getSender());
-      if (network.toUpperCase() !== 'SANDBOX') {
-        message.success('Contract Deployed');
-      }
-      return {
-        address: _userContract.address.toString(),
-        contract: userContract,
+    let stateInit: StateInit = {};
+    const cellBuilderRef = document.querySelector('.cell-builder-ref');
+    if (project.language === 'tact') {
+      const _contractInit = (cellBuilderRef as any)?.contentWindow
+        ?.contractInit;
+      stateInit = {
+        code: _contractInit.init.code,
+        data: _contractInit.init.data,
       };
+    } else {
+      stateInit = {
+        code: codeCell,
+        data: Cell.fromBoc(Buffer.from(dataCell, 'base64'))[0],
+      };
+    }
+
+    if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
+      if (project.language === 'tact') {
+        const _contractInit = (cellBuilderRef as any)?.contentWindow
+          ?.contractInit;
+
+        const _userContract = sandboxBlockchain.openContract(_contractInit);
+
+        // TODO: Handle last parameter i.e. message
+        const sender = sandboxWallet!!.getSender();
+        const response = await _userContract.send(
+          sender,
+          { value: toNano(1) },
+          {
+            $$type: 'Deploy',
+            queryId: BigInt(0),
+          }
+        );
+
+        return {
+          address: _userContract.address.toString(),
+          contract: _userContract,
+        };
+      } else {
+        const _userContract = UserContract.createForDeploy(
+          stateInit.code as Cell,
+          stateInit.data as Cell
+        );
+        const userContract = sandboxBlockchain.openContract(_userContract);
+        const response = await userContract.sendData(
+          sandboxWallet!!.getSender()
+        );
+        if (network.toUpperCase() !== 'SANDBOX') {
+          message.success('Contract Deployed');
+        }
+        return {
+          address: _userContract.address.toString(),
+          contract: userContract,
+        };
+      }
     }
 
     const _contractAddress = contractAddress(0, stateInit);
@@ -113,7 +147,7 @@ export function useContractAction() {
     wallet: SandboxContract<TreasuryContract>
   ) {
     const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
-    if (network === 'SANDBOX') {
+    if (network.toUpperCase() === 'SANDBOX') {
       if (!contract) {
         message.error('Contract is not deployed');
         return;

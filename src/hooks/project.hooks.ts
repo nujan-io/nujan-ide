@@ -8,8 +8,21 @@ import {
   ProjectTemplate,
   Tree,
 } from '@/interfaces/workspace.interface';
+import { OverwritableVirtualFileSystem } from '@/utility/OverwritableVirtualFileSystem';
 import { FileInterface } from '@/utility/fileSystem';
 import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
+import {
+  build as buildTact,
+  createVirtualFileSystem,
+} from '@tact-lang/compiler';
+import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
+import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
+import {
+  getContracts,
+  getType,
+} from '@tact-lang/compiler/dist/types/resolveDescriptors';
+
+import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import {
   CompileResult,
   SuccessResult,
@@ -32,6 +45,7 @@ export function useProjectActions() {
   return {
     createProject,
     compileFuncProgram,
+    compileTactProgram,
   };
 
   async function createProject(
@@ -52,8 +66,9 @@ export function useProjectActions() {
     }, {});
 
     if (
-      !convertedFileObject['stateInit.cell.ts'] ||
-      !convertedFileObject['message.cell.ts']
+      (!convertedFileObject['stateInit.cell.ts'] ||
+        !convertedFileObject['message.cell.ts']) &&
+      language !== 'tact'
     ) {
       const commonFiles = createTemplateBasedProject(
         'import',
@@ -141,6 +156,102 @@ export function useProjectActions() {
 
     updateProjectById(data, projectId);
     return data;
+  }
+
+  async function compileTactProgram(
+    file: Pick<Tree, 'path'>,
+    projectId: Project['id']
+  ) {
+    const fileList: { [key: string]: string } = {};
+
+    let filesToProcess = [file?.path];
+
+    while (filesToProcess.length !== 0) {
+      const fileToProcess = filesToProcess.pop();
+      const file = await getFileByPath(fileToProcess, projectId);
+      if (file?.content) {
+        fileList[file.path!!] = file.content;
+      }
+      if (!file?.content) {
+        continue;
+      }
+    }
+
+    const fs = new OverwritableVirtualFileSystem(fileList);
+
+    const response = await buildTact({
+      config: {
+        path: file.path!!,
+        output: 'dist',
+        name: 'tact',
+      },
+      project: fs,
+      stdlib: '@stdlib',
+    });
+
+    let output = {
+      abi: '',
+      boc: '',
+      contractScript: Buffer.from(''),
+    };
+
+    fs.overwrites.forEach((value, key) => {
+      if (key.includes('.abi')) {
+        output.abi = JSON.parse(value.toString());
+      } else if (key.includes('.boc')) {
+        output.boc = Buffer.from(value).toString('base64');
+      } else if (key.includes('.ts')) {
+        output.contractScript = value;
+      }
+    });
+
+    const getters = (output.abi as any)?.getters?.map((item: any) => {
+      return {
+        name: item.name,
+        parameters: item.arguments.map((parameter: any) => {
+          return {
+            name: parameter.name,
+            type: parameter.type,
+          };
+        }),
+      };
+    });
+
+    const setters = (output.abi as any)?.receivers?.map((item: any) => {
+      let fields = [];
+      if (item.message.type) {
+        fields = (output.abi as any).types.find(
+          (type: any) => type.name === item.message.type
+        );
+      }
+      return fields;
+    });
+
+    let ctx = new CompilerContext({ shared: {} });
+    let stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
+    ctx = precompile(ctx, fs, stdlib, file.path!!);
+    const _contract = getContracts(ctx);
+    const contactType = getType(ctx, _contract[0]);
+
+    const initParams = contactType.init?.args?.map((item: any) => {
+      return {
+        name: item.name,
+        type: item.type.name,
+        optional: item.type.optional,
+      };
+    });
+
+    const data: Partial<Project> = {
+      abi: { getters, setters },
+      contractBOC: output.boc,
+      initParams,
+      contractScript: output.contractScript,
+      contractName: _contract[0],
+    };
+
+    updateProjectById(data, projectId);
+
+    return fs.overwrites;
   }
 
   async function generateABI(fileList: any) {
@@ -241,11 +352,15 @@ const importUserFile = async (
     files.push(currentFile);
   }
 
-  const commonFiles = createTemplateBasedProject(
-    'import',
-    language,
-    commonProjectFiles
-  );
+  let commonFiles: any = [];
+
+  if (language !== 'tact') {
+    commonFiles = createTemplateBasedProject(
+      'import',
+      language,
+      commonProjectFiles
+    );
+  }
 
   return {
     files: [...files, ...commonFiles.files],

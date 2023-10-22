@@ -11,7 +11,7 @@ let onigasmLoaded = false;
 
 export async function highlightCodeSnippets(
   loader: any,
-  language: ContractLanguage
+  _language: ContractLanguage
 ): Promise<any> {
   let ftmLanguage = {
     func: funcTMLanguage,
@@ -28,37 +28,43 @@ export async function highlightCodeSnippets(
   }
 
   await (loader as any).init().then((monaco: any) => {
-    const registry = new Registry({
-      getGrammarDefinition: async () => {
-        return {
-          format: 'json',
-          content: ftmLanguage[language],
-        };
-      },
-    });
+    for (const [key, value] of Object.entries(ftmLanguage)) {
+      const language = key as ContractLanguage;
+      const registry = new Registry({
+        getGrammarDefinition: async () => {
+          return {
+            format: 'json',
+            content: ftmLanguage[language],
+          };
+        },
+      });
 
-    const grammars = new Map();
-    grammars.set(language, `source.${language}`);
-    monaco.languages.register({ id: language });
+      const grammars = new Map();
+      grammars.set(language, `source.${language}`);
+      monaco.languages.register({ id: language });
+
+      const commentRules = {
+        func: {
+          lineComment: ';;',
+          blockComment: ['{-', '-}'],
+        },
+        tact: {
+          lineComment: '//',
+          blockComment: ['/*', '*/'],
+        },
+      };
+
+      const languageConfiguration: monaco.languages.LanguageConfiguration = {
+        comments: commentRules[language] as any,
+      };
+      monaco.languages.setLanguageConfiguration(
+        language,
+        languageConfiguration
+      );
+      wireTmGrammars(monaco, registry, grammars);
+    }
+
     monaco.editor.defineTheme('vs-theme-dark', vscodeOneDark);
     monaco.editor.setTheme('vs-theme-dark');
-
-    const commentRules = {
-      func: {
-        lineComment: ';;',
-        blockComment: ['{-', '-}'],
-      },
-      tact: {
-        lineComment: '//',
-        blockComment: ['/*', '*/'],
-      },
-    };
-
-    const languageConfiguration: monaco.languages.LanguageConfiguration = {
-      comments: commentRules[language] as any,
-    };
-    monaco.languages.setLanguageConfiguration(language, languageConfiguration);
-
-    wireTmGrammars(monaco, registry, grammars);
   });
 }

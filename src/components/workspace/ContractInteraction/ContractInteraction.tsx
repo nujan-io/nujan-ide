@@ -1,23 +1,28 @@
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { ABI, NetworkEnvironment } from '@/interfaces/workspace.interface';
+import {
+  ABI,
+  ContractLanguage,
+  NetworkEnvironment,
+} from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
-import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
+import { SandboxContract } from '@ton-community/sandbox';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { FC, useEffect, useRef, useState } from 'react';
 import ABIUi from '../ABIUi';
 import OpenFile from '../OpenFile/OpenFile';
+import { globalWorkspace } from '../globalWorkspace';
 import s from './ContractInteraction.module.scss';
 
 interface Props {
   contractAddress: string;
   projectId: string;
-  abi: ABI[];
+  abi: ABI | null;
   network: NetworkEnvironment;
   contract: SandboxContract<UserContract> | null;
-  wallet: SandboxContract<TreasuryContract>;
+  language?: ContractLanguage;
 }
 const ContractInteraction: FC<Props> = ({
   contractAddress,
@@ -25,13 +30,14 @@ const ContractInteraction: FC<Props> = ({
   abi,
   network,
   contract = null,
-  wallet,
+  language = 'func',
 }) => {
   const [tonConnector] = useTonConnectUI();
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
   const { getFileByPath } = useWorkspaceActions();
   const { createLog } = useLogActivity();
+  const { sandboxWallet: wallet } = globalWorkspace;
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
@@ -138,7 +144,7 @@ const ContractInteraction: FC<Props> = ({
   }, [isLoading, tonConnector, network, contractAddress, contract]);
 
   const send = async (data: string) => {
-    sendMessage(data, contractAddress, contract, network, wallet);
+    sendMessage(data, contractAddress, contract, network, wallet!!);
   };
 
   if (!contractAddress) {
@@ -151,7 +157,7 @@ const ContractInteraction: FC<Props> = ({
         className={s.cellBuilderRef}
         ref={cellBuilderRef}
         src="/html/tonweb.html"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts  allow-same-origin"
       />
       <p>
         This will be used to send internal message and call getter method on
@@ -159,10 +165,10 @@ const ContractInteraction: FC<Props> = ({
       </p>
       <br />
 
-      {abi && abi.length > 0 && (
+      {abi && abi.getters.length > 0 && (
         <>
-          <h3 className={s.label}>Getters ({abi.length}):</h3>
-          {abi.map((item, i) => (
+          <h3 className={s.label}>Getters ({abi.getters.length}):</h3>
+          {abi.getters.map((item, i) => (
             <ABIUi
               abi={item}
               key={i}
@@ -174,26 +180,31 @@ const ContractInteraction: FC<Props> = ({
         </>
       )}
       <br />
+
       <h3 className={s.label}>Send internal message:</h3>
-      <p>
-        Update cell data in{' '}
-        <OpenFile
-          projectId={projectId}
-          name="message.cell.ts"
-          path="message.cell.ts"
-        />{' '}
-        and then send message
-      </p>
-      <Form className={s.form} onFinish={onSubmit}>
-        <Button
-          type="default"
-          htmlType="submit"
-          loading={isLoading === 'setter'}
-          className={s.sendMessage}
-        >
-          Send
-        </Button>
-      </Form>
+      {language !== 'tact' && (
+        <>
+          <p>
+            Update cell data in{' '}
+            <OpenFile
+              projectId={projectId}
+              name="message.cell.ts"
+              path="message.cell.ts"
+            />{' '}
+            and then send message
+          </p>
+          <Form className={s.form} onFinish={onSubmit}>
+            <Button
+              type="default"
+              htmlType="submit"
+              loading={isLoading === 'setter'}
+              className={s.sendMessage}
+            >
+              Send
+            </Button>
+          </Form>
+        </>
+      )}
     </div>
   );
 };
