@@ -11,18 +11,39 @@
 <body>
     <script src="https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/ton-core.js"></script>
     <script>
+        window.TonCore = window.parent.TonCore;
         window.addEventListener('message', async function (event) {
             if (!event.data || typeof event.data !== "object" || !event.data?.type || event.data?.name !== 'nujan-ton-ide') {
                 return;
             }
 
-            const d = `async function main() {
+            let _code = '';
+
+            if (event.data?.language !== 'tact') {
+                _code = `async function main() {
                 ${event.data.code}
                 const boc = await cell.toBoc();
                 return boc;
             } main()`;
+            }
+
+            if (event.data?.language === 'tact') {
+                let contractName = event.data?.contractName;
+                _code = `async function main() {
+                ${event.data.code}
+                const contractInit  = await TactCounter.fromInit(BigInt(1), BigInt(1));
+                window.contractInit = contractInit;
+                console.log('contractInit', contractInit);
+                return contractInit;
+            } main()`;
+            }
+
+
             try {
-                const cellValue = await eval(d);
+                let cellValue = await eval(_code);
+                if (event.data?.language === 'tact') {
+                    cellValue = {};
+                }
 
                 const response = {
                     name: 'nujan-ton-ide',
@@ -31,8 +52,10 @@
                 }
                 window.parent.postMessage(response, "*");
             } catch (error) {
+                console.log('error-frame', error);
                 let errorStack = error.stack.split('\n');
                 errorStack = errorStack.filter(line => line.trim() !== "" && !line.includes("tonweb.html")).map((item) => {
+                    // TODO: test this as cdn is not being used
                     if (item.includes('ton-core.js')) {
                         return item.replace('https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/', '');
                     }

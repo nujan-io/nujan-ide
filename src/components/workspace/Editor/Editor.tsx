@@ -1,6 +1,6 @@
 import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Tree } from '@/interfaces/workspace.interface';
+import { ContractLanguage, Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import { highlightCodeSnippets } from '@/utility/syntaxHighlighter';
 import { fileTypeFromFileName } from '@/utility/utils';
@@ -61,12 +61,14 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         if (label === 'typescript') {
           return '/_next/static/ts.worker.js';
         }
-
         return '/_next/static/editor.worker.js';
       };
       loader.config({ monaco });
       // await loader.init();
-      await highlightCodeSnippets(loader, fileTypeFromFileName(file.name));
+      await highlightCodeSnippets(
+        loader,
+        fileTypeFromFileName(file.name) as ContractLanguage
+      );
     }
 
     loadMonacoEditor().then(() => {

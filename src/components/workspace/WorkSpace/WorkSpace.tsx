@@ -8,6 +8,7 @@ import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import { useEffectOnce } from 'react-use';
+import * as TonCore from 'ton-core';
 import BottomPanel from '../BottomPanel/BottomPanel';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
@@ -16,6 +17,7 @@ import Tabs from '../Tabs';
 import TestCases from '../TestCases';
 import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
+import { globalWorkspace } from '../globalWorkspace';
 import FileTree from '../tree/FileTree';
 import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
@@ -28,9 +30,6 @@ const WorkSpace: FC = () => {
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoading, setIsloading] = useState(false);
-  const [sandboxBlockchain, setSandboxBlockchain] = useState<Blockchain | null>(
-    null
-  );
   const [contract, setContract] = useState<any>('');
 
   const { id: projectId, tab } = router.query;
@@ -42,12 +41,12 @@ const WorkSpace: FC = () => {
     workspaceAction.createNewItem('', name, type, projectId as string);
   };
 
-  const createSandbox = async () => {
-    if (sandboxBlockchain) {
+  const createSandbox = async (force: boolean = false) => {
+    if (globalWorkspace.sandboxBlockchain && !force) {
       return;
     }
     const blockchain = await Blockchain.create();
-    setSandboxBlockchain(blockchain);
+    globalWorkspace.sandboxBlockchain = blockchain;
   };
 
   useEffect(() => {
@@ -101,6 +100,7 @@ const WorkSpace: FC = () => {
 
   useEffectOnce(() => {
     setIsLoaded(true);
+    (window as any).TonCore = TonCore;
   });
 
   return (
@@ -142,11 +142,10 @@ const WorkSpace: FC = () => {
             <FileTree projectId={projectId as string} />
           </div>
         )}
-        {activeMenu === 'build' && sandboxBlockchain && (
+        {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
           <BuildProject
             projectId={projectId as string}
             onCodeCompile={(_codeBOC) => {}}
-            sandboxBlockchain={sandboxBlockchain}
             contract={contract}
             updateContract={(contractInstance) => {
               setContract(contractInstance);

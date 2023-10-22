@@ -1,7 +1,7 @@
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import {
-  ABI,
+  ABIField,
   ABIParameter,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
@@ -12,7 +12,7 @@ import s from './ABIUi.module.scss';
 
 const { Option } = Select;
 interface Props {
-  abi: ABI;
+  abi: ABIField;
   contractAddress: string;
   network: NetworkEnvironment;
   contract: SandboxContract<UserContract> | null;

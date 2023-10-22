@@ -58,7 +58,6 @@ const LogView: FC<Props> = ({ type, text }) => {
       fitAddon.fit();
 
       EventEmitter.on('LOG_CLEAR', (data) => {
-        console.log('LOG_CLEAR', data);
         terminal.clear();
       });
 

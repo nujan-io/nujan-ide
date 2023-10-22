@@ -30,7 +30,7 @@ const ExecuteFile: FC<Props> = ({
   allowedFile = [],
 }) => {
   const { compileTsFile, projectFiles } = useWorkspaceActions();
-  const { compileFuncProgram } = useProjectActions();
+  const { compileFuncProgram, compileTactProgram } = useProjectActions();
   const { createLog } = useLogActivity();
   const [selectedFile, setSelectedFile] = useState<Tree | undefined>();
 
@@ -63,6 +63,25 @@ const ExecuteFile: FC<Props> = ({
             onCompile();
           }
           createLog('Contract Built Successfully', 'success');
+          break;
+
+        case 'tact':
+          try {
+            const buildResponse = (await compileTactProgram(
+              selectedFile,
+              projectId
+            )) as Map<string, Buffer>;
+
+            if (onCompile) {
+              onCompile();
+            }
+            createLog('Built Successfully', 'success');
+          } catch (error: any) {
+            const errroMessage = error?.message?.split('\n');
+            for (let i = 0; i < errroMessage.length; i++) {
+              createLog(errroMessage[i], 'error', true, true);
+            }
+          }
           break;
       }
     } catch (error) {
