@@ -43,16 +43,21 @@ export async function highlightCodeSnippets(
     monaco.editor.defineTheme('vs-theme-dark', vscodeOneDark);
     monaco.editor.setTheme('vs-theme-dark');
 
-    const funcLanguageConfiguration: monaco.languages.LanguageConfiguration = {
-      comments: {
+    const commentRules = {
+      func: {
         lineComment: ';;',
         blockComment: ['{-', '-}'],
       },
+      tact: {
+        lineComment: '//',
+        blockComment: ['/*', '*/'],
+      },
     };
-    monaco.languages.setLanguageConfiguration(
-      language,
-      funcLanguageConfiguration
-    );
+
+    const languageConfiguration: monaco.languages.LanguageConfiguration = {
+      comments: commentRules[language] as any,
+    };
+    monaco.languages.setLanguageConfiguration(language, languageConfiguration);
 
     wireTmGrammars(monaco, registry, grammars);
   });
