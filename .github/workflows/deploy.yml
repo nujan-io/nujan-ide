@@ -1,9 +1,9 @@
 name: Deploy CI
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, beta]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, beta]
 
 jobs:
   deploy:
