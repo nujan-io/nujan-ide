@@ -1,9 +1,11 @@
 import { globalWorkspace } from '@/components/workspace/globalWorkspace';
 import {
+  ContractLanguage,
   NetworkEnvironment,
   ParameterType,
   Project,
 } from '@/interfaces/workspace.interface';
+import { capitalizeFirstLetter } from '@/utility/utils';
 import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
 import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
 import { SendTransactionRequest } from '@tonconnect/sdk';
@@ -65,17 +67,44 @@ export function useContractAction() {
           ?.contractInit;
 
         const _userContract = sandboxBlockchain.openContract(_contractInit);
+        (window as any).userContract = _userContract;
 
         // TODO: Handle last parameter i.e. message
         const sender = sandboxWallet!!.getSender();
+        const queryId = BigInt(0);
+        let messageParams = {};
+        if (project?.initParams && project?.initParams?.length > 0) {
+          const hasQueryId = project?.initParams?.findIndex(
+            (item) => item.name == 'queryId'
+          );
+          if (hasQueryId > -1) {
+            messageParams = {
+              $$type: 'Deploy',
+              queryId,
+            };
+          } else {
+            messageParams = {
+              $$type: 'Deploy',
+            };
+          }
+        }
         const response = await _userContract.send(
           sender,
           { value: toNano(1) },
+          messageParams
+        );
+
+        const response1 = await _userContract.send(
+          sender,
+          { value: toNano(1) },
           {
-            $$type: 'Deploy',
+            $$type: 'Add',
             queryId: BigInt(0),
+            amount: BigInt(5),
           }
         );
+
+        const data = await _userContract.getCounter();
 
         return {
           address: _userContract.address.toString(),
@@ -179,6 +208,7 @@ export function useContractAction() {
     contractAddress: string,
     methodName: string,
     contract: SandboxContract<UserContract> | null = null,
+    language: ContractLanguage,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
   ) {
@@ -207,11 +237,18 @@ export function useContractAction() {
     });
 
     if (network === 'SANDBOX' && contract) {
-      const call = await contract.getData(methodName, parsedStack as any);
-      const responseValues = [];
-
-      while (call.stack.remaining) {
-        responseValues.push(parseReponse(call.stack.pop()));
+      let responseValues = [];
+      if (language === 'tact') {
+        // convert getter function name as per script function name. Ex. counter will become getCounter
+        const response = await (contract as any)[
+          'get' + capitalizeFirstLetter(methodName)
+        ]();
+        responseValues.push({ method: methodName, value: response.toString() });
+      } else {
+        const call = await contract.getData(methodName, parsedStack as any);
+        while (call.stack.remaining) {
+          responseValues.push(parseReponse(call.stack.pop()));
+        }
       }
       return responseValues;
     }

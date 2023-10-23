@@ -3,6 +3,7 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import {
   ABIField,
   ABIParameter,
+  ContractLanguage,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
 import { SandboxContract } from '@ton-community/sandbox';
@@ -16,12 +17,14 @@ interface Props {
   contractAddress: string;
   network: NetworkEnvironment;
   contract: SandboxContract<UserContract> | null;
+  language?: ContractLanguage;
 }
 const ABIUi: FC<Props> = ({
   abi,
   contractAddress,
   network,
   contract = null,
+  language = 'func',
 }) => {
   const possiblesTypes = abi.parameters.map((item) => {
     if (['cell', 'slice'].includes(item.type)) {
@@ -47,6 +50,7 @@ const ABIUi: FC<Props> = ({
         contractAddress,
         abi.name,
         contract as any,
+        language,
         stack as any,
         network
       );

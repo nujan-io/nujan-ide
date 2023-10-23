@@ -241,6 +241,20 @@ export function useProjectActions() {
       };
     });
 
+    const deployFields = (output.abi as any).types.find(
+      (item: any) => item.name === 'Deploy'
+    )?.fields;
+
+    if (deployFields && deployFields.length > 0) {
+      deployFields.forEach((item: any) => {
+        initParams?.push({
+          name: item.name,
+          type: item.type.type,
+          optional: item.type.optional,
+        });
+      });
+    }
+
     const data: Partial<Project> = {
       abi: { getters, setters },
       contractBOC: output.boc,

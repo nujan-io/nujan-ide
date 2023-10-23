@@ -175,6 +175,7 @@ const ContractInteraction: FC<Props> = ({
               contractAddress={contractAddress}
               network={network}
               contract={contract}
+              language={language}
             />
           ))}
         </>
