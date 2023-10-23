@@ -9,7 +9,7 @@ import { getContractLINK } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Blockchain } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Form, Select } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
 import { Cell } from 'ton-core';
@@ -61,7 +61,20 @@ const BuildProject: FC<Props> = ({
 
   const activeProject = project(projectId);
 
-  const initDeploy = async () => {
+  const initDeploy = async (formValues = {}) => {
+    const _temp: any = { ...formValues };
+    let initParams = '';
+    if (_temp.queryId) {
+      delete _temp.queryId;
+    }
+
+    for (const [key, value] of Object.entries(_temp)) {
+      if (value) {
+        initParams += `BigInt(${value}),`;
+      }
+    }
+    initParams = initParams.slice(0, -1);
+
     try {
       if (!tonConnector.connected && environment !== 'SANDBOX') {
         throw 'Please connect wallet';
@@ -70,7 +83,7 @@ const BuildProject: FC<Props> = ({
         throw `Please connect wallet to ${environment}`;
       }
       setIsLoading('deploy');
-      await createStateInitCell();
+      await createStateInitCell(initParams);
     } catch (error: any) {
       setIsLoading('');
       if (typeof error === 'string') {
@@ -132,21 +145,18 @@ const BuildProject: FC<Props> = ({
         projectId
       );
     } catch (error: any) {
-      console.log(error);
+      console.log(error, 'error');
+      const errroMessage = error?.message?.split('\n');
+      for (let i = 0; i < errroMessage.length; i++) {
+        createLog(errroMessage[i], 'error', true, true);
+      }
     } finally {
       setIsLoading('');
     }
   };
 
-  const createStateInitCell = async () => {
+  const createStateInitCell = async (initParams = '') => {
     if (!cellBuilderRef.current?.contentWindow) return;
-    const stateInitContent = await getFileByPath(
-      'stateInit.cell.ts',
-      projectId
-    );
-    if (stateInitContent && !stateInitContent.content) {
-      throw 'State init data is missing in file stateInit.cell.ts';
-    }
 
     try {
       let jsOutout = [{ code: '' }];
@@ -159,6 +169,14 @@ const BuildProject: FC<Props> = ({
           'tact.ts'
         );
       } else {
+        const stateInitContent = await getFileByPath(
+          'stateInit.cell.ts',
+          projectId
+        );
+        if (stateInitContent && !stateInitContent.content) {
+          throw 'State init data is missing in file stateInit.cell.ts';
+        }
+
         jsOutout = await buildTs(
           {
             'stateInit.cell.ts': stateInitContent?.content,
@@ -180,6 +198,7 @@ const BuildProject: FC<Props> = ({
           code: finalJsoutput,
           language: activeProject?.language,
           contractName: activeProject?.contractName,
+          initParams,
         },
         '*'
       );
@@ -226,6 +245,7 @@ const BuildProject: FC<Props> = ({
         return;
       }
       if (event.data?.error) {
+        setIsLoading('');
         createLog(event.data.error, 'error');
         return;
       }
@@ -305,14 +325,36 @@ const BuildProject: FC<Props> = ({
 
         {(activeProject?.contractBOC && environment !== 'SANDBOX') ||
           (activeProject?.language == 'tact' && (
-            <Button
-              type="primary"
-              loading={isLoading == 'deploy'}
-              onClick={initDeploy}
-              disabled={!currentActiveFile || !activeProject?.contractBOC}
-            >
-              Deploy
-            </Button>
+            <>
+              <Form className={s.form} onFinish={initDeploy}>
+                {activeProject?.initParams && (
+                  <div>
+                    {activeProject?.initParams?.map((item, index) => (
+                      <Form.Item
+                        className={s.formItem}
+                        key={index}
+                        name={item.name}
+                        rules={[{ required: !item.optional }]}
+                      >
+                        <Input
+                          placeholder={`${item.name}: ${item.type}${
+                            item.optional ? '?' : ''
+                          }`}
+                        />
+                      </Form.Item>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={isLoading == 'deploy'}
+                  disabled={!currentActiveFile || !activeProject?.contractBOC}
+                >
+                  Deploy
+                </Button>
+              </Form>
+            </>
           ))}
       </div>
 

@@ -130,3 +130,15 @@ export const getFileExtension = (fileName: string) => {
   if (!fileName) return;
   return fileName.split('.').slice(1).join('.');
 };
+
+export const capitalizeFirstLetter = (inputString: string) => {
+  if (inputString.length === 0) {
+    return inputString; // Return an empty string as-is
+  }
+
+  // Capitalize the first letter
+  const firstLetter = inputString.charAt(0).toUpperCase();
+  const restOfTheString = inputString.slice(1);
+
+  return firstLetter + restOfTheString;
+};
