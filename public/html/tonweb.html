@@ -31,7 +31,7 @@
                 let contractName = event.data?.contractName;
                 _code = `async function main() {
                 ${event.data.code}
-                const contractInit  = await TactCounter.fromInit(${event.data.initParams});
+                const contractInit  = await ${contractName}.fromInit(${event.data.initParams});
                 window.contractInit = contractInit;
                 return contractInit;
             } main()`;

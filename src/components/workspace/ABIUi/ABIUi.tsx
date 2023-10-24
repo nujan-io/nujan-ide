@@ -18,6 +18,7 @@ interface Props {
   network: NetworkEnvironment;
   contract: SandboxContract<UserContract> | null;
   language?: ContractLanguage;
+  type: 'Getter' | 'Setter';
 }
 const ABIUi: FC<Props> = ({
   abi,
@@ -25,6 +26,7 @@ const ABIUi: FC<Props> = ({
   network,
   contract = null,
   language = 'func',
+  type,
 }) => {
   const possiblesTypes = abi.parameters.map((item) => {
     if (['cell', 'slice'].includes(item.type)) {
@@ -36,17 +38,25 @@ const ABIUi: FC<Props> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { createLog } = useLogActivity();
 
-  const { callGetter } = useContractAction();
+  const { callGetter, callSetter } = useContractAction();
 
   const onSubmit = async (formValues: any) => {
     let stack = Object.values(formValues).map((param: any) => {
-      const { type, value } = Object.values(param)[0] as any;
-      return { type: type, value: value };
+      const formField: any = Object.entries(param);
+      const { type, value } = formField[0][1];
+      if (language === 'tact') {
+        return { type, value, name: formField[0][0] };
+      } else {
+        const { type, value } = Object.values(param)[0] as any;
+        return { type: type, value: value };
+      }
     });
     try {
       setIsLoading(true);
 
-      const getterReponse = await callGetter(
+      const callableFunction = type === 'Getter' ? callGetter : callSetter;
+
+      const getterReponse = await callableFunction(
         contractAddress,
         abi.name,
         contract as any,

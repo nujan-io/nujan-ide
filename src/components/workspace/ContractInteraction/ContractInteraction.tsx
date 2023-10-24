@@ -176,13 +176,14 @@ const ContractInteraction: FC<Props> = ({
               network={network}
               contract={contract}
               language={language}
+              type="Getter"
             />
           ))}
         </>
       )}
       <br />
 
-      <h3 className={s.label}>Send internal message:</h3>
+      <h3 className={s.label}>Send internal message: ({abi?.setters?.length || '-'})</h3>
       {language !== 'tact' && (
         <>
           <p>
@@ -204,6 +205,21 @@ const ContractInteraction: FC<Props> = ({
               Send
             </Button>
           </Form>
+        </>
+      )}
+      {abi && abi.setters.length > 0 && (
+        <>
+          {abi.setters.map((item, i) => (
+            <ABIUi
+              abi={item}
+              key={i}
+              contractAddress={contractAddress}
+              network={network}
+              contract={contract}
+              language={language}
+              type="Setter"
+            />
+          ))}
         </>
       )}
     </div>

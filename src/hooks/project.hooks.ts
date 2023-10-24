@@ -212,19 +212,35 @@ export function useProjectActions() {
           return {
             name: parameter.name,
             type: parameter.type,
+            format: parameter.format,
+            optional: parameter.optional,
           };
         }),
       };
     });
 
-    const setters = (output.abi as any)?.receivers?.map((item: any) => {
-      let fields = [];
+    let setters: any = [];
+    (output.abi as any)?.receivers?.forEach((item: any) => {
+      if (item.message.type === 'Deploy') {
+        return;
+      }
       if (item.message.type) {
-        fields = (output.abi as any).types.find(
+        const singleItem = (output.abi as any).types.find(
           (type: any) => type.name === item.message.type
         );
+        const singleField = {
+          name: singleItem.name,
+          parameters: singleItem.fields.map((parameter: any) => {
+            return {
+              name: parameter.name,
+              type: parameter.type.type,
+              format: parameter.type.format,
+              optional: parameter.type.optional,
+            };
+          }),
+        };
+        setters.push(singleField);
       }
-      return fields;
     });
 
     let ctx = new CompilerContext({ shared: {} });

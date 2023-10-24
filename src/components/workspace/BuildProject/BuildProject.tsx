@@ -86,6 +86,7 @@ const BuildProject: FC<Props> = ({
       await createStateInitCell(initParams);
     } catch (error: any) {
       setIsLoading('');
+      console.log(error, 'error');
       if (typeof error === 'string') {
         createLog(error, 'error');
         return;
@@ -162,6 +163,10 @@ const BuildProject: FC<Props> = ({
       let jsOutout = [{ code: '' }];
 
       if (activeProject?.language == 'tact') {
+        const contractScript = activeProject?.contractScript?.toString();
+        if (!contractScript || typeof contractScript !== 'string') {
+          throw 'Build project built first';
+        }
         jsOutout = await buildTs(
           {
             'tact.ts': activeProject?.contractScript?.toString(),
@@ -191,6 +196,20 @@ const BuildProject: FC<Props> = ({
         .replace(/}\s+from\s.+/, '} = window.TonCore;')
         .replace(/^\s*export\s+\{[^}]*\};\s*/m, '');
 
+      let contractName = activeProject?.contractName;
+
+      if (activeProject?.language == 'tact') {
+        const _code = `async function main() {
+          ${finalJsoutput}
+          const contractInit  = await ${contractName}.fromInit(${initParams});
+          return contractInit;
+        } main()`;
+        const contractInit = await eval(_code);
+        (window as any).contractInit = contractInit;
+        deploy();
+        return;
+      }
+
       cellBuilderRef.current.contentWindow.postMessage(
         {
           name: 'nujan-ton-ide',
@@ -203,14 +222,14 @@ const BuildProject: FC<Props> = ({
         '*'
       );
     } catch (error: any) {
-      // setIsLoading('');
-      if (error.message.includes("'default' is not exported by ")) {
+      setIsLoading('');
+      if (error?.message?.includes("'default' is not exported by ")) {
         throw "'default' is not exported by stateInit.cell.ts";
       }
-      createLog(
-        'Something went wrong. Check browser console for details.',
-        'error'
-      );
+      if (error?.message) {
+        createLog(error?.message, 'error');
+        return;
+      }
       throw error;
     }
   };
@@ -348,8 +367,9 @@ const BuildProject: FC<Props> = ({
                 <Button
                   type="primary"
                   htmlType="submit"
-                  loading={isLoading == 'deploy'}
-                  disabled={!currentActiveFile || !activeProject?.contractBOC}
+                  // loading={isLoading == 'deploy'}
+                  disabled={!activeProject?.contractBOC}
+                  className="w-100"
                 >
                   Deploy
                 </Button>
