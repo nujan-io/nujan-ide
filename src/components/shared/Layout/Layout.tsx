@@ -1,6 +1,5 @@
 import { useUserOnboardingAction } from '@/hooks/userOnboarding.hooks';
 import { FC, useEffect, useState } from 'react';
-import UserOnboardingWizard from '../UserOnboardingWizard';
 import s from './Layout.module.scss';
 
 interface Props {
@@ -19,7 +18,7 @@ export const Layout: FC<Props> = ({ className = '', children }) => {
   }
   return (
     <>
-      <UserOnboardingWizard />
+      {/* <UserOnboardingWizard /> */}
       <main
         className={`${s.root} ${
           onboarding().tourActive ? 'onboarding-active' : ''

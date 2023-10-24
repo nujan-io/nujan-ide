@@ -32,6 +32,7 @@ export function useContractAction() {
   return {
     deployContract,
     sendMessage,
+    callSetter,
     callGetter,
   };
   async function deployContract(
@@ -44,12 +45,10 @@ export function useContractAction() {
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     // Amount to send to contract. Gas fee
-    const value = toNano('0.002');
+    const value = toNano('0.02');
     let stateInit: StateInit = {};
-    const cellBuilderRef = document.querySelector('.cell-builder-ref');
     if (project.language === 'tact') {
-      const _contractInit = (cellBuilderRef as any)?.contentWindow
-        ?.contractInit;
+      const _contractInit = (window as any).contractInit;
       stateInit = {
         code: _contractInit.init.code,
         data: _contractInit.init.data,
@@ -63,12 +62,8 @@ export function useContractAction() {
 
     if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
       if (project.language === 'tact') {
-        const _contractInit = (cellBuilderRef as any)?.contentWindow
-          ?.contractInit;
-
+        const _contractInit = (window as any).contractInit;
         const _userContract = sandboxBlockchain.openContract(_contractInit);
-        (window as any).userContract = _userContract;
-
         // TODO: Handle last parameter i.e. message
         const sender = sandboxWallet!!.getSender();
         const queryId = BigInt(0);
@@ -88,23 +83,14 @@ export function useContractAction() {
             };
           }
         }
+
         const response = await _userContract.send(
           sender,
-          { value: toNano(1) },
+          {
+            value,
+          },
           messageParams
         );
-
-        const response1 = await _userContract.send(
-          sender,
-          { value: toNano(1) },
-          {
-            $$type: 'Add',
-            queryId: BigInt(0),
-            amount: BigInt(5),
-          }
-        );
-
-        const data = await _userContract.getCounter();
 
         return {
           address: _userContract.address.toString(),
@@ -204,6 +190,42 @@ export function useContractAction() {
     }
   }
 
+  async function callSetter(
+    contractAddress: string,
+    methodName: string,
+    contract: SandboxContract<UserContract> | null = null,
+    language: ContractLanguage,
+    stack?: TupleItem[],
+    network?: Network | Partial<NetworkEnvironment>
+  ) {
+    if (network === 'SANDBOX' && contract) {
+      const { sandboxWallet } = globalWorkspace;
+
+      const sender = sandboxWallet!!.getSender();
+
+      let messageParams = {
+        $$type: methodName,
+      };
+      stack?.forEach((item: any) => {
+        messageParams = {
+          ...messageParams,
+          [item.name]: BigInt(item.value),
+        };
+      });
+
+      if (language === 'tact') {
+        const response = await (contract as any).send(
+          sender,
+          { value: toNano('0.02') },
+          messageParams
+        );
+        return { message: 'Message sent successfully' };
+      } else {
+      }
+      return;
+    }
+  }
+
   async function callGetter(
     contractAddress: string,
     methodName: string,
@@ -235,7 +257,6 @@ export function useContractAction() {
           };
       }
     });
-
     if (network === 'SANDBOX' && contract) {
       let responseValues = [];
       if (language === 'tact') {
