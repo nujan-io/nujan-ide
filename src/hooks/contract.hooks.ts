@@ -195,6 +195,7 @@ export function useContractAction() {
     methodName: string,
     contract: SandboxContract<UserContract> | null = null,
     language: ContractLanguage,
+    kind?: string,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
   ) {
@@ -203,9 +204,12 @@ export function useContractAction() {
 
       const sender = sandboxWallet!!.getSender();
 
-      let messageParams = {
+      let messageParams: any = {
         $$type: methodName,
       };
+      if (kind === 'text') {
+        messageParams = methodName;
+      }
       stack?.forEach((item: any) => {
         messageParams = {
           ...messageParams,
@@ -231,6 +235,7 @@ export function useContractAction() {
     methodName: string,
     contract: SandboxContract<UserContract> | null = null,
     language: ContractLanguage,
+    kind?: string,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
   ) {

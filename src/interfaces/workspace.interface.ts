@@ -59,6 +59,7 @@ export interface ABIParameter {
 
 export interface ABIField {
   name: string;
+  kind: string;
   parameters: ABIParameter[];
   arguments: ABIParameter[];
   returnTypes: ABIParameter;
