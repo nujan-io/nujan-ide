@@ -61,6 +61,7 @@ const ABIUi: FC<Props> = ({
         abi.name,
         contract as any,
         language,
+        abi?.kind,
         stack as any,
         network
       );
@@ -109,7 +110,7 @@ const ABIUi: FC<Props> = ({
               className={s.formItemABI}
               rules={[{ required: true, message: 'Please input value' }]}
             >
-              <Input placeholder={`${item.name}:${item.type}`} />
+              <Input placeholder={`${item.name}: ${item.type}`} />
             </Form.Item>
           </div>
         ))}

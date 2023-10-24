@@ -224,7 +224,15 @@ export function useProjectActions() {
       if (item.message.type === 'Deploy') {
         return;
       }
-      if (item.message.type) {
+      if (item.message.kind) {
+        if (item.message.kind !== 'typed') {
+          setters.push({
+            name: item.message.text,
+            parameters: [],
+            kind: item.message.kind,
+          });
+          return;
+        }
         const singleItem = (output.abi as any).types.find(
           (type: any) => type.name === item.message.type
         );
@@ -236,6 +244,7 @@ export function useProjectActions() {
               type: parameter.type.type,
               format: parameter.type.format,
               optional: parameter.type.optional,
+              kind: item.message.kind,
             };
           }),
         };
