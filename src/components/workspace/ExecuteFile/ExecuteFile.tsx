@@ -98,15 +98,15 @@ const ExecuteFile: FC<Props> = ({
 
   const selectFile = (e: any) => {
     const selectedFile = fileList.find((f) => {
-      if (typeof e === 'string') return f.id === e;
-      return f.id === e.target.value;
+      if (typeof e === 'string') return f?.id === e;
+      return f?.id === e?.target?.value;
     });
     setSelectedFile(selectedFile);
   };
 
   useEffect(() => {
     setSelectedFile(fileList[0]);
-  }, [fileList]);
+  }, []);
 
   return (
     <div className={s.root}>
