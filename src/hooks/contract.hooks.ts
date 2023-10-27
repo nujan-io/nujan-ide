@@ -8,7 +8,7 @@ import {
 import { capitalizeFirstLetter } from '@/utility/utils';
 import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
 import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
-import { SendTransactionRequest } from '@tonconnect/sdk';
+import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
 import BN from 'bn.js';
@@ -18,7 +18,9 @@ import {
   Cell,
   Contract,
   ContractProvider,
+  SendMode,
   Sender,
+  SenderArguments,
   TupleItem,
   beginCell,
   contractAddress,
@@ -49,6 +51,7 @@ export function useContractAction() {
     let stateInit: StateInit = {};
     if (project.language === 'tact') {
       const _contractInit = (window as any).contractInit;
+      console.log('_contractInit', _contractInit);
       stateInit = {
         code: _contractInit.init.code,
         data: _contractInit.init.data,
@@ -199,10 +202,15 @@ export function useContractAction() {
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
   ) {
-    if (network === 'SANDBOX' && contract) {
-      const { sandboxWallet } = globalWorkspace;
+    if (language === 'tact' && contract) {
+      let sender: Sender | null = null;
 
-      const sender = sandboxWallet!!.getSender();
+      if (network === 'SANDBOX') {
+        const { sandboxWallet } = globalWorkspace;
+        sender = sandboxWallet!!.getSender();
+      } else {
+        sender = new TonConnectSender(tonConnector.connector);
+      }
 
       let messageParams: any = {
         $$type: methodName,
@@ -217,16 +225,12 @@ export function useContractAction() {
         };
       });
 
-      if (language === 'tact') {
-        const response = await (contract as any).send(
-          sender,
-          { value: toNano('0.02') },
-          messageParams
-        );
-        return { message: 'Message sent successfully' };
-      } else {
-      }
-      return;
+      const response = await (contract as any).send(
+        sender,
+        { value: toNano('0.02') },
+        messageParams
+      );
+      return { message: 'Message sent successfully' };
     }
   }
 
@@ -354,5 +358,48 @@ function parseReponse(tupleItem: TupleItem) {
     return { type: 'int', value: (tupleItem as any).value.toString() };
   } else {
     return { type: 'raw', value: String((tupleItem as any).value) };
+  }
+}
+
+class TonConnectSender implements Sender {
+  provider: ITonConnect;
+  readonly address?: Address;
+
+  constructor(provider: ITonConnect) {
+    this.provider = provider;
+    if (provider.wallet)
+      this.address = Address.parse(provider.wallet?.account.address);
+    else this.address = undefined;
+  }
+
+  async send(args: SenderArguments): Promise<void> {
+    if (
+      !(
+        args.sendMode === undefined ||
+        args.sendMode == SendMode.PAY_GAS_SEPARATELY
+      )
+    ) {
+      throw new Error(
+        'Deployer sender does not support `sendMode` other than `PAY_GAS_SEPARATELY`'
+      );
+    }
+
+    await this.provider.sendTransaction({
+      validUntil: Date.now() + 5 * 60 * 1000,
+      messages: [
+        {
+          address: args.to.toString(),
+          amount: args.value.toString(),
+          payload: args.body?.toBoc().toString('base64'),
+          stateInit: args.init
+            ? beginCell()
+                .storeWritable(storeStateInit(args.init))
+                .endCell()
+                .toBoc()
+                .toString('base64')
+            : undefined,
+        },
+      ],
+    });
   }
 }

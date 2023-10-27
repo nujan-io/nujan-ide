@@ -61,6 +61,50 @@ const BuildProject: FC<Props> = ({
 
   const activeProject = project(projectId);
 
+  const deployView = () => {
+    if (!activeProject?.contractBOC) {
+      return;
+    }
+
+    if (activeProject?.language != 'tact' && environment === 'SANDBOX') {
+      return;
+    }
+
+    return (
+      <>
+        <Form className={s.form} onFinish={initDeploy}>
+          {activeProject?.initParams && (
+            <div>
+              {activeProject?.initParams?.map((item, index) => (
+                <Form.Item
+                  className={s.formItem}
+                  key={index}
+                  name={item.name}
+                  rules={[{ required: !item.optional }]}
+                >
+                  <Input
+                    placeholder={`${item.name}: ${item.type}${
+                      item.optional ? '?' : ''
+                    }`}
+                  />
+                </Form.Item>
+              ))}
+            </div>
+          )}
+          <Button
+            type="primary"
+            htmlType="submit"
+            // loading={isLoading == 'deploy'}
+            disabled={!activeProject?.contractBOC}
+            className="w-100"
+          >
+            Deploy
+          </Button>
+        </Form>
+      </>
+    );
+  };
+
   const initDeploy = async (formValues = {}) => {
     const _temp: any = { ...formValues };
     let initParams = '';
@@ -341,41 +385,7 @@ const BuildProject: FC<Props> = ({
             }
           }}
         />
-
-        {(activeProject?.contractBOC && environment !== 'SANDBOX') ||
-          (activeProject?.language == 'tact' && (
-            <>
-              <Form className={s.form} onFinish={initDeploy}>
-                {activeProject?.initParams && (
-                  <div>
-                    {activeProject?.initParams?.map((item, index) => (
-                      <Form.Item
-                        className={s.formItem}
-                        key={index}
-                        name={item.name}
-                        rules={[{ required: !item.optional }]}
-                      >
-                        <Input
-                          placeholder={`${item.name}: ${item.type}${
-                            item.optional ? '?' : ''
-                          }`}
-                        />
-                      </Form.Item>
-                    ))}
-                  </div>
-                )}
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  // loading={isLoading == 'deploy'}
-                  disabled={!activeProject?.contractBOC}
-                  className="w-100"
-                >
-                  Deploy
-                </Button>
-              </Form>
-            </>
-          ))}
+        {deployView()}
       </div>
 
       {activeProject?.contractAddress!! && environment !== 'SANDBOX' && (
