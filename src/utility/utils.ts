@@ -65,16 +65,17 @@ export const getContractLINK = (
   contractAddress: string,
   chainNetwork: NetworkEnvironment
 ) => {
-  if (chainNetwork === 'SANDBOX') {
-    return '';
-  }
-  return `
-  <a
-    href="${getContractURL(contractAddress, chainNetwork)}"
-    target="_blank"
-  >
-    View Deployed Contract
-  </a>`;
+  // if (chainNetwork === 'SANDBOX') {
+  //   return '';
+  // }
+  // return `
+  // <a
+  //   href="${getContractURL(contractAddress, chainNetwork)}"
+  //   target="_blank"
+  // >
+  //   View Deployed Contract
+  // </a>`
+  return '';
 };
 
 export const getContractURL = (
