@@ -345,25 +345,46 @@ function useWorkspaceActions() {
     id: Tree['parent'] | '',
     name: string,
     type: string,
-    projectId: string
+    projectId: string,
+    content: string = ''
   ) {
+    let parentId = id;
+    let itemName = name;
+    let newDirectory = '';
     const item = searchNode(id as string, projectId, 'parent');
     const currentItem = searchNode(id as string, projectId);
+    let filePath = currentItem.node?.path;
     if (isFileExists(name, projectId, item.node?.parent || '')) {
       return;
     }
 
+    // check if file name contains directory. Then create a directory first and then create a file
+    if (name.includes('/')) {
+      const pathArray = name.split('/');
+      const fileName = [...pathArray].pop();
+      itemName = fileName || name;
+      newDirectory = pathArray[0] || '';
+      filePath = newDirectory;
+    }
+    if (!id && name.includes('/')) {
+      const newItem = _createItem('directory', newDirectory || '', '', '');
+      item.project.push(newItem);
+      parentId = newItem.id;
+    }
+
     const newItem = _createItem(
       type,
-      name,
-      id as string,
-      currentItem.node?.path || ''
+      itemName,
+      parentId as string,
+      filePath || ''
     );
     if (type === 'file') {
-      await fileSystem.files.add({ id: newItem.id, content: '' });
+      await fileSystem.files.add({ id: newItem.id, content: content });
     }
+
     item.project.push(newItem);
     updateProjectFiles(item.project, projectId);
+    return newItem;
   }
 
   function isFileExists(

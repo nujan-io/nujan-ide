@@ -22,6 +22,7 @@ import {
   getType,
 } from '@tact-lang/compiler/dist/types/resolveDescriptors';
 
+import EventEmitter from '@/utility/eventEmitter';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import {
   CompileResult,
@@ -40,6 +41,9 @@ export function useProjectActions() {
     getFileByPath,
     addFilesToDatabase,
     updateProjectById,
+    createNewItem,
+    updateFileContent,
+    deleteItem,
   } = useWorkspaceActions();
 
   return {
@@ -192,7 +196,10 @@ export function useProjectActions() {
     let output = {
       abi: '',
       boc: '',
-      contractScript: Buffer.from(''),
+      contractScript: {
+        name: '',
+        value: Buffer.from(''),
+      },
     };
 
     fs.overwrites.forEach((value, key) => {
@@ -201,7 +208,10 @@ export function useProjectActions() {
       } else if (key.includes('.boc')) {
         output.boc = Buffer.from(value).toString('base64');
       } else if (key.includes('.ts')) {
-        output.contractScript = value;
+        output.contractScript = {
+          name: key,
+          value,
+        };
       }
     });
 
@@ -284,11 +294,37 @@ export function useProjectActions() {
       abi: { getters, setters },
       contractBOC: output.boc,
       initParams,
-      contractScript: output.contractScript,
+      contractScript: output.contractScript.value,
       contractName: _contract[0],
     };
 
     updateProjectById(data, projectId);
+
+    const scriptFile = await getFileByPath(
+      output.contractScript.name,
+      projectId
+    );
+
+    let fileToReRender = scriptFile;
+
+    if (!scriptFile?.id) {
+      let distDirectory = await getFileByPath('dist', projectId);
+      fileToReRender = await createNewItem(
+        distDirectory?.id!!,
+        output.contractScript.name,
+        'file',
+        projectId,
+        output.contractScript.value.toString()
+      );
+    } else {
+      updateFileContent(
+        scriptFile.id,
+        output.contractScript.value.toString(),
+        projectId
+      );
+    }
+
+    EventEmitter.emit('FORCE_UPDATE_FILE', fileToReRender?.id);
 
     return fs.overwrites;
   }

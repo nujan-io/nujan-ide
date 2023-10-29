@@ -7,6 +7,7 @@ import { fileTypeFromFileName } from '@/utility/utils';
 import EditorDefault, { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { FC, useEffect, useRef, useState } from 'react';
+import { useLatest } from 'react-use';
 import s from './Editor.module.scss';
 import { editorOnMount } from './EditorOnMount';
 type Monaco = typeof monaco;
@@ -33,6 +34,8 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   // Using this extra state to trigger save file from js event
   const [saveFileCounter, setSaveFileCounter] = useState(1);
+  const latestFile = useLatest(file);
+
   const [initialFile, setInitialFile] = useState<Pick<
     Tree,
     'id' | 'content'
@@ -89,15 +92,27 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     EventEmitter.on('SAVE_FILE', () => {
       setSaveFileCounter((prev) => prev + 1);
     });
+
+    // If file is changed e.g. in case of build process then force update in editor
+    EventEmitter.on('FORCE_UPDATE_FILE', async (fileId: string) => {
+      if (fileId !== latestFile.current.id) return;
+      await fetchFileContent(true);
+    });
     return () => {
       EventEmitter.off('SAVE_FILE');
+      EventEmitter.off('FORCE_UPDATE_FILE');
     };
   }, [isLoaded]);
 
-  const fetchFileContent = async () => {
-    if (!file.id || file.id === initialFile?.id) return;
+  const fetchFileContent = async (force = false) => {
+    if ((!file.id || file.id === initialFile?.id) && !force) return;
     let content = await getFileContent(file.id);
     let modelContent = editorRef.current.getValue();
+
+    if (force) {
+      editorRef.current.setValue(content);
+      modelContent = content;
+    }
     if (modelContent) {
       content = modelContent;
     } else {
