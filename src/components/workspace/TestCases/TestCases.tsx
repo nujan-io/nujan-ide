@@ -24,7 +24,18 @@ const TestCases: FC<Props> = ({ projectId }) => {
   const executeTestCases = async (filePath: string) => {
     const file = await getFileByPath(filePath, projectId);
     if (!file) return;
-    let testCaseCode = (await compileTsFile(file, projectId))[0].code;
+    let testCaseCode = '';
+
+    try {
+      testCaseCode = (await compileTsFile(file, projectId))[0].code;
+    } catch (error: any) {
+      if (error.message) {
+        createLog(error.message, 'error');
+        return;
+      }
+      console.log(error);
+      return;
+    }
 
     // if (!cellBuilderRef.current?.contentWindow) return;
 
@@ -44,12 +55,12 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     const contractCompileBlock = compileBlockExp.exec(testCaseCode);
     const contractPath = contractCompileBlock?.[1].replace(/['"]/g, '');
-    if (!contractPath) {
-      createLog('Please specify contract path', 'error');
-      return;
-    }
+    // if (!contractPath) {
+    //   createLog('Please specify contract path', 'error');
+    //   return;
+    // }
     const contractFile = await getFileByPath(contractPath, projectId);
-    if (!contractFile) {
+    if (contractPath && !contractFile) {
       createLog(
         `Contract file not found - ${contractPath}. Define correct absolute path. Ex. contracts/main.fc`,
         'error'
@@ -59,7 +70,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     let contractBOC = undefined;
 
-    if (contractPath && contractPath.includes('.fc')) {
+    if (contractPath && contractCompileBlock && contractPath.includes('.fc')) {
       try {
         const contract = await compileFuncProgram(
           { path: contractPath },
@@ -70,6 +81,12 @@ const TestCases: FC<Props> = ({ projectId }) => {
           contractCompileBlock?.[0],
           `bocToCell("${contractBOC}")`
         );
+        testCaseCode = `
+        const {
+        Cell,
+      } = require("ton-core");
+        ${testCaseCode}
+        `;
       } catch (error: any) {
         let _error = '';
         if (typeof error === 'string') {
@@ -92,9 +109,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
       )
       .replace(/}\s*from\s*'ton-core';/, '} = require("ton-core");');
 
-    testCaseCode = `const {
-      Cell,
-    } = require("ton-core"); 
+    testCaseCode = `
     require("@ton-community/test-utils");
     function bocToCell(codeBoc) {
       return Cell.fromBoc(Buffer.from(codeBoc, "base64"))[0];
