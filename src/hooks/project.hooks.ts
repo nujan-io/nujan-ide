@@ -188,6 +188,9 @@ export function useProjectActions() {
         path: file.path!!,
         output: 'dist',
         name: 'tact',
+        options: {
+          debug: true,
+        },
       },
       project: fs,
       stdlib: '@stdlib',

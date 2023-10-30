@@ -68,7 +68,10 @@ const WorkSpace: FC = () => {
       if (!_log.includes('DEBUG')) {
         return;
       }
-      createLog(_log);
+      const splittedLog = _log.split('\n');
+      for (let i = 0; i < splittedLog.length; i++) {
+        createLog(splittedLog[i], 'info', true, true);
+      }
     };
 
     Analytics.track('Project Opened', {
