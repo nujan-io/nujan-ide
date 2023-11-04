@@ -105,7 +105,7 @@ const ABIUi: FC<Props> = ({
                 key={i}
                 name={[i, item.name, 'type']}
                 className={`${s.formItemABI} ${s.formItemType}}`}
-                rules={[{ required: true, message: 'Please select type' }]}
+                rules={[{ message: 'Please select type' }]}
               >
                 <Input type="hidden" value={0} />
               </Form.Item>
