@@ -183,6 +183,14 @@ export function useProjectActions() {
 
     const fs = new OverwritableVirtualFileSystem(fileList);
 
+    let ctx = new CompilerContext({ shared: {} });
+    let stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
+    try {
+      ctx = precompile(ctx, fs, stdlib, file.path!!);
+    } catch (error: any) {
+      throw error;
+    }
+
     const response = await buildTact({
       config: {
         path: file.path!!,
@@ -195,6 +203,9 @@ export function useProjectActions() {
       project: fs,
       stdlib: '@stdlib',
     });
+    if (!response) {
+      throw new Error('Error while building');
+    }
 
     let output = {
       abi: '',
@@ -265,9 +276,6 @@ export function useProjectActions() {
       }
     });
 
-    let ctx = new CompilerContext({ shared: {} });
-    let stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
-    ctx = precompile(ctx, fs, stdlib, file.path!!);
     const _contract = getContracts(ctx);
     const contactType = getType(ctx, _contract[0]);
 
@@ -430,7 +438,7 @@ const importUserFile = async (
     files.push(currentFile);
   }
 
-  let commonFiles: any = [];
+  let commonFiles: any = { files: [], filesWithId: [] };
 
   if (language !== 'tact') {
     commonFiles = createTemplateBasedProject(

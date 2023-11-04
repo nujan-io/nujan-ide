@@ -65,7 +65,7 @@ const WorkSpace: FC = () => {
     console.log = (...args) => {
       originalConsoleLog(...args); // Call the original console.log
       const _log = args.join(' ');
-      if (!_log.includes('DEBUG')) {
+      if (!_log.includes('DEBUG') || activeProject?.language === 'tact') {
         return;
       }
       const splittedLog = _log.split('\n');

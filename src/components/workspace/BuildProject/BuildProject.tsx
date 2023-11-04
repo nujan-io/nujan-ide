@@ -9,16 +9,56 @@ import { getContractLINK } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Blockchain } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Form, Input, Select } from 'antd';
+import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
 import { FC, useEffect, useRef, useState } from 'react';
-import { Cell } from 'ton-core';
+import { Address, Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import OpenFile from '../OpenFile/OpenFile';
 import s from './BuildProject.module.scss';
 
+import {
+  AddressInput,
+  AmountInput,
+  BoolInput,
+  BufferInput,
+  CellInput,
+  NullInput,
+  StringInput,
+} from '../abiInputs';
 import { globalWorkspace } from '../globalWorkspace';
+
+const fields = (type: String) => {
+  if (
+    type.includes('int') ||
+    type == 'Int' ||
+    type == 'bigint | number' ||
+    type == 'number | bigint'
+  )
+    return AmountInput;
+  switch (type) {
+    case 'Address':
+      return AddressInput;
+    case 'Bool':
+      return BoolInput;
+    case 'Buffer':
+      return BufferInput;
+    case 'bigint':
+    case 'number':
+      return AmountInput;
+    case 'string':
+      return StringInput;
+    case 'Cell':
+    case 'Builder':
+    case 'Slice':
+      return CellInput;
+    case 'null':
+      return NullInput;
+    default:
+      return StringInput;
+  }
+};
 
 interface Props {
   projectId: string;
@@ -75,20 +115,21 @@ const BuildProject: FC<Props> = ({
         <Form className={s.form} onFinish={initDeploy}>
           {activeProject?.initParams && (
             <div>
-              {activeProject?.initParams?.map((item, index) => (
-                <Form.Item
-                  className={s.formItem}
-                  key={index}
-                  name={item.name}
-                  rules={[{ required: !item.optional }]}
-                >
-                  <Input
+              {activeProject?.initParams?.map((item, index) => {
+                if (item.name === 'queryId') return <></>;
+                const Field = fields(item.type);
+                return (
+                  <Field
+                    key={index}
+                    className={s.formItem}
+                    name={item.name}
                     placeholder={`${item.name}: ${item.type}${
                       item.optional ? '?' : ''
                     }`}
+                    rules={[{ required: !item.optional }]}
                   />
-                </Form.Item>
-              ))}
+                );
+              })}
             </div>
           )}
           <Button
@@ -111,11 +152,41 @@ const BuildProject: FC<Props> = ({
     if (_temp.queryId) {
       delete _temp.queryId;
     }
+    const initParamsData = activeProject?.initParams;
+    let parametrsType: any = {};
+    if (initParamsData) {
+      parametrsType = initParamsData.reduce(
+        (acc: any, curr) => ((acc[curr.name] = curr.type), acc),
+        {}
+      );
+    }
 
     for (const [key, value] of Object.entries(_temp)) {
-      if (value) {
+      const type = parametrsType[key];
+      console.log(key, value);
+      if (
+        type.includes('int') ||
+        type == 'Int' ||
+        type == 'bigint | number' ||
+        type == 'number | bigint'
+      ) {
         initParams += `BigInt(${value}),`;
+        continue;
       }
+      // if (value) {
+      switch (type) {
+        case 'Address':
+          initParams += eval(
+            `(Address) => { return Address.parse(${value}"; }`
+          )(Address);
+          continue;
+        case 'Bool':
+          initParams += `${!!value},`;
+          continue;
+      }
+      if (parametrsType[key] == 'Address') {
+      }
+      // }
     }
     initParams = initParams.slice(0, -1);
 
@@ -140,10 +211,7 @@ const BuildProject: FC<Props> = ({
   };
 
   const deploy = async () => {
-    createLog(
-      `Deploying contract with code BOC -  ${activeProject?.contractBOC}`,
-      'info'
-    );
+    createLog(`Deploying contract ...`, 'info');
     try {
       if (sandboxBlockchain && environment === 'SANDBOX') {
         const blockchain = await Blockchain.create();
@@ -157,7 +225,11 @@ const BuildProject: FC<Props> = ({
           false
         );
       }
-      const { address: _contractAddress, contract } = await deployContract(
+      const {
+        address: _contractAddress,
+        contract,
+        logs,
+      } = await deployContract(
         activeProject?.contractBOC as string,
         buildOutput?.dataCell as any,
         environment.toLowerCase() as Network,
@@ -176,6 +248,12 @@ const BuildProject: FC<Props> = ({
         )}`,
         'success'
       );
+
+      for (let i = 0; i < (logs || []).length; i++) {
+        if (!logs?.[i]) continue;
+        createLog(logs[i], 'info', false);
+      }
+
       if (!_contractAddress) {
         return;
       }

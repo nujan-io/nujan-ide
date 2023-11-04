@@ -19,13 +19,13 @@ const DashboardSidebar: FC<Props> = ({ className }) => {
       <div className={s.menuItems}>
         <div>
           <span className={`${s.name} ${s.item}`}>Welcome 👋</span>
-          <span
+          {/* <span
             className={`${s.name} ${s.item}`}
             onClick={() => startOnboarding(0)}
           >
             <AppIcon name="Play" />
             Start help wizard
-          </span>
+          </span> */}
           <Link
             className={`${s.name} ${s.item}`}
             href="https://docs.nujan.io/"

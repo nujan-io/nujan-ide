@@ -5,9 +5,13 @@ import {
   ParameterType,
   Project,
 } from '@/interfaces/workspace.interface';
-import { capitalizeFirstLetter } from '@/utility/utils';
+import { capitalizeFirstLetter, convertToText } from '@/utility/utils';
 import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
-import { SandboxContract, TreasuryContract } from '@ton-community/sandbox';
+import {
+  SandboxContract,
+  SendMessageResult,
+  TreasuryContract,
+} from '@ton-community/sandbox';
 import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
@@ -24,6 +28,7 @@ import {
   TupleItem,
   beginCell,
   contractAddress,
+  fromNano,
   storeStateInit,
   toNano,
 } from 'ton-core';
@@ -42,16 +47,21 @@ export function useContractAction() {
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
     project: Project
-  ): Promise<{ address: string; contract?: SandboxContract<UserContract> }> {
+  ): Promise<{
+    address: string;
+    contract?: SandboxContract<UserContract>;
+    logs?: string[];
+  }> {
     const { sandboxBlockchain, sandboxWallet } = globalWorkspace;
     let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
+
+    let sender: Sender | null = null;
 
     // Amount to send to contract. Gas fee
     const value = toNano('0.02');
     let stateInit: StateInit = {};
     if (project.language === 'tact') {
       const _contractInit = (window as any).contractInit;
-      console.log('_contractInit', _contractInit);
       stateInit = {
         code: _contractInit.init.code,
         data: _contractInit.init.data,
@@ -63,59 +73,92 @@ export function useContractAction() {
       };
     }
 
-    if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
-      if (project.language === 'tact') {
-        const _contractInit = (window as any).contractInit;
-        const _userContract = sandboxBlockchain.openContract(_contractInit);
-        // TODO: Handle last parameter i.e. message
-        const sender = sandboxWallet!!.getSender();
-        const queryId = BigInt(0);
-        let messageParams = {};
-        if (project?.initParams && project?.initParams?.length > 0) {
-          const hasQueryId = project?.initParams?.findIndex(
-            (item) => item.name == 'queryId'
-          );
-          if (hasQueryId > -1) {
-            messageParams = {
-              $$type: 'Deploy',
-              queryId,
-            };
-          } else {
-            messageParams = {
-              $$type: 'Deploy',
-            };
-          }
-        }
+    let messageParams = {};
+    const _contractInit = (window as any).contractInit;
+    let _userContract: any = null;
 
-        const response = await _userContract.send(
-          sender,
-          {
-            value,
-          },
-          messageParams
-        );
-
-        return {
-          address: _userContract.address.toString(),
-          contract: _userContract,
+    if (project?.initParams && project?.initParams?.length > 0) {
+      const hasQueryId = project?.initParams?.findIndex(
+        (item) => item.name == 'queryId'
+      );
+      const queryId = BigInt(0);
+      if (hasQueryId > -1) {
+        messageParams = {
+          $$type: 'Deploy',
+          queryId,
         };
       } else {
-        const _userContract = UserContract.createForDeploy(
-          stateInit.code as Cell,
-          stateInit.data as Cell
-        );
-        const userContract = sandboxBlockchain.openContract(_userContract);
-        const response = await userContract.sendData(
-          sandboxWallet!!.getSender()
-        );
-        if (network.toUpperCase() !== 'SANDBOX') {
-          message.success('Contract Deployed');
-        }
-        return {
-          address: _userContract.address.toString(),
-          contract: userContract,
+        messageParams = {
+          $$type: 'Deploy',
         };
       }
+    }
+
+    if (project.language === 'tact' && network.toUpperCase() !== 'SANDBOX') {
+      sender = new TonConnectSender(tonConnector.connector);
+      const endpoint = await getHttpEndpoint({
+        network: network?.toLocaleLowerCase() as Network,
+      });
+
+      const client = new TonClient({ endpoint });
+      _userContract = client.open(_contractInit);
+      client;
+    } else if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
+      _userContract = sandboxBlockchain.openContract(_contractInit);
+      sender = sandboxWallet!!.getSender();
+    }
+
+    if (project.language === 'tact') {
+      const response = await _userContract.send(
+        sender,
+        {
+          value,
+        },
+        messageParams
+      );
+      let logMessages: string[] = [];
+      if (response) {
+        logMessages = terminalLogMessages(
+          [response],
+          [_userContract as Contract]
+        );
+      }
+
+      // create a code loop through array and check has error string
+      for (let index = 0; index < logMessages.length; index++) {
+        const element = logMessages[index];
+        if (element.includes('Error')) {
+          return {
+            address: '',
+            contract: _userContract,
+            logs: logMessages,
+          };
+        }
+      }
+
+      return {
+        address: _userContract.address.toString(),
+        contract: _userContract,
+        logs: logMessages,
+      };
+    }
+
+    if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
+      //  else {
+      const _userContract = UserContract.createForDeploy(
+        stateInit.code as Cell,
+        stateInit.data as Cell
+      );
+      const userContract = sandboxBlockchain.openContract(_userContract);
+      const response = await userContract.sendData(sandboxWallet!!.getSender());
+      if (network.toUpperCase() !== 'SANDBOX') {
+        message.success('Contract Deployed');
+      }
+      return {
+        address: _userContract.address.toString(),
+        contract: userContract,
+      };
+      // }
     }
 
     const _contractAddress = contractAddress(0, stateInit);
@@ -201,7 +244,7 @@ export function useContractAction() {
     kind?: string,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
-  ) {
+  ): Promise<{ message: string; logs?: string[] } | undefined> {
     if (language === 'tact' && contract) {
       let sender: Sender | null = null;
 
@@ -221,17 +264,27 @@ export function useContractAction() {
       stack?.forEach((item: any) => {
         messageParams = {
           ...messageParams,
-          [item.name]: BigInt(item.value),
+          [item.name]: BigInt(item.value || 0),
         };
       });
 
       const response = await (contract as any).send(
         sender,
-        { value: toNano('0.02') },
+        { value: toNano('0.1') },
         messageParams
       );
-      return { message: 'Message sent successfully' };
+      return {
+        message: 'Message sent successfully',
+        logs: terminalLogMessages([response], [contract as Contract]),
+      };
     }
+  }
+
+  function parseInt(item: any, language: ContractLanguage) {
+    if (language === 'tact') {
+      return new BN(item.value.toString());
+    }
+    return BigInt((item as any).value);
   }
 
   async function callGetter(
@@ -242,13 +295,14 @@ export function useContractAction() {
     kind?: string,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>
-  ) {
+  ): Promise<{ message: string; logs?: string[] } | undefined | any> {
+    console.log(stack, 'stack');
     const parsedStack = stack?.map((item) => {
       switch (item.type as ParameterType) {
         case 'int':
           return {
             type: item.type,
-            value: new BN((item as any).value.toString()),
+            value: parseInt(item, language),
           };
         case 'address':
           return {
@@ -270,10 +324,13 @@ export function useContractAction() {
       let responseValues = [];
       if (language === 'tact') {
         // convert getter function name as per script function name. Ex. counter will become getCounter
-        const response = await (contract as any)[
-          'get' + capitalizeFirstLetter(methodName)
-        ]();
-        responseValues.push({ method: methodName, value: response.toString() });
+        const params = parsedStack?.map((item) => item.value);
+        const _method = ('get' + capitalizeFirstLetter(methodName)) as any;
+        const response = await (contract as any)[_method](params);
+        responseValues.push({
+          method: methodName,
+          value: convertToText(response),
+        });
       } else {
         const call = await contract.getData(methodName, parsedStack as any);
         while (call.stack.remaining) {
@@ -362,7 +419,7 @@ function parseReponse(tupleItem: TupleItem) {
 }
 
 class TonConnectSender implements Sender {
-  provider: ITonConnect;
+  public provider: ITonConnect;
   readonly address?: Address;
 
   constructor(provider: ITonConnect) {
@@ -401,5 +458,157 @@ class TonConnectSender implements Sender {
         },
       ],
     });
+  }
+}
+
+// Credit for below log message parsing: https://github.com/tact-lang/tact-by-example/blob/main/src/routes/(examples)/%2Blayout.svelte
+function terminalLogMessages(
+  results: SendMessageResult[] = [],
+  contractInstances: Contract[]
+) {
+  const messages = [];
+  for (const result of results) {
+    for (const transaction of result.transactions) {
+      if (
+        transaction.inMessage?.info.type == 'internal' ||
+        transaction.inMessage?.info.type == 'external-in'
+      ) {
+        if (transaction.inMessage?.info.type == 'internal') {
+          if (transaction.debugLogs) {
+            const splittedLog = transaction.debugLogs.split('\n');
+            for (let i = 0; i < splittedLog.length; i++) {
+              messages.push(splittedLog[i]);
+            }
+          }
+          if (transaction.description.type == 'generic') {
+            if (transaction.description.computePhase.type == 'vm') {
+              // get the computational result of the transaction
+              const compute = transaction.description.computePhase;
+              if (compute.exitCode == 4294967282) compute.exitCode = -14;
+              messages.push(
+                `Transaction Executed: ${
+                  compute.success ? 'success' : 'error'
+                }, ` +
+                  `Exit Code: ${compute.exitCode}, Gas: ${shorten(
+                    compute.gasFees,
+                    'coins'
+                  )}`
+              );
+              let foundError = false;
+              for (const contractInstance of contractInstances) {
+                if (
+                  transaction.inMessage?.info.dest.equals(
+                    contractInstance.address
+                  )
+                ) {
+                  if (compute.exitCode == -14) compute.exitCode = 13;
+                  const message =
+                    contractInstance?.abi?.errors?.[compute.exitCode]?.message;
+                  if (message) {
+                    messages.push(`🔴 Error message: ${message}\n`);
+                    foundError = true;
+                  }
+                }
+              }
+              if (!foundError) {
+                const knownErrors: { [code: number]: { message: string } } = {
+                  [-14]: { message: `Out of gas error` },
+                  2: { message: `Stack undeflow` },
+                  3: { message: `Stack overflow` },
+                  4: { message: `Integer overflow` },
+                  5: { message: `Integer out of expected range` },
+                  6: { message: `Invalid opcode` },
+                  7: { message: `Type check error` },
+                  8: { message: `Cell overflow` },
+                  9: { message: `Cell underflow` },
+                  10: { message: `Dictionary error` },
+                  13: { message: `Out of gas error` },
+                  32: { message: `Method ID not found` },
+                  34: { message: `Action is invalid or not supported` },
+                  37: { message: `Not enough TON` },
+                  38: { message: `Not enough extra-currencies` },
+                  128: { message: `Null reference exception` },
+                  129: { message: `Invalid serialization prefix` },
+                  130: { message: `Invalid incoming message` },
+                  131: { message: `Constraints error` },
+                  132: { message: `Access denied` },
+                  133: { message: `Contract stopped` },
+                  134: { message: `Invalid argument` },
+                  135: { message: `Code of a contract was not found` },
+                  136: { message: `Invalid address` },
+                  137: {
+                    message: `Masterchain support is not enabled for this contract`,
+                  },
+                };
+                const message = knownErrors[compute.exitCode]?.message;
+                if (message) {
+                  messages.push(`Error message: ${message}`);
+                  foundError = true;
+                }
+              }
+            }
+          }
+        }
+        for (let i = 0; i < transaction.outMessagesCount; i++) {
+          const outMessage = transaction.outMessages.get(i);
+          if (outMessage?.info.type == 'external-out') {
+            if (outMessage.info.dest == null) {
+              const name = messageName(outMessage.body, contractInstances);
+              messages.push(
+                `Log emitted: ${name}, from ${shorten(outMessage.info.src)}`
+              );
+            }
+          }
+        }
+        for (const event of transaction.events) {
+          if (event.type == 'message_sent') {
+            const name = messageName(event.body, contractInstances);
+            messages.push(
+              `Message sent: ${name}, from ${shorten(event.from)}, to ${shorten(
+                event.to
+              )}, ` +
+                `value ${shorten(event.value, 'coins')}, ${
+                  event.bounced ? '' : 'not '
+                }bounced`
+            );
+          }
+        }
+      }
+    }
+  }
+  return messages;
+}
+
+function messageName(body: Cell, contractInstances: Contract[]): string {
+  try {
+    const slice = body.beginParse();
+    let op = slice.loadInt(32);
+    if (op == 0) {
+      return `"${slice.loadStringTail()}"`;
+    }
+    if (op < 0) op += 4294967296;
+    for (const contractInstance of contractInstances) {
+      for (const type of contractInstance?.abi?.types ?? []) {
+        if (op == type.header) return type.name;
+      }
+    }
+    if (op == 0xffffffff) {
+      return 'error';
+    }
+    return `unknown (0x${op.toString(16)})`;
+  } catch (e) {}
+  return 'empty';
+}
+
+function shorten(
+  long: Address | bigint,
+  format: 'default' | 'coins' = 'default'
+) {
+  if (long instanceof Address) {
+    return `${long.toString().slice(0, 4)}..${long.toString().slice(-4)}`;
+  }
+  if (typeof long == 'bigint') {
+    if (format == 'default') return long.toString();
+    if (format == 'coins') return fromNano(long);
   }
 }

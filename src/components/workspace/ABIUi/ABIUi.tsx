@@ -32,7 +32,10 @@ const ABIUi: FC<Props> = ({
     if (['cell', 'slice'].includes(item.type)) {
       return [item.type, 'address'];
     }
-    return [item.type];
+    if (typeof item.type === 'string') {
+      return [item.type];
+    }
+    return [(item.type as any).type];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +59,7 @@ const ABIUi: FC<Props> = ({
 
       const callableFunction = type === 'Getter' ? callGetter : callSetter;
 
-      const getterReponse = await callableFunction(
+      const response = await callableFunction(
         contractAddress,
         abi.name,
         contract as any,
@@ -66,8 +69,12 @@ const ABIUi: FC<Props> = ({
         network
       );
 
-      if (getterReponse) {
-        createLog(JSON.stringify(getterReponse));
+      if (response?.logs) {
+        for (const log of response?.logs) {
+          createLog(log);
+        }
+      } else {
+        createLog(JSON.stringify(response));
       }
     } catch (error: any) {
       console.log('error', error);
@@ -90,30 +97,50 @@ const ABIUi: FC<Props> = ({
   return (
     <div className={s.root}>
       <Form className={s.form} onFinish={onSubmit}>
-        {abi.parameters.map((item: ABIParameter, i: number) => (
-          <div key={i}>
-            <Form.Item
-              name={[i, item.name, 'type']}
-              className={`${s.formItemABI} ${s.formItemType}}`}
-              rules={[{ required: true, message: 'Please select type' }]}
-            >
-              <Select placeholder="select type">
-                {possiblesTypes[i].map((type, _j) => (
-                  <Option key={`${i}-${_j}`} value={type}>
-                    {type}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item
-              name={[i, item.name, 'value']}
-              className={s.formItemABI}
-              rules={[{ required: true, message: 'Please input value' }]}
-            >
-              <Input placeholder={`${item.name}: ${item.type}`} />
-            </Form.Item>
-          </div>
-        ))}
+        {abi.parameters.map((item: ABIParameter, i: number) => {
+          if (item.name === 'queryId') {
+            return (
+              <Form.Item
+                key={i}
+                name={[i, item.name, 'type']}
+                className={`${s.formItemABI} ${s.formItemType}}`}
+                rules={[{ required: true, message: 'Please select type' }]}
+              >
+                <Input type="hidden" value={0} />
+              </Form.Item>
+            );
+          }
+          return (
+            <div key={i}>
+              <Form.Item
+                name={[i, item.name, 'type']}
+                className={`${s.formItemABI} ${s.formItemType}}`}
+                rules={[{ required: true, message: 'Please select type' }]}
+              >
+                <Select placeholder="select type">
+                  {possiblesTypes[i].map((type, _j) => (
+                    <Option key={`${i}-${_j}`} value={type}>
+                      {type}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name={[i, item.name, 'value']}
+                className={s.formItemABI}
+                rules={[{ required: true, message: 'Please input value' }]}
+              >
+                <Input
+                  placeholder={`${item.name}: ${
+                    typeof item.type === 'string'
+                      ? item.type
+                      : (item.type as any).type
+                  }`}
+                />
+              </Form.Item>
+            </div>
+          );
+        })}
 
         <Button
           className={s.btnAction}

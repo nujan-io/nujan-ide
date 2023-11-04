@@ -1,0 +1,40 @@
+import { Form, Input } from 'antd';
+import { Rule, RuleObject } from 'antd/es/form';
+import { Address } from 'ton-core';
+
+interface Props {
+  name?: string;
+  placeholder?: string;
+  className?: string;
+  rules?: Rule[];
+}
+
+const AddressInput = ({
+  name = 'address',
+  placeholder = 'EQDPK...0nYxC',
+  className = '',
+  rules = [],
+}: Props) => {
+  const fieldRules = [
+    ...rules,
+    () => ({
+      validator(_rule: RuleObject, value: string) {
+        if (!value) return Promise.resolve();
+        try {
+          Address.parse(value);
+        } catch {
+          return Promise.reject('Invalid Address');
+        }
+
+        return Promise.resolve();
+      },
+    }),
+  ];
+  return (
+    <Form.Item name={name} rules={fieldRules} className={className}>
+      <Input placeholder={placeholder} />
+    </Form.Item>
+  );
+};
+
+export default AddressInput;
