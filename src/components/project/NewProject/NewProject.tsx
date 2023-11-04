@@ -30,9 +30,9 @@ const NewProject: FC = () => {
   ];
 
   const templatedList = [
-    // { label: 'Blank Contract', value: 'tonBlank' },
+    { label: 'Blank Contract', value: 'tonBlank' },
     { label: 'Counter Contract', value: 'tonCounter' },
-    { label: 'NFT Contract', value: 'nft', lang: 'tact' },
+    // { label: 'NFT Contract', value: 'nft', lang: 'tact' },
 
     { label: 'Import Contract', value: 'import' },
 
