@@ -101,6 +101,7 @@ const ABIUi: FC<Props> = ({
           if (item.name === 'queryId') {
             return (
               <Form.Item
+                noStyle
                 key={i}
                 name={[i, item.name, 'type']}
                 className={`${s.formItemABI} ${s.formItemType}}`}
