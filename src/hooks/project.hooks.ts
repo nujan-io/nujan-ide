@@ -33,6 +33,7 @@ import { BlobReader, TextWriter, ZipReader } from '@zip.js/zip.js';
 import { RcFile } from 'antd/es/upload';
 import cloneDeep from 'lodash.clonedeep';
 import { v4 as uuidv4 } from 'uuid';
+import { useSettingAction } from './setting.hooks';
 import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
@@ -45,6 +46,7 @@ export function useProjectActions() {
     updateFileContent,
     deleteItem,
   } = useWorkspaceActions();
+  const { isContractDebugEnabled } = useSettingAction();
 
   return {
     createProject,
@@ -197,7 +199,7 @@ export function useProjectActions() {
         output: 'dist',
         name: 'tact',
         options: {
-          debug: true,
+          debug: isContractDebugEnabled(),
         },
       },
       project: fs,

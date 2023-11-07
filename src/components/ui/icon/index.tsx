@@ -2,25 +2,28 @@ import { FC } from 'react';
 import {
   AiOutlineClose,
   AiOutlineDelete,
-  AiOutlineFileAdd,
-  AiOutlineFolderAdd,
-  AiOutlineGithub,
   AiOutlineGoogle,
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineProject,
-  AiOutlineSetting,
 } from 'react-icons/ai';
 import { BsFillPlayFill } from 'react-icons/bs';
-import { CiBeaker1 } from 'react-icons/ci';
 import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2 } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
 import { HiDocumentText } from 'react-icons/hi';
 import { MdFeedback } from 'react-icons/md';
-import { SiTestcafe } from 'react-icons/si';
-import { VscGist } from 'react-icons/vsc';
-import Plus from './Plus';
+import {
+  Beaker,
+  Code,
+  GitHub,
+  NewFile,
+  NewFolder,
+  Plus,
+  Setting,
+  Telegram,
+  Test,
+} from './AppIconList';
 
 export type AppIconType =
   | 'Project'
@@ -33,7 +36,7 @@ export type AppIconType =
   | 'Plus'
   | 'Home'
   | 'AngleRight'
-  | 'TestCases'
+  | 'Test'
   | 'Google'
   | 'GitHub'
   | 'Logout'
@@ -42,7 +45,9 @@ export type AppIconType =
   | 'Delete'
   | 'Play'
   | 'Document'
-  | 'Feedback';
+  | 'Feedback'
+  | 'Telegram'
+  | 'Setting';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -52,28 +57,29 @@ export interface AppIconInterface {
 const Components = {
   Project: AiOutlineProject,
   Edit: FiEdit2,
-  NewFile: AiOutlineFileAdd,
-  NewFolder: AiOutlineFolderAdd,
+  NewFile,
+  NewFolder,
   Close: AiOutlineClose,
   Home: AiOutlineHome,
-  Code: VscGist,
-  Beaker: CiBeaker1,
+  Code,
+  Beaker,
   AngleRight: GoTriangleRight,
-  TestCases: SiTestcafe,
+  Test: Test,
   Google: AiOutlineGoogle,
-  GitHub: AiOutlineGithub,
+  GitHub,
   Logout: AiOutlineLogout,
-  Setting: AiOutlineSetting,
+  Setting,
   Clone: FaRegClone,
   Plus,
   Delete: AiOutlineDelete,
   Play: BsFillPlayFill,
   Document: HiDocumentText,
   Feedback: MdFeedback,
+  Telegram,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {
-  if (typeof Components[name] !== undefined) {
+  if (name in Components) {
     const Component = Components[name];
     return <Component className={className} />;
   }

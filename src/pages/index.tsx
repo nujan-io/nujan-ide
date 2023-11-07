@@ -1,9 +1,9 @@
-import { Dashboard } from '@/components/dashboard';
+import { WorkSpace } from '@/components/workspace';
 
 export default function Home() {
   return (
     <>
-      <Dashboard />
+      <WorkSpace />
     </>
   );
 }

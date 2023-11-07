@@ -1,0 +1,16 @@
+.root {
+  padding: 0 0.7rem;
+  font-size: 0.875rem;
+  margin: 0.7rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  .header {
+    display: flex;
+    justify-content: space-between;
+  }
+  .projects {
+    .name {
+    }
+  }
+}

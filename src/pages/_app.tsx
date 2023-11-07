@@ -78,13 +78,13 @@ export default function App({
         <title>{AppConfig.seo.title}</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/png" href="/images/logo.png" />
+        <link rel="icon" type="image/svg+xml" href="/images/logo-icon.svg" />
       </Head>
       <RecoilRoot>
         <ConfigProvider
           theme={{
             token: {
-              colorPrimary: '#007fd4',
+              colorPrimary: '#0098ea',
               fontFamily: 'var(--font-body)',
             },
             algorithm: darkAlgorithm,

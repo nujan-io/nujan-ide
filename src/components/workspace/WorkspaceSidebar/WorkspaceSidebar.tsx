@@ -1,7 +1,11 @@
+import { AppLogo, Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
+import { AppData } from '@/constant/AppData';
 import { useAuthAction } from '@/hooks/auth.hooks';
+import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
+import { Form, Popover, Switch } from 'antd';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './WorkspaceSidebar.module.scss';
@@ -27,6 +31,7 @@ const WorkspaceSidebar: FC<Props> = ({
 }) => {
   const { isProjectEditable } = useWorkspaceActions();
   const { user } = useAuthAction();
+  const { isContractDebugEnabled, toggleContractDebug } = useSettingAction();
 
   const hasEditAccess = isProjectEditable(projectId as string, user);
 
@@ -44,33 +49,71 @@ const WorkspaceSidebar: FC<Props> = ({
     {
       label: 'Unit Test',
       value: 'test-cases',
-      icon: 'TestCases',
+      icon: 'Test',
     },
   ];
 
+  const settingContent = () => (
+    <div>
+      <div className={s.settingItem}>
+        <Form.Item
+          style={{ marginBottom: 0 }}
+          label="Debug Contract"
+          valuePropName="checked"
+        >
+          <Switch
+            checked={isContractDebugEnabled()}
+            onChange={(toggleState) => {
+              toggleContractDebug(toggleState);
+            }}
+          />
+        </Form.Item>
+        <p>
+          *{' '}
+          <small>
+            Contract rebuild and redeploy <br /> required after an update
+          </small>
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className={s.container}>
-      <Link href="/project" className={`${s.action}`}>
-        <AppIcon name="Home" />
-        <span>Home</span>
-      </Link>
-      {menuItems.map((menu, i) => {
-        if (menu.private && !hasEditAccess) {
-          return;
-        }
-        return (
-          <div
-            key={i}
-            className={`${s.action} ${
-              activeMenu === menu.value ? s.isActive : ''
-            }`}
-            onClick={() => onMenuClicked(menu.value)}
-          >
-            <AppIcon name={menu.icon as any} />
-            <span>{menu.label}</span>
+      <div>
+        <AppLogo className={`${s.brandLogo}`} href="#" />
+        {menuItems.map((menu, i) => {
+          if (menu.private && !hasEditAccess) {
+            return;
+          }
+          return (
+            <Tooltip key={i} title={menu.label} placement="right">
+              <div
+                className={`${s.action} ${
+                  activeMenu === menu.value ? s.isActive : ''
+                }`}
+                onClick={() => onMenuClicked(menu.value)}
+              >
+                <AppIcon className={s.icon} name={menu.icon as any} />
+              </div>
+            </Tooltip>
+          );
+        })}
+      </div>
+      <div>
+        {AppData.socials.map((menu, i) => (
+          <Tooltip key={i} title={menu.label} placement="right">
+            <Link href={menu.url} className={`${s.action}`} target="_blank">
+              <AppIcon className={s.icon} name={menu.icon as any} />
+            </Link>
+          </Tooltip>
+        ))}
+        <Popover placement="rightTop" title="Setting" content={settingContent}>
+          <div className={`${s.action}`}>
+            <AppIcon className={s.icon} name="Setting" />
           </div>
-        );
-      })}
+        </Popover>
+      </div>
     </div>
   );
 };

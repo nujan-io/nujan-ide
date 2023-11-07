@@ -1,3 +1,4 @@
+import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
@@ -18,6 +19,7 @@ import TestCases from '../TestCases';
 import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
 import { globalWorkspace } from '../globalWorkspace';
+import { ManageProject } from '../project';
 import FileTree from '../tree/FileTree';
 import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
@@ -126,8 +128,10 @@ const WorkSpace: FC = () => {
         )}
         {isLoaded && activeMenu === 'code' && (
           <div className="onboarding-file-explorer">
+            <span className={s.heading}>Explorer</span>
+            <ManageProject />
             <div className={s.globalAction}>
-              <span>Project</span>
+              <span>{AppConfig.name} IDE</span>
               <ItemAction
                 className={`${s.visible}`}
                 allowedActions={['NewFile', 'NewFolder']}

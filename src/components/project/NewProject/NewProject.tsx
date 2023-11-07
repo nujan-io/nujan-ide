@@ -5,6 +5,7 @@ import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useState } from 'react';
 
+import { Tooltip } from '@/components/ui';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
@@ -13,7 +14,11 @@ import { downloadRepo } from '@/utility/gitRepoDownloader';
 import { useRouter } from 'next/router';
 import s from './NewProject.module.scss';
 
-const NewProject: FC = () => {
+interface Props {
+  className?: string;
+}
+
+const NewProject: FC<Props> = ({ className = '' }) => {
   const [isActive, setIsActive] = useState(false);
   const { projects } = useWorkspaceActions();
   const { createProject } = useProjectActions();
@@ -179,14 +184,12 @@ const NewProject: FC = () => {
   return (
     <>
       <div
-        className={`${s.root} onboarding-new-project`}
+        className={`${s.root} ${className} onboarding-new-project}`}
         onClick={() => setIsActive(true)}
       >
-        <span>
-          {' '}
-          <AppIcon name="Plus" className={s.newIcon} /> <br />
-          New Project
-        </span>
+        <Tooltip title="New Project" placement="right">
+          <AppIcon name="Plus" className={s.newIcon} />
+        </Tooltip>
       </div>
       <Modal
         className="onboarding-new-project-form"

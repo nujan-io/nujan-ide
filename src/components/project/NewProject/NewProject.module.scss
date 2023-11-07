@@ -1,23 +1,20 @@
 .root {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: var(--grey-500);
-  border-radius: var(--border-radius);
-  position: relative;
-  padding: 2rem 1rem;
-  text-align: center;
-  min-height: 10rem;
-  height: 9rem;
+  justify-content: space-between;
+  // justify-content: center;
+  // background-color: var(--grey-500);
+  // border-radius: var(--border-radius);
+  // position: relative;
+  // padding: 2rem 1rem;
+  // text-align: center;
+  // min-height: 10rem;
+  // height: 9rem;
   cursor: pointer;
-  color: #fff;
-  font-weight: 900;
+  // color: #fff;
+  // font-weight: 900;
 
-  transition: all 0.2s ease-in-out 0s;
-
-  &:hover {
-    transform: scale(1.05);
-  }
+  // transition: all 0.2s ease-in-out 0s;
 }
 
 .btnAction {
@@ -32,8 +29,8 @@
   font-size: 1.9rem;
 }
 .newIcon {
-  width: 4rem;
-  height: 4rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 .form {
   margin-top: 1.5rem;

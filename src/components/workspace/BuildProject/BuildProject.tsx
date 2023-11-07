@@ -11,7 +11,7 @@ import { Blockchain } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
-import { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Address, Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
@@ -116,7 +116,8 @@ const BuildProject: FC<Props> = ({
           {activeProject?.initParams && (
             <div>
               {activeProject?.initParams?.map((item, index) => {
-                if (item.name === 'queryId') return <></>;
+                if (item.name === 'queryId')
+                  return <React.Fragment key={index} />;
                 const Field = fields(item.type);
                 return (
                   <Field

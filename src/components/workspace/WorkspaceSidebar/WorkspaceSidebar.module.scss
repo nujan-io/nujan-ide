@@ -1,11 +1,25 @@
 .container {
-  background-color: #222222;
+  background: #0e0e10;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .brandLogo {
+    padding: 1.4rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+      width: 100%;
+    }
+  }
   .action {
     font-size: 1.8rem;
-    padding: 1rem 0.1rem;
+    padding: 0.7rem 0.1rem;
+    margin: 0.5rem;
     cursor: pointer;
-    opacity: 0.5;
+    opacity: 0.6;
     position: relative;
     color: #fff;
     display: flex;
@@ -13,23 +27,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    &::before {
-      content: '';
-      background-color: var(--primary);
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      width: 2px;
-      display: none;
-    }
+    border-radius: 0.625rem;
+
     &.isActive,
     &:hover {
       opacity: 1;
       color: var(--primary);
+      background: rgba(0, 0, 0, 0.7);
       &::before {
         display: block;
       }
+    }
+    .icon {
+      width: 1.5rem;
     }
     span {
       font-size: 0.8rem;

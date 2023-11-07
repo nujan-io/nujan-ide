@@ -10,19 +10,21 @@ interface Props {
 }
 
 const AppLogo: FC<Props> = ({
-  src = '/images/logo.svg',
+  src = '/images/logo-icon.svg',
   href = '/',
   className = '',
 }) => {
   return (
-    <Link href={href} className={`${s.root} ${className}`}>
-      <Image
-        className={s.brandImage}
-        src={src}
-        width={150}
-        height={50}
-        alt=""
-      />
+    <Link
+      href={href}
+      className={`${s.root} ${className}`}
+      onClick={(e) => {
+        if (href === '#') {
+          e.preventDefault();
+        }
+      }}
+    >
+      <Image className={s.brandImage} src={src} width={45} height={45} alt="" />
     </Link>
   );
 };

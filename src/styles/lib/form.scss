@@ -1,0 +1,11 @@
+.select-search-input-dark {
+  .ant-select-selector {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+.ant-select-dropdown
+  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: var(--dark-hover) !important;
+}

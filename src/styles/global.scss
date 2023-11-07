@@ -1,5 +1,5 @@
 :root {
-  --primary: #13a3fd;
+  --primary: #0098ea;
   --font-title: 'Poppins', sans-serif;
   --font-body: 'Poppins', sans-serif;
   --text-color: #f7f7f7;
@@ -11,6 +11,11 @@
   --bg-color-dark: #000;
   --color-danger: #f50;
   --border-radius: 10px;
+  --dark-hover: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
 }
 
 html {

@@ -10,7 +10,7 @@
     padding-top: 0.5rem;
     flex: 0 0 250px;
     width: 250px;
-    background-color: #141414;
+    background-color: #141416;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     :global(.onboarding-active) & {
@@ -26,16 +26,26 @@
     flex-direction: column;
     justify-content: space-between;
   }
+  .heading {
+    color: #ccc;
+    text-align: center;
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 0;
+  }
   .globalAction {
+    color: #ccc;
     display: flex;
     justify-content: space-between;
     padding: 0.5rem;
     padding-left: 0.7rem;
-    font-size: 0.8rem;
-    border-bottom: 1px solid var(--black-500);
+    padding: 0.5rem 0.5rem 0 0.7rem;
+    font-size: 0.875rem;
+    // border-bottom: 1px solid var(--black-500);
     align-items: center;
     font-weight: 800;
-    margin-bottom: 0.8rem;
+    // margin-bottom: 0.8rem;
 
     svg {
       font-size: 1.2rem;
