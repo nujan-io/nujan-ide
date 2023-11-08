@@ -168,6 +168,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         defaultValue=""
         onChange={markFileDirty}
         options={{
+          minimap: {
+            enabled: false,
+          },
           fontSize: 14,
           bracketPairColorization: {
             enabled: true,

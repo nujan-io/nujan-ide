@@ -8,6 +8,7 @@ import { Blockchain } from '@ton-community/sandbox';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
+import Split from 'react-split';
 import { useEffectOnce } from 'react-use';
 import * as TonCore from 'ton-core';
 import BottomPanel from '../BottomPanel/BottomPanel';
@@ -122,70 +123,87 @@ const WorkSpace: FC = () => {
           }}
         />
       </div>
-      <div className={s.tree}>
-        {activeMenu === 'setting' && (
-          <ProjectSetting projectId={projectId as Project['id']} />
-        )}
-        {isLoaded && activeMenu === 'code' && (
-          <div className="onboarding-file-explorer">
-            <span className={s.heading}>Explorer</span>
-            <ManageProject />
-            <div className={s.globalAction}>
-              <span>{AppConfig.name} IDE</span>
-              <ItemAction
-                className={`${s.visible}`}
-                allowedActions={['NewFile', 'NewFolder']}
-                onNewFile={() => commitItemCreation('file', 'new file')}
-                onNewDirectory={() =>
-                  commitItemCreation('directory', 'new folder')
-                }
-              />
-            </div>
-            {isLoading && (
-              <Spin tip="Loading" size="default" className={s.loader}>
-                <div className="content" />
-              </Spin>
-            )}
-            <FileTree projectId={projectId as string} />
-          </div>
-        )}
-        {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
-          <BuildProject
-            projectId={projectId as string}
-            onCodeCompile={(_codeBOC) => {}}
-            contract={contract}
-            updateContract={(contractInstance) => {
-              setContract(contractInstance);
-            }}
-          />
-        )}
-        {activeMenu === 'test-cases' && (
-          <div className={s.testCaseArea}>
-            <TestCases projectId={projectId as string} />
-          </div>
-        )}
-      </div>
-      <div className={`${s.workArea} onboarding-code-editor`}>
-        {isLoaded && (
-          <>
-            <div className={s.tabsWrapper}>
-              <Tabs projectId={projectId as string} />
-            </div>
-
-            <div style={{ height: '100%' }}>
-              {activeFile && (
-                <Editor
-                  file={activeFile as any}
-                  projectId={projectId as string}
+      <Split
+        className={s.splitHorizontal}
+        minSize={250}
+        gutterSize={4}
+        sizes={[5, 95]}
+      >
+        <div className={s.tree}>
+          {activeMenu === 'setting' && (
+            <ProjectSetting projectId={projectId as Project['id']} />
+          )}
+          {isLoaded && activeMenu === 'code' && (
+            <div className="onboarding-file-explorer">
+              <span className={s.heading}>Explorer</span>
+              <ManageProject />
+              <div className={s.globalAction}>
+                <span>{AppConfig.name} IDE</span>
+                <ItemAction
+                  className={`${s.visible}`}
+                  allowedActions={['NewFile', 'NewFolder']}
+                  onNewFile={() => commitItemCreation('file', 'new file')}
+                  onNewDirectory={() =>
+                    commitItemCreation('directory', 'new folder')
+                  }
                 />
+              </div>
+              {isLoading && (
+                <Spin tip="Loading" size="default" className={s.loader}>
+                  <div className="content" />
+                </Spin>
               )}
+              <FileTree projectId={projectId as string} />
             </div>
-            <div>
-              <BottomPanel />
+          )}
+          {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
+            <BuildProject
+              projectId={projectId as string}
+              onCodeCompile={(_codeBOC) => {}}
+              contract={contract}
+              updateContract={(contractInstance) => {
+                setContract(contractInstance);
+              }}
+            />
+          )}
+          {activeMenu === 'test-cases' && (
+            <div className={s.testCaseArea}>
+              <TestCases projectId={projectId as string} />
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+        <div className={`${s.workArea} onboarding-code-editor`}>
+          {isLoaded && (
+            <>
+              <Split
+                className={s.splitVertical}
+                minSize={50}
+                gutterSize={4}
+                sizes={[80, 20]}
+                direction="vertical"
+              >
+                <div>
+                  <div className={s.tabsWrapper}>
+                    <Tabs projectId={projectId as string} />
+                  </div>
+
+                  <div style={{ height: '100%' }}>
+                    {activeFile && (
+                      <Editor
+                        file={activeFile as any}
+                        projectId={projectId as string}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <BottomPanel />
+                </div>
+              </Split>
+            </>
+          )}
+        </div>
+      </Split>
     </div>
   );
 };

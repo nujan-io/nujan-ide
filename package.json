@@ -45,6 +45,7 @@
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
     "react-joyride": "^2.5.4",
+    "react-split": "^2.0.14",
     "react-use": "^17.4.0",
     "recoil": "^0.7.7",
     "recoil-persist": "^4.2.0",
