@@ -5,6 +5,7 @@ import { useEffectOnce } from 'react-use';
 
 import 'xterm/css/xterm.css';
 
+import { AppConfig } from '@/config/AppConfig';
 import s from './LogView.module.scss';
 
 interface Props {
@@ -57,6 +58,11 @@ const LogView: FC<Props> = ({ type, text }) => {
       terminal.loadAddon(_fitAddon);
 
       terminal.open(appTerminal);
+      terminal!!.writeln(
+        `${(colorMap as any)['info']}Welcome to ${AppConfig.name} IDE${
+          colorMap.reset
+        }`
+      );
       _fitAddon.fit();
 
       EventEmitter.on('LOG_CLEAR', (data) => {
