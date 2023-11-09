@@ -9,6 +9,14 @@
     display: flex;
     justify-content: space-between;
   }
+  .startNew {
+    .title {
+      opacity: 0.7;
+    }
+    .newProject {
+      margin-top: 1rem;
+    }
+  }
   .options {
     display: flex;
     gap: 0.5rem;

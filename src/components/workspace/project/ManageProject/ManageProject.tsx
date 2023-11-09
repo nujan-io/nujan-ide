@@ -16,6 +16,63 @@ const ManageProject: FC = () => {
   const router = useRouter();
   const { id: projectId } = router.query;
 
+  const projectHeader = () => (
+    <>
+      <span className={s.heading}>Projects</span>
+      <div className={s.options}>
+        <NewProject />
+        <Tooltip title="Delete Project" placement="bottom">
+          <div
+            className={`${s.deleteProject} ${
+              !currentProject ? s.disabled : ''
+            }`}
+            onClick={(e) => currentProject && setIsDeleteConfirmOpen(true)}
+          >
+            <AppIcon name="Delete" />
+          </div>
+        </Tooltip>
+      </div>
+    </>
+  );
+
+  const projectOptions = () => (
+    <div className={s.projects}>
+      <Select
+        placeholder="Select a project"
+        showSearch
+        className="w-100 select-search-input-dark"
+        value={currentProject?.id}
+        onChange={(_project) => openProject(_project)}
+        notFoundContent="No project found"
+        filterOption={(inputValue, option) => {
+          return option?.title.toLowerCase().includes(inputValue.toLowerCase());
+        }}
+      >
+        {[...projects()].reverse().map((project) => (
+          <Select.Option
+            key={project.id}
+            value={project.id}
+            title={project.name}
+          >
+            <span>{getLanguageInitial(project?.language)}</span>
+            {project.name}
+          </Select.Option>
+        ))}
+      </Select>
+    </div>
+  );
+
+  const noProjectExistsUI = () => (
+    <div className={s.startNew}>
+      <span className={`${s.title}`}>Begin by initiating a new project</span>
+      <NewProject ui="button" className={s.newProject} />
+    </div>
+  );
+
+  const hasProjects = () => {
+    return projects().length > 0;
+  };
+
   const getLanguageInitial = (language: string | undefined) => {
     const languageInitial = language?.split('')?.[0]?.toUpperCase();
     if (!languageInitial) return 'F - ';
@@ -53,46 +110,11 @@ const ManageProject: FC = () => {
   return (
     <div className={s.root}>
       <div className={s.header}>
-        <span className={s.heading}>Projects</span>
-        <div className={s.options}>
-          <NewProject />
-          <Tooltip title="Delete Project" placement="bottom">
-            <div
-              className={`${s.deleteProject} ${
-                !currentProject ? s.disabled : ''
-              }`}
-              onClick={(e) => currentProject && setIsDeleteConfirmOpen(true)}
-            >
-              <AppIcon name="Delete" />
-            </div>
-          </Tooltip>
-        </div>
+        {hasProjects() && projectHeader()}
+        {!hasProjects() && noProjectExistsUI()}
       </div>
-      <div className={s.projects}>
-        <Select
-          showSearch
-          className="w-100 select-search-input-dark"
-          value={currentProject?.id}
-          onChange={(_project) => openProject(_project)}
-          notFoundContent="No project found"
-          filterOption={(inputValue, option) => {
-            return option?.title
-              .toLowerCase()
-              .includes(inputValue.toLowerCase());
-          }}
-        >
-          {[...projects()].reverse().map((project) => (
-            <Select.Option
-              key={project.id}
-              value={project.id}
-              title={project.name}
-            >
-              <span>{getLanguageInitial(project?.language)}</span>
-              {project.name}
-            </Select.Option>
-          ))}
-        </Select>
-      </div>
+      {hasProjects() && projectOptions()}
+
       <Modal
         className="modal-delete-project"
         open={isDeleteConfirmOpen}

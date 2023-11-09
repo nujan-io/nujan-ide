@@ -16,9 +16,10 @@ import s from './NewProject.module.scss';
 
 interface Props {
   className?: string;
+  ui?: 'icon' | 'button';
 }
 
-const NewProject: FC<Props> = ({ className = '' }) => {
+const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
   const [isActive, setIsActive] = useState(false);
   const { projects } = useWorkspaceActions();
   const { createProject } = useProjectActions();
@@ -188,7 +189,15 @@ const NewProject: FC<Props> = ({ className = '' }) => {
           className={`${s.root} ${className} onboarding-new-project}`}
           onClick={() => setIsActive(true)}
         >
-          <AppIcon name="Plus" className={s.newIcon} />
+          {ui === 'icon' && <AppIcon name="Plus" className={s.newIcon} />}
+          {ui === 'button' && (
+            <Button
+              type="primary"
+              className={`ant-btn-primary-gradient item-center-align w-100`}
+            >
+              <AppIcon name="Plus" className={s.newIcon} /> Create a new project
+            </Button>
+          )}
         </div>
       </Tooltip>
 
