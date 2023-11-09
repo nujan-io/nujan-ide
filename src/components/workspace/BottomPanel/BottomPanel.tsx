@@ -64,7 +64,7 @@ const BottomPanel: FC = () => {
           /> */}
           <Tooltip title="Clear log" placement="left">
             <span className={s.clearLog} onClick={clearLog}>
-              <AppIcon name="Delete" />
+              <AppIcon name="Clear" className={s.icon} />
             </span>
           </Tooltip>
         </div>

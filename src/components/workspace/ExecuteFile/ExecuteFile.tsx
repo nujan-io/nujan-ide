@@ -115,6 +115,8 @@ const ExecuteFile: FC<Props> = ({
     <div className={s.root}>
       {description && <p className={s.desc}>{description}</p>}
       <Select
+        placeholder="Select a file"
+        notFoundContent="Required file not found"
         allowClear
         showSearch
         className="w-100"

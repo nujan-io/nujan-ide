@@ -10,6 +10,7 @@ import { BsFillPlayFill } from 'react-icons/bs';
 import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2, FiEye } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
+import { GrClear } from 'react-icons/gr';
 import { HiDocumentText } from 'react-icons/hi';
 import { MdFeedback } from 'react-icons/md';
 
@@ -55,7 +56,8 @@ export type AppIconType =
   | 'Info'
   | 'Build'
   | 'Rocket'
-  | 'Eye';
+  | 'Eye'
+  | 'Clear';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -88,6 +90,7 @@ const Components = {
   Build,
   Rocket,
   Eye: FiEye,
+  Clear: GrClear,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

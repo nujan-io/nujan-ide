@@ -41,6 +41,11 @@
       width: 2rem;
       height: 2rem;
       justify-content: center;
+      .icon {
+        path {
+          stroke: #fff;
+        }
+      }
       &:hover {
         background-color: var(--grey);
       }
