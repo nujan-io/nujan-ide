@@ -9,8 +9,75 @@
     display: flex;
     justify-content: space-between;
   }
+  .options {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .deleteProject {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+  }
   .projects {
     .name {
+    }
+  }
+  .disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: center;
+  position: relative;
+  padding-bottom: 1rem;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(186, 74, 255, 0.7);
+    height: 1px;
+  }
+}
+.modalDescription {
+  margin-top: 1rem;
+  .checklist {
+    opacity: 0.7;
+    span {
+      display: block;
+    }
+  }
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  .btnAction {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    gap: 0.1rem;
+    &.cancel {
+      background-color: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+      &:hover {
+        background-color: var(--grey-500);
+        box-shadow: 0 2px 0 var(--grey-500);
+      }
+      .icon {
+        width: 0.9rem;
+      }
     }
   }
 }

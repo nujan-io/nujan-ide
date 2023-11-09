@@ -3,19 +3,34 @@
   --font-title: 'Poppins', sans-serif;
   --font-body: 'Poppins', sans-serif;
   --text-color: #f7f7f7;
-  --black-500: #171717;
+  --black-500: #0e0e10;
   --grey: #4f4e4e;
   --grey-500: #1a1a1a;
-  --grey-900: #212121;
+  --grey-900: #232328;
   --grey-1000: #131212;
   --bg-color-dark: #000;
-  --color-danger: #f50;
+  --color-danger: #c84075;
   --border-radius: 10px;
   --dark-hover: linear-gradient(
     0deg,
     rgba(0, 0, 0, 0.6) 0%,
     rgba(0, 0, 0, 0.6) 100%
   );
+  --primary-gradient: linear-gradient(
+    45deg,
+    rgba(186, 74, 255, 1),
+    rgba(144, 85, 255, 1),
+    rgba(19, 226, 218, 1)
+  );
+  --modal-bg: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.5) 0%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    #232328;
+  --btn-primary: linear-gradient(90deg, #2d83ec -3.34%, #1ac9ff 100%);
+  --btn-primary-hover: linear-gradient(90deg, #2d82ea -3.34%, #16b0df 100%);
+  --btn-disabled: rgba(255, 255, 255, 0.1);
 }
 
 html {
@@ -69,10 +84,26 @@ a {
   word-wrap: break-word;
   word-break: break-word;
 }
+
 .xterm-viewport {
   background: transparent !important;
 }
 
+.xterm .xterm-viewport {
+  overflow-y: auto;
+}
+
 .xterm-rows {
   color: #2196f3 !important;
+}
+.item-center-align {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+button,
+body .ant-btn.button {
+  font-weight: 500 !important;
 }

@@ -1,11 +1,29 @@
-.select-search-input-dark {
+.ant-select {
   .ant-select-selector {
     background-color: rgba(0, 0, 0, 0.4) !important;
     border: 0 !important;
     box-shadow: none !important;
   }
 }
+div.ant-form-item {
+  .ant-form-item-label label {
+    font-size: 0.8125rem;
+  }
+}
 .ant-select-dropdown
   .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   background: var(--dark-hover) !important;
+}
+
+.ant-btn {
+  &.ant-btn-primary-gradient {
+    background: var(--btn-primary);
+    border: 0;
+    &:hover {
+      background: var(--btn-primary-hover);
+    }
+    &:disabled {
+      background: var(--btn-disabled);
+    }
+  }
 }

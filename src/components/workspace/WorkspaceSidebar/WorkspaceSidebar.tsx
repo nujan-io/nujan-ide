@@ -81,7 +81,7 @@ const WorkspaceSidebar: FC<Props> = ({
   return (
     <div className={s.container}>
       <div>
-        <AppLogo className={`${s.brandLogo}`} href="#" />
+        <AppLogo className={`${s.brandLogo}`} href="/" />
         {menuItems.map((menu, i) => {
           if (menu.private && !hasEditAccess) {
             return;
@@ -91,8 +91,8 @@ const WorkspaceSidebar: FC<Props> = ({
               <div
                 className={`${s.action} ${
                   activeMenu === menu.value ? s.isActive : ''
-                }`}
-                onClick={() => onMenuClicked(menu.value)}
+                } ${!projectId ? s.disabled : ''}`}
+                onClick={() => projectId && onMenuClicked(menu.value)}
               >
                 <AppIcon className={s.icon} name={menu.icon as any} />
               </div>

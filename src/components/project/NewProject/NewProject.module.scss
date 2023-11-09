@@ -2,19 +2,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  // justify-content: center;
-  // background-color: var(--grey-500);
-  // border-radius: var(--border-radius);
-  // position: relative;
-  // padding: 2rem 1rem;
-  // text-align: center;
-  // min-height: 10rem;
-  // height: 9rem;
-  cursor: pointer;
-  // color: #fff;
-  // font-weight: 900;
 
-  // transition: all 0.2s ease-in-out 0s;
+  cursor: pointer;
 }
 
 .btnAction {
@@ -26,7 +15,7 @@
 .title {
   text-align: center;
   display: block;
-  font-size: 1.9rem;
+  font-size: 1.3rem;
 }
 .newIcon {
   width: 1.1rem;

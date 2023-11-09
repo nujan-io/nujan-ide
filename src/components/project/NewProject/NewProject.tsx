@@ -183,14 +183,15 @@ const NewProject: FC<Props> = ({ className = '' }) => {
 
   return (
     <>
-      <div
-        className={`${s.root} ${className} onboarding-new-project}`}
-        onClick={() => setIsActive(true)}
-      >
-        <Tooltip title="New Project" placement="right">
+      <Tooltip title="New Project" placement="bottom">
+        <div
+          className={`${s.root} ${className} onboarding-new-project}`}
+          onClick={() => setIsActive(true)}
+        >
           <AppIcon name="Plus" className={s.newIcon} />
-        </Tooltip>
-      </div>
+        </div>
+      </Tooltip>
+
       <Modal
         className="onboarding-new-project-form"
         open={isActive}

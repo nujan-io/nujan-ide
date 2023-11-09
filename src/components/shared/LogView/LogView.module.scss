@@ -5,8 +5,15 @@
   margin-bottom: 8px;
   font-size: 0.9rem;
   padding: 0 0.5rem 0.5rem;
-  height: 100%;
+  height: calc(100% - 27px);
   width: 100%;
+  margin-right: 1rem;
+  > div {
+    display: none;
+    &:last-child {
+      display: block;
+    }
+  }
 
   .tab {
     display: inline-flex;

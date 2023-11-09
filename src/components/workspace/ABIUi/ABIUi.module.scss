@@ -19,17 +19,54 @@
     word-break: break-word;
   }
   .btnAction {
-    background-color: #4f912c !important;
-    color: #fff !important;
-    border: 0 !important;
     font-size: 0.8rem;
     padding: 0;
     width: 100%;
+    & [class*='wave-motion'] {
+      display: none !important;
+    }
   }
   .abiResponse {
     font-weight: 500;
     color: #a0e67d;
     margin-top: 0.5rem;
     padding: 5px;
+  }
+  &.Getter {
+    .btnAction {
+      border: 0;
+      box-shadow: none;
+      background: #232222;
+    }
+  }
+  &.Setter {
+    .btnAction {
+      border: solid 1px transparent;
+      background-image: linear-gradient(rgb(20, 20, 20), rgb(20, 20, 20)),
+        var(--primary-gradient);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      box-shadow: none;
+      z-index: 0;
+      &:hover {
+        border-color: transparent;
+        color: #fff;
+        &:before {
+          background: #101010;
+        }
+      }
+
+      &:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background: #000;
+        z-index: -1;
+        border-radius: inherit;
+      }
+    }
   }
 }

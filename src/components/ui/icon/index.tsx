@@ -1,6 +1,5 @@
 import { FC } from 'react';
 import {
-  AiOutlineClose,
   AiOutlineDelete,
   AiOutlineGoogle,
   AiOutlineHome,
@@ -9,17 +8,22 @@ import {
 } from 'react-icons/ai';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FaRegClone } from 'react-icons/fa';
-import { FiEdit2 } from 'react-icons/fi';
+import { FiEdit2, FiEye } from 'react-icons/fi';
 import { GoTriangleRight } from 'react-icons/go';
 import { HiDocumentText } from 'react-icons/hi';
 import { MdFeedback } from 'react-icons/md';
+
 import {
   Beaker,
+  Build,
+  Close,
   Code,
   GitHub,
+  Info,
   NewFile,
   NewFolder,
   Plus,
+  Rocket,
   Setting,
   Telegram,
   Test,
@@ -47,7 +51,11 @@ export type AppIconType =
   | 'Document'
   | 'Feedback'
   | 'Telegram'
-  | 'Setting';
+  | 'Setting'
+  | 'Info'
+  | 'Build'
+  | 'Rocket'
+  | 'Eye';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -59,7 +67,7 @@ const Components = {
   Edit: FiEdit2,
   NewFile,
   NewFolder,
-  Close: AiOutlineClose,
+  Close: Close,
   Home: AiOutlineHome,
   Code,
   Beaker,
@@ -76,6 +84,10 @@ const Components = {
   Document: HiDocumentText,
   Feedback: MdFeedback,
   Telegram,
+  Info,
+  Build,
+  Rocket,
+  Eye: FiEye,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

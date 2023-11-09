@@ -15,6 +15,7 @@ interface Props {
 const LogView: FC<Props> = ({ type, text }) => {
   const logViewerRef = createRef<HTMLDivElement>();
   const isTerminalLoaded = useRef(false);
+  const fitAddon = useRef<any>();
 
   const formatTimestamp = (timestamp: string | number | Date) => {
     if (!timestamp) return '\x1b[0m \x1b[0m';
@@ -50,12 +51,13 @@ const LogView: FC<Props> = ({ type, text }) => {
         cursorStyle: 'bar',
         disableStdin: true,
       });
-      const fitAddon = new FitAddon();
+      const _fitAddon = new FitAddon();
+      fitAddon.current = _fitAddon;
 
-      terminal.loadAddon(fitAddon);
+      terminal.loadAddon(_fitAddon);
 
       terminal.open(appTerminal);
-      fitAddon.fit();
+      _fitAddon.fit();
 
       EventEmitter.on('LOG_CLEAR', (data) => {
         terminal.clear();
@@ -83,10 +85,31 @@ const LogView: FC<Props> = ({ type, text }) => {
       initTerminal();
     }
 
+    function onSize() {
+      const screen: any = document.getElementsByClassName('xterm-screen')[0];
+      const viewport: any =
+        document.getElementsByClassName('xterm-viewport')[0];
+      const scrollArea: any =
+        document.getElementsByClassName('xterm-scroll-area')[0];
+      // workaround for scrollbar resize bugs
+      const documentPane: any = document.getElementById('app-terminal');
+
+      screen.style.height = documentPane.clientHeight + 'px';
+      viewport.style.height = documentPane.clientHeight + 'px';
+      scrollArea.style.height = screen.style.height;
+
+      fitAddon.current.fit();
+    }
+
+    EventEmitter.on('ON_SPLIT_DRAG_END', (data) => {
+      onSize();
+    });
+
     return () => {
       isTerminalLoaded.current = false;
       EventEmitter.off('LOG');
       EventEmitter.off('LOG_CLEAR');
+      EventEmitter.off('ON_SPLIT_DRAG_END');
       terminal?.dispose();
     };
   });

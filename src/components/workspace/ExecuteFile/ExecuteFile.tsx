@@ -1,3 +1,4 @@
+import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
@@ -16,6 +17,7 @@ interface Props {
   onCompile?: () => void;
   onClick?: (e: ButtonClick, data: string) => void;
   label?: string;
+  icon?: AppIconType;
   description?: string;
   allowedFile: string[];
 }
@@ -26,6 +28,7 @@ const ExecuteFile: FC<Props> = ({
   onCompile,
   onClick,
   label = 'Compile',
+  icon = '',
   description = '',
   allowedFile = [],
 }) => {
@@ -130,10 +133,11 @@ const ExecuteFile: FC<Props> = ({
       </Select>
       <Button
         type="primary"
-        className={`${s.action} w-100`}
+        className={`${s.action} ant-btn-primary-gradient w-100`}
         disabled={!selectedFile}
         onClick={buildFile}
       >
+        {icon && <AppIcon name={icon as AppIconType} />}
         {label}
       </Button>
     </div>

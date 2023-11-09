@@ -86,13 +86,7 @@ const WorkSpace: FC = () => {
       console.log = originalConsoleLog;
       try {
         document.removeEventListener('keydown', () => {});
-        // workspaceAction.closeAllFile();
-        workspaceAction.updateProjectById(
-          {
-            contractAddress: '',
-          },
-          projectId as string
-        );
+
         clearLog();
       } catch (error) {}
     };
@@ -128,6 +122,9 @@ const WorkSpace: FC = () => {
         minSize={250}
         gutterSize={4}
         sizes={[5, 95]}
+        onDragEnd={() => {
+          EventEmitter.emit('ON_SPLIT_DRAG_END', () => {});
+        }}
       >
         <div className={s.tree}>
           {activeMenu === 'setting' && (
@@ -137,17 +134,20 @@ const WorkSpace: FC = () => {
             <div className="onboarding-file-explorer">
               <span className={s.heading}>Explorer</span>
               <ManageProject />
-              <div className={s.globalAction}>
-                <span>{AppConfig.name} IDE</span>
-                <ItemAction
-                  className={`${s.visible}`}
-                  allowedActions={['NewFile', 'NewFolder']}
-                  onNewFile={() => commitItemCreation('file', 'new file')}
-                  onNewDirectory={() =>
-                    commitItemCreation('directory', 'new folder')
-                  }
-                />
-              </div>
+              {activeProject && (
+                <div className={s.globalAction}>
+                  <span>{AppConfig.name} IDE</span>
+                  <ItemAction
+                    className={`${s.visible}`}
+                    allowedActions={['NewFile', 'NewFolder']}
+                    onNewFile={() => commitItemCreation('file', 'new file')}
+                    onNewDirectory={() =>
+                      commitItemCreation('directory', 'new folder')
+                    }
+                  />
+                </div>
+              )}
+
               {isLoading && (
                 <Spin tip="Loading" size="default" className={s.loader}>
                   <div className="content" />
@@ -181,6 +181,9 @@ const WorkSpace: FC = () => {
                 gutterSize={4}
                 sizes={[80, 20]}
                 direction="vertical"
+                onDragEnd={() => {
+                  EventEmitter.emit('ON_SPLIT_DRAG_END', () => {});
+                }}
               >
                 <div>
                   <div className={s.tabsWrapper}>

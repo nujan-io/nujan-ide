@@ -7,12 +7,15 @@
   }
   .action {
     margin-top: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
     span {
       word-wrap: break-word;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      width: 100%;
     }
   }
 }

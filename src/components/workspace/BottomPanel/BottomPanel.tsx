@@ -1,9 +1,9 @@
 import { LogView } from '@/components/shared';
+import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { LogOptions, LogType } from '@/interfaces/log.interface';
 import { debounce } from '@/utility/utils';
-import { Tooltip } from 'antd';
 import { FC, useState } from 'react';
 import { useEffectOnce } from 'react-use';
 import s from './BottomPanel.module.scss';
@@ -69,14 +69,10 @@ const BottomPanel: FC = () => {
           </Tooltip>
         </div>
       </div>
-      <div className={s.view}>
-        {isLoaded && (
-          <LogView
-            text={filter?.text || undefined}
-            type={filter.type !== 'all' ? filter.type : undefined}
-          />
-        )}
-      </div>
+      <LogView
+        text={filter?.text || undefined}
+        type={filter.type !== 'all' ? filter.type : undefined}
+      />
     </div>
   );
 };

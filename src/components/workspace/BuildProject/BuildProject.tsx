@@ -18,6 +18,7 @@ import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import OpenFile from '../OpenFile/OpenFile';
 import s from './BuildProject.module.scss';
 
+import AppIcon from '@/components/ui/icon';
 import {
   AddressInput,
   AmountInput,
@@ -138,9 +139,9 @@ const BuildProject: FC<Props> = ({
             htmlType="submit"
             // loading={isLoading == 'deploy'}
             disabled={!activeProject?.contractBOC}
-            className="w-100"
+            className="w-100 item-center-align ant-btn-primary-gradient"
           >
-            Deploy
+            <AppIcon name="Rocket" /> Deploy
           </Button>
         </Form>
       </>
@@ -346,6 +347,9 @@ const BuildProject: FC<Props> = ({
       );
     } catch (error: any) {
       setIsLoading('');
+      if (error?.message?.includes('object is not defined')) {
+        throw 'Rebuild contract first';
+      }
       if (error?.message?.includes("'default' is not exported by ")) {
         throw "'default' is not exported by stateInit.cell.ts";
       }
@@ -419,7 +423,10 @@ const BuildProject: FC<Props> = ({
         src="/html/tonweb.html"
         sandbox="allow-scripts  allow-same-origin"
       />
-      <Form.Item label="Environment" className={s.formItem}>
+      <Form.Item
+        label="Environment"
+        className={`${s.formItem} select-search-input-dark`}
+      >
         <Select
           defaultValue="SANDBOX"
           onChange={(value) => setEnvironment(value as NetworkEnvironment)}
@@ -448,6 +455,7 @@ const BuildProject: FC<Props> = ({
         <ExecuteFile
           file={currentActiveFile}
           projectId={projectId as string}
+          icon="Build"
           label={
             environment === 'SANDBOX' && activeProject?.language !== 'tact'
               ? 'Build and Deploy'
@@ -475,7 +483,7 @@ const BuildProject: FC<Props> = ({
             }tonscan.org/address/${activeProject?.contractAddress}`}
             target="_blank"
           >
-            View Deployed Contract
+            <AppIcon name="Eye" /> View Deployed Contract
           </Link>
         </div>
       )}

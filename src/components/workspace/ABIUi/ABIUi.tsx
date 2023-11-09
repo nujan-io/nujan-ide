@@ -7,7 +7,7 @@ import {
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
 import { SandboxContract } from '@ton-community/sandbox';
-import { Button, Form, Input, Select, message } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import { FC, useState } from 'react';
 import s from './ABIUi.module.scss';
 
@@ -79,23 +79,24 @@ const ABIUi: FC<Props> = ({
     } catch (error: any) {
       console.log('error', error);
       if (error.message.includes('no healthy nodes for')) {
-        message.error(
-          'No healthy nodes for this network. Redeploy your contract.'
+        createLog(
+          'No healthy nodes for this network. Redeploy your contract.',
+          'error'
         );
         return;
       }
       if (error.message.includes('Invalid magic')) {
-        message.error('Invalid magic(type)');
+        createLog('Invalid magic(type)', 'error');
         return;
       }
-      message.error(error.message);
+      createLog(error.message, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={s.root}>
+    <div className={`${s.root} ${s[type]}`}>
       <Form className={s.form} onFinish={onSubmit}>
         {abi.parameters.map((item: ABIParameter, i: number) => {
           if (item.name === 'queryId') {
@@ -144,7 +145,7 @@ const ABIUi: FC<Props> = ({
         })}
 
         <Button
-          className={s.btnAction}
+          className={`${s.btnAction} bordered-gradient`}
           type="default"
           htmlType="submit"
           loading={isLoading}

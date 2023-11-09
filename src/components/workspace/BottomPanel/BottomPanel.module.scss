@@ -1,19 +1,17 @@
 .root {
   background-color: #181717;
-  // height: 100%;
+  height: 100%;
   z-index: 1000;
   position: relative;
   .tab {
     display: inline-flex;
     color: rgb(130, 129, 129);
-    margin-left: 0.5rem;
+    margin-left: 0.2rem;
     border-bottom: 1px solid rgb(76, 76, 76);
     text-transform: uppercase;
     font-size: 0.9rem;
   }
   .view {
-    // overflow-y: auto;
-    // height: 9rem;
     padding: 0.5rem;
     width: 100%;
   }
@@ -28,7 +26,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.7rem 0.7rem 0 0.5rem;
+    padding: 0.1rem 0.7rem 0 0.5rem;
     // margin: 1rem 0 0 0;
 
     .actions {
