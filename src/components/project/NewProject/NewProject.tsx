@@ -1,6 +1,5 @@
-import AppIcon from '@/components/ui/icon';
+import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { UploadOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useState } from 'react';
@@ -17,9 +16,20 @@ import s from './NewProject.module.scss';
 interface Props {
   className?: string;
   ui?: 'icon' | 'button';
+  projectType?: 'default' | 'local' | 'git';
+  label?: string;
+  icon?: AppIconType;
+  heading?: string;
 }
 
-const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
+const NewProject: FC<Props> = ({
+  className = '',
+  ui = 'icon',
+  projectType = 'default',
+  label = 'Create',
+  icon = 'Plus',
+  heading = 'New Project',
+}) => {
   const [isActive, setIsActive] = useState(false);
   const { projects } = useWorkspaceActions();
   const { createProject } = useProjectActions();
@@ -38,16 +48,6 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
   const templatedList = [
     { label: 'Blank Contract', value: 'tonBlank' },
     { label: 'Counter Contract', value: 'tonCounter' },
-    // { label: 'NFT Contract', value: 'nft', lang: 'tact' },
-
-    { label: 'Import Contract', value: 'import' },
-
-    // { label: 'Chat Bot Contract', value: 'chatBot' },
-  ];
-
-  const importOptions = [
-    { label: 'From Github', value: 'github', default: true },
-    { label: 'From local', value: 'local' },
   ];
 
   const onFormFinish = async (values: any) => {
@@ -60,14 +60,14 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
         throw `Project '${projectName}' already exists`;
       }
 
-      if (importType === 'github') {
+      if (projectType === 'git') {
         files = await downloadRepo(githubUrl);
       }
 
       const projectId = await createProject(
         projectName,
         language,
-        values.template,
+        values.template || 'import',
         values?.file?.file,
         files
       );
@@ -77,7 +77,7 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
       Analytics.track('Create project', {
         platform: 'IDE',
         type: `TON - ${language}`,
-        sourceType: importType,
+        sourceType: projectType,
         template: values.template,
       });
       message.success(`Project '${projectName}' created`);
@@ -118,61 +118,6 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
     setIsActive(false);
   };
 
-  const projectImport = (fieldGetter: any) => (
-    <div className="">
-      <Form.Item
-        label="Import Type"
-        name="importType"
-        className={s.formItem}
-        rules={[{ required: true }]}
-      >
-        <Radio.Group options={importOptions} optionType="button" />
-      </Form.Item>
-      <Form.Item
-        noStyle
-        shouldUpdate={(prevValues, currentValues) =>
-          prevValues.importType !== currentValues.importType
-        }
-      >
-        {() =>
-          fieldGetter('importType') === 'local' ? (
-            <Form.Item
-              label="Select contract zip file"
-              name="file"
-              className={s.formItem}
-              rules={[{ required: true }]}
-            >
-              <Upload
-                accept=".zip"
-                multiple={false}
-                maxCount={1}
-                beforeUpload={(file) => {
-                  return false;
-                }}
-              >
-                <Button icon={<UploadOutlined />}>Select File</Button>
-              </Upload>
-            </Form.Item>
-          ) : (
-            <Form.Item
-              label="Github Repository URL"
-              name="githubUrl"
-              className={s.formItem}
-              rules={[
-                {
-                  required: true,
-                  message: 'Please input your Github Repository URL',
-                },
-              ]}
-            >
-              <Input placeholder="Ex. https://github.com/nujan-io/ton-contracts/" />
-            </Form.Item>
-          )
-        }
-      </Form.Item>
-    </div>
-  );
-
   useEffect(() => {
     EventEmitter.on('ONBOARDOING_NEW_PROJECT', () => {
       setIsActive(true);
@@ -184,12 +129,12 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
 
   return (
     <>
-      <Tooltip title="New Project" placement="bottom">
+      <Tooltip title={heading} placement="bottom">
         <div
-          className={`${s.root} ${className} onboarding-new-project}`}
+          className={`${s.root} ${className} onboarding-new-project`}
           onClick={() => setIsActive(true)}
         >
-          {ui === 'icon' && <AppIcon name="Plus" className={s.newIcon} />}
+          {ui === 'icon' && <AppIcon name={icon} className={s.newIcon} />}
           {ui === 'button' && (
             <Button
               type="primary"
@@ -207,72 +152,94 @@ const NewProject: FC<Props> = ({ className = '', ui = 'icon' }) => {
         onCancel={closeModal}
         footer={null}
       >
-        <span className={s.title}>New Project</span>
+        <span className={s.title}>{heading}</span>
         <Form
           form={form}
-          className={s.form}
+          className={`${s.form} app-form`}
           layout="vertical"
           onFinish={onFormFinish}
           autoComplete="off"
           initialValues={{ template: 'tonCounter', language: 'tact' }}
           requiredMark="optional"
-          onFieldsChange={(changedField) => {
-            if (changedField[0].value === 'import') {
-              form.setFieldsValue({ importType: 'github' });
-            }
-          }}
         >
           <div className="top-header">
             <Form.Item
-              label="Name"
               name="name"
               className={s.formItem}
               rules={[
                 { required: true, message: 'Please input your project name!' },
               ]}
             >
-              <Input placeholder="Ex. Counter" />
+              <Input placeholder="Project name" />
             </Form.Item>
 
             <Form.Item
               label="Language"
               name="language"
-              className={s.formItem}
+              className={`${s.formItem} ${s.optionSelection}`}
               rules={[{ required: true }]}
             >
               <Radio.Group options={language} optionType="button" />
             </Form.Item>
           </div>
 
-          <Form.Item
-            label="Select Template/Import"
-            name="template"
-            className={`${s.formItem} template-selector`}
-          >
-            <Radio.Group options={templatedList} optionType="button" />
-          </Form.Item>
+          {projectType === 'default' && (
+            <Form.Item
+              label="Select Template"
+              name="template"
+              className={`${s.formItem} ${s.optionSelection} template-selector`}
+            >
+              <Radio.Group options={templatedList} optionType="button" />
+            </Form.Item>
+          )}
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.template !== currentValues.template
-            }
-          >
-            {({ getFieldValue }) =>
-              getFieldValue('template') === 'import'
-                ? projectImport(getFieldValue)
-                : null
-            }
-          </Form.Item>
+          {projectType === 'local' && (
+            <Form.Item
+              label="Select contract zip file"
+              name="file"
+              className={s.formItem}
+              rules={[{ required: true }]}
+            >
+              <Upload.Dragger
+                accept=".zip"
+                multiple={false}
+                maxCount={1}
+                beforeUpload={(file) => {
+                  return false;
+                }}
+              >
+                <div className={s.fileUploadLabel}>
+                  <AppIcon name="Download" className={s.icon} />
+                  <b>Choose a file</b> <span>or drag it here</span>
+                </div>
+              </Upload.Dragger>
+            </Form.Item>
+          )}
 
-          <Form.Item>
+          {projectType === 'git' && (
+            <Form.Item
+              label="Github Repository URL"
+              name="githubUrl"
+              className={s.formItem}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please input your Github Repository URL',
+                },
+              ]}
+            >
+              <Input placeholder="Ex. https://github.com/nujan-io/ton-contracts/" />
+            </Form.Item>
+          )}
+
+          <Form.Item className={s.btnActionContainer}>
             <Button
-              className={s.btnAction}
+              className={`${s.btnAction} ant-btn-primary-gradient item-center-align`}
               loading={isLoading}
               type="primary"
               htmlType="submit"
             >
-              Create
+              <AppIcon name={icon} /> {label}
             </Button>
           </Form.Item>
         </Form>

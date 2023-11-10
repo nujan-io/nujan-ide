@@ -21,6 +21,21 @@ const ManageProject: FC = () => {
       <span className={s.heading}>Projects</span>
       <div className={s.options}>
         <NewProject />
+        <NewProject
+          label="Import"
+          projectType="git"
+          heading="Import from github"
+          icon="GitHub"
+          className={s.git}
+        />
+        <NewProject
+          label="Import"
+          projectType="local"
+          heading="Import from local"
+          icon="Import"
+          className={s.local}
+        />
+
         <Tooltip title="Delete Project" placement="bottom">
           <div
             className={`${s.deleteProject} ${
@@ -54,8 +69,7 @@ const ManageProject: FC = () => {
             value={project.id}
             title={project.name}
           >
-            <span>{getLanguageInitial(project?.language)}</span>
-            {project.name}
+            {project.name} - <span>{project?.language || 'func'}</span>
           </Select.Option>
         ))}
       </Select>

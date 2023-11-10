@@ -97,7 +97,7 @@ const ABIUi: FC<Props> = ({
 
   return (
     <div className={`${s.root} ${s[type]}`}>
-      <Form className={s.form} onFinish={onSubmit}>
+      <Form className={`${s.form} app-form`} onFinish={onSubmit}>
         {abi.parameters.map((item: ABIParameter, i: number) => {
           if (item.name === 'queryId') {
             return (

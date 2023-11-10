@@ -27,3 +27,16 @@ div.ant-form-item {
     }
   }
 }
+
+.app-form {
+  .ant-input {
+    border: 0;
+    border-bottom: 1px solid transparent;
+    background-color: rgba(0, 0, 0, 1);
+    height: 35px;
+    box-shadow: none;
+    &:focus {
+      border-color: #454545;
+    }
+  }
+}

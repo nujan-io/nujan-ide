@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import {
   AiOutlineDelete,
+  AiOutlineDownload,
   AiOutlineGoogle,
   AiOutlineHome,
   AiOutlineLogout,
@@ -20,6 +21,7 @@ import {
   Close,
   Code,
   GitHub,
+  Import,
   Info,
   NewFile,
   NewFolder,
@@ -57,7 +59,9 @@ export type AppIconType =
   | 'Build'
   | 'Rocket'
   | 'Eye'
-  | 'Clear';
+  | 'Clear'
+  | 'Download'
+  | 'Import';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -91,6 +95,8 @@ const Components = {
   Rocket,
   Eye: FiEye,
   Clear: GrClear,
+  Download: AiOutlineDownload,
+  Import,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

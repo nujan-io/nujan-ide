@@ -34,6 +34,10 @@
     &::before {
       margin-top: 2%;
     }
+    .closeIcon {
+      width: 0.8rem;
+      height: 0.8rem;
+    }
     &:hover {
       .close {
         &:not(.isDirty) {
@@ -65,7 +69,7 @@
     .close {
       display: inline-flex;
       margin-left: 5px;
-      margin-top: 2px;
+      // margin-top: 2px;
       border-radius: 5px;
       padding: 1px;
       position: relative;

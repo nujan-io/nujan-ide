@@ -20,6 +20,18 @@
   .options {
     display: flex;
     gap: 0.5rem;
+    .git {
+      svg {
+        width: 0.95rem;
+        height: unset;
+      }
+    }
+    .local {
+      svg {
+        width: 1.3rem;
+        height: unset;
+      }
+    }
   }
 
   .deleteProject {

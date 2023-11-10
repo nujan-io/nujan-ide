@@ -183,7 +183,12 @@ const ContractInteraction: FC<Props> = ({
       )}
       <br />
 
-      <h3 className={s.label}>Send internal message: ({abi?.setters?.length || '-'})</h3>
+      <h3 className={s.label}>
+        Send internal message:{' '}
+        {abi?.setters?.length && abi?.setters?.length > 0
+          ? `(${abi?.setters?.length})`
+          : ''}
+      </h3>
       {language !== 'tact' && (
         <>
           <p>
