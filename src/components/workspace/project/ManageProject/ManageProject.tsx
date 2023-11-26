@@ -14,7 +14,7 @@ const ManageProject: FC = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const router = useRouter();
-  const { id: projectId } = router.query;
+  const { id: projectId, importURL } = router.query;
 
   const projectHeader = () => (
     <>
@@ -24,9 +24,10 @@ const ManageProject: FC = () => {
         <NewProject
           label="Import"
           projectType="git"
-          heading="Import from github"
+          heading="Import from GitHub"
           icon="GitHub"
           className={s.git}
+          active={!!importURL}
         />
         <NewProject
           label="Import"

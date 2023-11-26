@@ -20,6 +20,7 @@ interface Props {
   label?: string;
   icon?: AppIconType;
   heading?: string;
+  active?: boolean;
 }
 
 const NewProject: FC<Props> = ({
@@ -29,14 +30,15 @@ const NewProject: FC<Props> = ({
   label = 'Create',
   icon = 'Plus',
   heading = 'New Project',
+  active = false,
 }) => {
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(active);
   const { projects } = useWorkspaceActions();
   const { createProject } = useProjectActions();
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
-  const { importURL, name: projectName } = router.query;
+  const { importURL, name: projectName, lang: importLanguage } = router.query;
 
   const [form] = useForm();
 
@@ -51,7 +53,7 @@ const NewProject: FC<Props> = ({
   ];
 
   const onFormFinish = async (values: any) => {
-    const { name: projectName, importType, githubUrl, language } = values;
+    const { name: projectName, githubUrl, language } = values;
     let files: Tree[] = [];
 
     try {
@@ -96,15 +98,15 @@ const NewProject: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (!importURL || (!form && !isActive)) {
+    if (!importURL || !active) {
       return;
     }
 
     form.setFieldsValue({
       template: 'import',
-      importType: 'github',
       githubUrl: importURL || '',
       name: projectName || '',
+      language: importLanguage || 'func',
     });
     setIsActive(true);
     const finalQueryParam = router.query;
