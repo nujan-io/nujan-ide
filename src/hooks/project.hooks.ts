@@ -45,6 +45,7 @@ export function useProjectActions() {
     createNewItem,
     updateFileContent,
     deleteItem,
+    projectFiles,
   } = useWorkspaceActions();
   const { isContractDebugEnabled } = useSettingAction();
 
@@ -172,11 +173,17 @@ export function useProjectActions() {
 
     let filesToProcess = [file?.path];
 
+    projectFiles(projectId).forEach((f) => {
+      if (f.name.includes('.tact') && !filesToProcess.includes(f.path)) {
+        filesToProcess.push(f.path);
+      }
+    });
+
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
       const file = await getFileByPath(fileToProcess, projectId);
       if (file?.content) {
-        fileList[file.path!!] = file.content;
+        fileList['/' + file.path!!] = file.content;
       }
       if (!file?.content) {
         continue;
@@ -313,10 +320,12 @@ export function useProjectActions() {
 
     updateProjectById(data, projectId);
 
-    const scriptFile = await getFileByPath(
-      output.contractScript.name,
-      projectId
-    );
+    let scriptPath = output.contractScript.name;
+    if (scriptPath.startsWith('/')) {
+      scriptPath = scriptPath.substring(1);
+    }
+
+    const scriptFile = await getFileByPath(scriptPath, projectId);
 
     let fileToReRender = scriptFile;
 
@@ -324,7 +333,7 @@ export function useProjectActions() {
       let distDirectory = await getFileByPath('dist', projectId);
       fileToReRender = await createNewItem(
         distDirectory?.id!!,
-        output.contractScript.name,
+        scriptPath,
         'file',
         projectId,
         output.contractScript.value.toString()
