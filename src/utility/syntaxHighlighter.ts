@@ -6,6 +6,7 @@ import { Registry } from 'monaco-textmate';
 import { loadWASM } from 'onigasm';
 import funcTMLanguage from '../assets/ton/func/tmLanguage.json';
 import tactTMLanguage from '../assets/ton/tact/tmLanguage.json';
+import typeScriptTMLanguage from '../assets/typescript/tmLanguage.json';
 
 let onigasmLoaded = false;
 
@@ -16,6 +17,7 @@ export async function highlightCodeSnippets(
   let ftmLanguage = {
     func: funcTMLanguage,
     tact: tactTMLanguage,
+    typescript: typeScriptTMLanguage,
   };
 
   if (!onigasmLoaded) {
