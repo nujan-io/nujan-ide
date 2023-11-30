@@ -1,6 +1,8 @@
 .root {
   font-size: 0.9rem;
   cursor: pointer;
+  height: calc(100vh - 11rem);
+  overflow-y: auto;
   ul {
     list-style: none;
     padding-left: 0;
