@@ -2,10 +2,14 @@ import TonAuth from '@/components/auth/TonAuth/TonAuth';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { NetworkEnvironment } from '@/interfaces/workspace.interface';
+import {
+  ABIField,
+  InitParams,
+  NetworkEnvironment,
+} from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
-import { getContractLINK } from '@/utility/utils';
+import { getContractLINK, getFileExtension } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Blockchain } from '@ton-community/sandbox';
 import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
@@ -29,6 +33,12 @@ import {
   StringInput,
 } from '../abiInputs';
 import { globalWorkspace } from '../globalWorkspace';
+
+const blankABI = {
+  getters: [],
+  setters: [],
+  initParams: [],
+};
 
 const fields = (type: String) => {
   if (
@@ -81,6 +91,15 @@ const BuildProject: FC<Props> = ({
     dataCell: Cell | null;
   } | null>(null);
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
+  const [contractABI, setContractABI] = useState<{
+    getters: ABIField[];
+    setters: ABIField[];
+    initParams: InitParams[];
+  }>(blankABI);
+  const [selectedContract, setSelectedContract] = useState<string | undefined>(
+    undefined
+  );
+
   const [tonConnector] = useTonConnectUI();
   const chain = tonConnector.wallet?.account.chain;
 
@@ -102,21 +121,65 @@ const BuildProject: FC<Props> = ({
 
   const activeProject = project(projectId);
 
-  const deployView = () => {
-    if (!activeProject?.contractBOC) {
-      return;
-    }
+  const contractsToDeploy = () => {
+    return projectFiles(projectId)
+      .filter((f) => {
+        const _fileExtension = getFileExtension(f?.name || '');
+        return (
+          f.path?.startsWith('dist') &&
+          ['abi'].includes(_fileExtension as string)
+        );
+      })
+      .map((f) => {
+        return {
+          id: f.id,
+          name: f.name
+            .replace('.abi', '')
+            .replace('tact_', '')
+            .replace('func_', ''),
+          path: f.path,
+        };
+      });
+  };
 
-    if (activeProject?.language != 'tact' && environment === 'SANDBOX') {
+  const deployView = () => {
+    const _contractsToDeploy = contractsToDeploy();
+
+    if (_contractsToDeploy.length === 0) {
       return;
     }
 
     return (
       <>
-        <Form className={s.form} onFinish={initDeploy}>
-          {activeProject?.initParams && (
+        <Form
+          className={`${s.form} app-form`}
+          onFinish={initDeploy}
+          onValuesChange={(changedValues) => {
+            if (Object.hasOwn(changedValues, 'contract')) {
+              setSelectedContract(changedValues.contract);
+            }
+          }}
+        >
+          <Form.Item
+            name="contract"
+            className={s.formItem}
+            rules={[{ required: true, message: 'Please select contract' }]}
+          >
+            <Select
+              placeholder="Select a contract"
+              className="w-100"
+              allowClear
+            >
+              {_contractsToDeploy.map((f) => (
+                <Select.Option key={f.id} value={f.path} title={f.path}>
+                  {f.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          {contractABI?.initParams && (
             <div>
-              {activeProject?.initParams?.map((item, index) => {
+              {contractABI?.initParams?.map((item, index) => {
                 if (item.name === 'queryId')
                   return <React.Fragment key={index} />;
                 const Field = fields(item.type);
@@ -138,7 +201,7 @@ const BuildProject: FC<Props> = ({
             type="primary"
             htmlType="submit"
             // loading={isLoading == 'deploy'}
-            disabled={!activeProject?.contractBOC}
+            disabled={selectedContract === undefined}
             className="w-100 item-center-align ant-btn-primary-gradient"
           >
             <AppIcon name="Rocket" /> Deploy
@@ -148,26 +211,26 @@ const BuildProject: FC<Props> = ({
     );
   };
 
-  const initDeploy = async (formValues = {}) => {
+  const initDeploy = async (formValues: any) => {
     const _temp: any = { ...formValues };
+
     let initParams = '';
     if (_temp.queryId) {
       delete _temp.queryId;
     }
-    const initParamsData = activeProject?.initParams;
+    const initParamsData = contractABI?.initParams;
     let parametrsType: any = {};
     if (initParamsData) {
       parametrsType = initParamsData.reduce(
-        (acc: any, curr) => ((acc[curr.name] = curr.type), acc),
+        (acc: any, curr: any) => ((acc[curr.name] = curr.type), acc),
         {}
       );
     }
 
     for (const [key, value] of Object.entries(_temp)) {
       const type = parametrsType[key];
-      console.log(key, value);
       if (
-        type.includes('int') ||
+        type?.includes('int') ||
         type == 'Int' ||
         type == 'bigint | number' ||
         type == 'number | bigint'
@@ -190,7 +253,7 @@ const BuildProject: FC<Props> = ({
       }
       // }
     }
-    initParams = initParams.slice(0, -1);
+    initParams = initParams?.slice(0, -1);
 
     try {
       if (!tonConnector.connected && environment !== 'SANDBOX') {
@@ -214,6 +277,11 @@ const BuildProject: FC<Props> = ({
 
   const deploy = async () => {
     createLog(`Deploying contract ...`, 'info');
+    const contractBOCPath = selectedContract?.replace('.abi', '.code.boc');
+    const contractBOC = await getFileByPath(contractBOCPath, projectId);
+    if (!contractBOC?.content) {
+      throw 'Contract BOC is missing. Rebuild the contract.';
+    }
     try {
       if (sandboxBlockchain && environment === 'SANDBOX') {
         const blockchain = await Blockchain.create();
@@ -232,10 +300,11 @@ const BuildProject: FC<Props> = ({
         contract,
         logs,
       } = await deployContract(
-        activeProject?.contractBOC as string,
+        contractBOC.content,
         buildOutput?.dataCell as any,
         environment.toLowerCase() as Network,
-        activeProject!!
+        activeProject!!,
+        contractABI.initParams
       );
 
       Analytics.track('Deploy project', {
@@ -281,19 +350,23 @@ const BuildProject: FC<Props> = ({
   };
 
   const createStateInitCell = async (initParams = '') => {
+    if (!selectedContract) {
+      throw 'Please select contract';
+    }
+    const contractScriptPath = selectedContract?.replace('.abi', '.ts');
     if (!cellBuilderRef.current?.contentWindow) return;
+    const contractScript = await getFileByPath(contractScriptPath, projectId);
+    if (activeProject?.language === 'tact' && !contractScript?.content) {
+      throw 'Contract script is missing. Rebuild the contract.';
+    }
 
     try {
       let jsOutout = [{ code: '' }];
 
       if (activeProject?.language == 'tact') {
-        const contractScript = activeProject?.contractScript?.toString();
-        if (!contractScript || typeof contractScript !== 'string') {
-          throw 'Build project built first';
-        }
         jsOutout = await buildTs(
           {
-            'tact.ts': activeProject?.contractScript?.toString(),
+            'tact.ts': contractScript?.content,
           },
           'tact.ts'
         );
@@ -320,7 +393,11 @@ const BuildProject: FC<Props> = ({
         .replace(/}\s+from\s.+/, '} = window.TonCore;')
         .replace(/^\s*export\s+\{[^}]*\};\s*/m, '');
 
-      let contractName = activeProject?.contractName;
+      const contractName = selectedContract
+        .replace('dist/', '')
+        .replace('.abi', '')
+        .replace('tact_', '')
+        .replace('func_', '');
 
       if (activeProject?.language == 'tact') {
         const _code = `async function main() {
@@ -372,6 +449,79 @@ const BuildProject: FC<Props> = ({
     }
     return isValid;
   };
+
+  const updateABI = async () => {
+    if (!selectedContract) {
+      setContractABI(blankABI);
+      return;
+    }
+    const contractABIFile = await getFileByPath(selectedContract, projectId);
+
+    if (!contractABIFile?.content) {
+      createLog('Contract ABI is missing. Rebuild the contract.', 'error');
+      return;
+    }
+    const contractABI = JSON.parse(contractABIFile?.content || '{}');
+    if (activeProject?.language === 'tact') {
+      contractABI.getters = contractABI?.getters?.map((item: any) => {
+        return {
+          name: item.name,
+          parameters: item.arguments.map((parameter: any) => {
+            return {
+              name: parameter.name,
+              type: parameter.type,
+              format: parameter.format,
+              optional: parameter.optional,
+            };
+          }),
+        };
+      });
+      let setters: any = [];
+      contractABI?.receivers?.forEach((item: any) => {
+        if (item.message.type === 'Deploy') {
+          return;
+        }
+        if (item.message.kind) {
+          if (item.message.kind !== 'typed') {
+            setters.push({
+              name: item.message.text,
+              parameters: [],
+              kind: item.message.kind,
+            });
+            return;
+          }
+          const singleItem = contractABI.types.find(
+            (type: any) => type.name === item.message.type
+          );
+          const singleField = {
+            name: singleItem.name,
+            parameters: singleItem.fields.map((parameter: any) => {
+              return {
+                name: parameter.name,
+                type: parameter.type.type,
+                format: parameter.type.format,
+                optional: parameter.type.optional,
+                kind: item.message.kind,
+              };
+            }),
+          };
+          setters.push(singleField);
+        }
+      });
+
+      contractABI.setters = setters;
+    }
+
+    setContractABI({
+      getters: contractABI.getters || [],
+      setters: contractABI.setters || [],
+      initParams: contractABI.initParams || [],
+    });
+  };
+
+  useEffect(() => {
+    updateABI();
+  }, [selectedContract]);
 
   useEffect(() => {
     const handler = (
@@ -458,7 +608,7 @@ const BuildProject: FC<Props> = ({
           icon="Build"
           label={
             environment === 'SANDBOX' && activeProject?.language !== 'tact'
-              ? 'Build and Deploy'
+              ? 'Build'
               : 'Build'
           }
           description="- Select a contract file to build and deploy"
@@ -468,7 +618,7 @@ const BuildProject: FC<Props> = ({
               environment == 'SANDBOX' &&
               activeProject?.language !== 'tact'
             ) {
-              initDeploy();
+              // initDeploy();
             }
           }}
         />
@@ -493,7 +643,7 @@ const BuildProject: FC<Props> = ({
           <ContractInteraction
             contractAddress={activeProject?.contractAddress!!}
             projectId={projectId}
-            abi={activeProject?.abi || null}
+            abi={contractABI || null}
             network={environment}
             contract={contract}
             language={activeProject?.language}

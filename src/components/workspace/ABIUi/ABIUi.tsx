@@ -150,7 +150,7 @@ const ABIUi: FC<Props> = ({
           htmlType="submit"
           loading={isLoading}
         >
-          {abi.name}
+          {abi.name || '-- fallback method --'}
         </Button>
       </Form>
     </div>

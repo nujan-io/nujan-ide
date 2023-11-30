@@ -28,6 +28,7 @@ function useWorkspaceActions() {
     deleteItem,
     moveFile,
     createNewItem,
+    createFiles,
     openedFiles,
     activeFile,
     getFileById,
@@ -385,6 +386,51 @@ function useWorkspaceActions() {
     item.project.push(newItem);
     updateProjectFiles(item.project, projectId);
     return newItem;
+  }
+
+  async function createFiles(
+    files: Pick<Tree, 'path' | 'content'>[],
+    directoryPath: string,
+    projectId: string
+  ) {
+    let _projectFiles = cloneDeep(projectFiles(projectId));
+    // check if file name contains directory. Then create a directory first and then create a file
+    let directoryItem = await getFileByPath(directoryPath, projectId);
+    if (!directoryItem) {
+      directoryItem = _createItem('directory', directoryPath || '', '', '');
+      _projectFiles.push(directoryItem);
+    }
+
+    await Promise.all(
+      files.map(async (file) => {
+        const fileName = file.path!!.split('/').pop();
+        let currentFile = _projectFiles.find((item) => item.name === fileName);
+        let isNewFile = false;
+        if (!currentFile) {
+          currentFile = _createItem(
+            'file',
+            fileName!!,
+            directoryItem?.id || '',
+            directoryPath || ''
+          );
+          isNewFile = true;
+        }
+        if (isNewFile) {
+          await fileSystem.files.add({
+            id: currentFile.id,
+            content: file.content || '',
+          });
+        } else {
+          await fileSystem.files.update(currentFile.id, {
+            content: file.content || '',
+          });
+        }
+        if (isNewFile) {
+          _projectFiles.push(currentFile);
+        }
+      })
+    );
+    updateProjectFiles(_projectFiles, projectId);
   }
 
   function isFileExists(

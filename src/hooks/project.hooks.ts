@@ -17,12 +17,8 @@ import {
 } from '@tact-lang/compiler';
 import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
-import {
-  getContracts,
-  getType,
-} from '@tact-lang/compiler/dist/types/resolveDescriptors';
+import { getType } from '@tact-lang/compiler/dist/types/resolveDescriptors';
 
-import EventEmitter from '@/utility/eventEmitter';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import {
   CompileResult,
@@ -42,7 +38,7 @@ export function useProjectActions() {
     getFileByPath,
     addFilesToDatabase,
     updateProjectById,
-    createNewItem,
+    createFiles,
     updateFileContent,
     deleteItem,
     projectFiles,
@@ -156,13 +152,26 @@ export function useProjectActions() {
     }
 
     const abi = await generateABI(fileList);
-    const data: Partial<Project> = {
-      abi: { getters: abi as any, setters: [] },
-      contractBOC: (buildResult as SuccessResult).codeBoc,
-    };
 
-    updateProjectById(data, projectId);
-    return data;
+    const contractName = file.path?.replace('.fc', '');
+    createFiles(
+      [
+        {
+          path: `dist/func_${contractName}.abi`,
+          content: JSON.stringify({
+            name: contractName,
+            getters: abi,
+            setters: [],
+          }),
+        },
+        {
+          path: `dist/func_${contractName}.code.boc`,
+          content: (buildResult as SuccessResult).codeBoc,
+        },
+      ],
+      'dist',
+      projectId
+    );
   }
 
   async function compileTactProgram(
@@ -238,115 +247,35 @@ export function useProjectActions() {
       }
     });
 
-    const getters = (output.abi as any)?.getters?.map((item: any) => {
-      return {
-        name: item.name,
-        parameters: item.arguments.map((parameter: any) => {
-          return {
-            name: parameter.name,
-            type: parameter.type,
-            format: parameter.format,
-            optional: parameter.optional,
-          };
-        }),
-      };
-    });
+    let buildFiles: Pick<Tree, 'path' | 'content'>[] = [];
+    fs.overwrites.forEach((value, key) => {
+      const filePath = key.slice(1);
 
-    let setters: any = [];
-    (output.abi as any)?.receivers?.forEach((item: any) => {
-      if (item.message.type === 'Deploy') {
-        return;
-      }
-      if (item.message.kind) {
-        if (item.message.kind !== 'typed') {
-          setters.push({
-            name: item.message.text,
-            parameters: [],
-            kind: item.message.kind,
-          });
-          return;
-        }
-        const singleItem = (output.abi as any).types.find(
-          (type: any) => type.name === item.message.type
-        );
-        const singleField = {
-          name: singleItem.name,
-          parameters: singleItem.fields.map((parameter: any) => {
-            return {
-              name: parameter.name,
-              type: parameter.type.type,
-              format: parameter.type.format,
-              optional: parameter.type.optional,
-              kind: item.message.kind,
-            };
-          }),
+      let fileContent = value.toString();
+      if (key.includes('.abi')) {
+        const contractName = key
+          .replace('/dist/', '')
+          .replace('.abi', '')
+          .replace('tact_', '');
+        fileContent = JSON.parse(fileContent);
+        const parsedFileContent = {
+          ...(fileContent as Object),
+          initParams: getInitParams(ctx, contractName, fileContent),
         };
-        setters.push(singleField);
+        fileContent = JSON.stringify(parsedFileContent);
       }
-    });
-
-    const _contract = getContracts(ctx);
-    const contactType = getType(ctx, _contract[0]);
-
-    const initParams = contactType.init?.args?.map((item: any) => {
-      return {
-        name: item.name,
-        type: item.type.name,
-        optional: item.type.optional,
-      };
-    });
-
-    const deployFields = (output.abi as any).types.find(
-      (item: any) => item.name === 'Deploy'
-    )?.fields;
-
-    if (deployFields && deployFields.length > 0) {
-      deployFields.forEach((item: any) => {
-        initParams?.push({
-          name: item.name,
-          type: item.type.type,
-          optional: item.type.optional,
-        });
+      if (key.includes('.boc')) {
+        fileContent = Buffer.from(value).toString('base64');
+      }
+      buildFiles.push({
+        path: filePath,
+        content: fileContent,
       });
-    }
+      // TODO: Do this after the build files are updated.
+      // EventEmitter.emit('FORCE_UPDATE_FILE', filePath);
+    });
 
-    const data: Partial<Project> = {
-      abi: { getters, setters },
-      contractBOC: output.boc,
-      initParams,
-      contractScript: output.contractScript.value,
-      contractName: _contract[0],
-    };
-
-    updateProjectById(data, projectId);
-
-    let scriptPath = output.contractScript.name;
-    if (scriptPath.startsWith('/')) {
-      scriptPath = scriptPath.substring(1);
-    }
-
-    const scriptFile = await getFileByPath(scriptPath, projectId);
-
-    let fileToReRender = scriptFile;
-
-    if (!scriptFile?.id) {
-      let distDirectory = await getFileByPath('dist', projectId);
-      fileToReRender = await createNewItem(
-        distDirectory?.id!!,
-        scriptPath,
-        'file',
-        projectId,
-        output.contractScript.value.toString()
-      );
-    } else {
-      updateFileContent(
-        scriptFile.id,
-        output.contractScript.value.toString(),
-        projectId
-      );
-    }
-
-    EventEmitter.emit('FORCE_UPDATE_FILE', fileToReRender?.id);
+    createFiles(buildFiles, 'dist', projectId);
 
     return fs.overwrites;
   }
@@ -463,4 +392,37 @@ const importUserFile = async (
     files: [...files, ...commonFiles.files],
     filesWithId: [...filesWithId, ...commonFiles.filesWithId],
   };
+};
+
+const getInitParams = (
+  ctx: CompilerContext,
+  contractName: string,
+  abi: any
+) => {
+  const contactType = getType(ctx, contractName);
+  let initParams: { name: string; type: string; optional: boolean }[] = [];
+
+  initParams =
+    contactType.init?.args?.map((item: any) => {
+      return {
+        name: item.name,
+        type: item.type.name,
+        optional: item.type.optional,
+      };
+    }) ?? [];
+
+  const deployFields = abi.types.find(
+    (item: any) => item.name === 'Deploy'
+  )?.fields;
+
+  if (deployFields && deployFields.length > 0) {
+    deployFields.forEach((item: any) => {
+      initParams?.push({
+        name: item.name,
+        type: item.type.type,
+        optional: item.type.optional,
+      });
+    });
+  }
+  return initParams;
 };

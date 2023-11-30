@@ -1,6 +1,7 @@
 import { globalWorkspace } from '@/components/workspace/globalWorkspace';
 import {
   ContractLanguage,
+  InitParams,
   NetworkEnvironment,
   ParameterType,
   Project,
@@ -46,7 +47,8 @@ export function useContractAction() {
     codeBOC: string,
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
-    project: Project
+    project: Project,
+    initParams: InitParams[]
   ): Promise<{
     address: string;
     contract?: SandboxContract<UserContract>;
@@ -58,7 +60,7 @@ export function useContractAction() {
     let sender: Sender | null = null;
 
     // Amount to send to contract. Gas fee
-    const value = toNano('0.02');
+    const value = toNano('0.05');
     let stateInit: StateInit = {};
     if (project.language === 'tact') {
       const _contractInit = (window as any).contractInit;
@@ -77,8 +79,8 @@ export function useContractAction() {
     const _contractInit = (window as any).contractInit;
     let _userContract: any = null;
 
-    if (project?.initParams && project?.initParams?.length > 0) {
-      const hasQueryId = project?.initParams?.findIndex(
+    if (initParams && initParams?.length > 0) {
+      const hasQueryId = initParams?.findIndex(
         (item) => item.name == 'queryId'
       );
       const queryId = BigInt(0);
@@ -103,7 +105,11 @@ export function useContractAction() {
       const client = new TonClient({ endpoint });
       _userContract = client.open(_contractInit);
       client;
-    } else if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
+    } else if (
+      network.toUpperCase() === 'SANDBOX' &&
+      sandboxBlockchain &&
+      project.language === 'tact'
+    ) {
       _userContract = sandboxBlockchain.openContract(_contractInit);
       sender = sandboxWallet!!.getSender();
     }
@@ -144,7 +150,6 @@ export function useContractAction() {
     }
 
     if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
-      //  else {
       const _userContract = UserContract.createForDeploy(
         stateInit.code as Cell,
         stateInit.data as Cell
@@ -158,7 +163,6 @@ export function useContractAction() {
         address: _userContract.address.toString(),
         contract: userContract,
       };
-      // }
     }
 
     const _contractAddress = contractAddress(0, stateInit);
@@ -259,7 +263,7 @@ export function useContractAction() {
         $$type: methodName,
       };
       if (kind === 'text') {
-        messageParams = methodName;
+        messageParams = methodName || '';
       }
       stack?.forEach((item: any) => {
         messageParams = {
@@ -267,6 +271,13 @@ export function useContractAction() {
           [item.name]: BigInt(item.value || 0),
         };
       });
+
+      if (kind === 'empty') {
+        messageParams = null;
+      }
+      if (kind === 'text' && Object.keys(messageParams).length === 0) {
+        messageParams = '';
+      }
 
       const response = await (contract as any).send(
         sender,
@@ -293,11 +304,10 @@ export function useContractAction() {
     contract: SandboxContract<UserContract> | null = null,
     language: ContractLanguage,
     kind?: string,
-    stack?: TupleItem[],
+    stack?: TupleItem[] | any,
     network?: Network | Partial<NetworkEnvironment>
   ): Promise<{ message: string; logs?: string[] } | undefined | any> {
-    console.log(stack, 'stack');
-    const parsedStack = stack?.map((item) => {
+    const parsedStack = stack?.map((item: any) => {
       switch (item.type as ParameterType) {
         case 'int':
           return {
@@ -310,6 +320,11 @@ export function useContractAction() {
             cell: beginCell()
               .storeAddress(Address.parse((item as any).value))
               .endCell(),
+          };
+        case 'bool':
+          return {
+            type: item.type,
+            value: item.value === 'true',
           };
         default:
           return {
@@ -324,9 +339,16 @@ export function useContractAction() {
       let responseValues = [];
       if (language === 'tact') {
         // convert getter function name as per script function name. Ex. counter will become getCounter
-        const params = parsedStack?.map((item) => item.value);
+        const params = parsedStack?.map((item: any) => {
+          switch (item.type) {
+            case 'int':
+              return item.value as any;
+            default:
+              return item.value;
+          }
+        });
         const _method = ('get' + capitalizeFirstLetter(methodName)) as any;
-        const response = await (contract as any)[_method](params);
+        const response = await (contract as any)[_method](...(params as any));
         responseValues.push({
           method: methodName,
           value: convertToText(response),

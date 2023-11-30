@@ -94,8 +94,8 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     });
 
     // If file is changed e.g. in case of build process then force update in editor
-    EventEmitter.on('FORCE_UPDATE_FILE', async (fileId: string) => {
-      if (fileId !== latestFile.current.id) return;
+    EventEmitter.on('FORCE_UPDATE_FILE', async (filePath: string) => {
+      if (filePath !== latestFile.current.path) return;
       await fetchFileContent(true);
     });
     return () => {
