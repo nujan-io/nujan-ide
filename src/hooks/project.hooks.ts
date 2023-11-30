@@ -172,6 +172,7 @@ export function useProjectActions() {
       'dist',
       projectId
     );
+    return { contractBOC: (buildResult as SuccessResult).codeBoc };
   }
 
   async function compileTactProgram(
