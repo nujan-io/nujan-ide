@@ -1,3 +1,4 @@
+import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
@@ -66,6 +67,7 @@ const WorkSpace: FC = () => {
     const originalConsoleLog = console.log;
 
     console.log = (...args) => {
+      // console.trace(args);
       originalConsoleLog(...args); // Call the original console.log
       const _log = args.join(' ');
       if (!_log.includes('DEBUG') || activeProject?.language === 'tact') {
@@ -191,6 +193,9 @@ const WorkSpace: FC = () => {
                   </div>
 
                   <div style={{ height: '100%' }}>
+                    {isLoaded && !projectId && !activeFile && (
+                      <ProjectTemplate />
+                    )}
                     {activeFile && (
                       <Editor
                         file={activeFile as any}

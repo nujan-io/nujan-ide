@@ -16,11 +16,14 @@ import s from './NewProject.module.scss';
 interface Props {
   className?: string;
   ui?: 'icon' | 'button';
-  projectType?: 'default' | 'local' | 'git';
+  projectType?: 'default' | 'local' | 'git' | 'exampleTemplate';
   label?: string;
   icon?: AppIconType;
   heading?: string;
   active?: boolean;
+  defaultFiles?: Tree[];
+  projectLanguage?: string;
+  name?: string;
 }
 
 const NewProject: FC<Props> = ({
@@ -31,6 +34,9 @@ const NewProject: FC<Props> = ({
   icon = 'Plus',
   heading = 'New Project',
   active = false,
+  defaultFiles = [],
+  projectLanguage = 'func',
+  name,
 }) => {
   const [isActive, setIsActive] = useState(active);
   const { projects } = useWorkspaceActions();
@@ -53,13 +59,13 @@ const NewProject: FC<Props> = ({
   ];
 
   const onFormFinish = async (values: any) => {
-    const { name: projectName, githubUrl, language } = values;
-    let files: Tree[] = [];
+    let { name: projectName, githubUrl, language } = values;
+    let files: Tree[] = defaultFiles;
 
     try {
       setIsLoading(true);
       if (projects().findIndex((p) => p.name == projectName) >= 0) {
-        throw `Project '${projectName}' already exists`;
+        projectName += '-' + projects().length + 1;
       }
 
       if (projectType === 'git') {
@@ -134,7 +140,17 @@ const NewProject: FC<Props> = ({
       <Tooltip title={heading} placement="bottom">
         <div
           className={`${s.root} ${className} onboarding-new-project`}
-          onClick={() => setIsActive(true)}
+          onClick={() => {
+            if (projectType !== 'exampleTemplate') {
+              setIsActive(true);
+              return;
+            }
+            onFormFinish({
+              template: 'import',
+              name: name,
+              language: projectLanguage,
+            });
+          }}
         >
           {ui === 'icon' && <AppIcon name={icon} className={s.newIcon} />}
           {ui === 'button' && (
@@ -142,7 +158,8 @@ const NewProject: FC<Props> = ({
               type="primary"
               className={`ant-btn-primary-gradient item-center-align w-100`}
             >
-              <AppIcon name="Plus" className={s.newIcon} /> Create a new project
+              <AppIcon name={icon} className={s.newIcon} />{' '}
+              {label !== 'Create' ? label : 'Create a new project'}
             </Button>
           )}
         </div>

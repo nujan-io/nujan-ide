@@ -1,0 +1,29 @@
+.root {
+  padding: 1rem;
+  overflow-y: auto;
+  height: 100%;
+
+  .examples {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+
+    .item {
+      background: var(--grey--50);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      &:hover {
+        background: var(--grey--70);
+      }
+    }
+  }
+  .credit {
+    margin-top: 2rem;
+    opacity: 0.8;
+  }
+}
+
+.projectExampleDrawer {
+  line-height: 1.5;
+}

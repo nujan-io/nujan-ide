@@ -14,4 +14,8 @@ export const AppConfig = {
     MIXPANEL_TOKEN: process.env.NEXT_PUBLIC_MIXPANEL_TOKEN || '',
     IS_ENABLED: !!process.env.NEXT_PUBLIC_ANALYTICS_ENABLED || false,
   },
+  proxy: {
+    key: process.env.NEXT_PUBLIC_PROXY_KEY || '',
+    url: process.env.NEXT_PUBLIC_PROXY_URL || 'https://proxy.cors.sh/',
+  },
 };

@@ -80,7 +80,7 @@ const ManageProject: FC = () => {
   const noProjectExistsUI = () => (
     <div className={s.startNew}>
       <span className={`${s.title}`}>Begin by initiating a new project</span>
-      <NewProject ui="button" className={s.newProject} />
+      <NewProject ui="button" className={s.newProject} icon="Plus" />
     </div>
   );
 
