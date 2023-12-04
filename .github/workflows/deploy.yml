@@ -31,7 +31,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           scope: ${{ secrets.VERCEL_SCOPE }}
-          vercel-args: "${{ github.ref == 'refs/heads/master' && '--prod' || '' }}"
+          vercel-args: "${{ github.ref == 'refs/heads/main' && '--prod' || '' }}"
           alias-domains: |
             nujan-ide.vercel.app
             ide.nujan.io
