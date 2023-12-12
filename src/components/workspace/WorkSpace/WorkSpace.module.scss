@@ -9,7 +9,7 @@
   .splitHorizontal {
     display: flex;
     flex-direction: row;
-    width: 100%;
+    width: calc(100% - 70px);
     div[class*='gutter-horizontal'] {
       background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
       cursor: col-resize;
