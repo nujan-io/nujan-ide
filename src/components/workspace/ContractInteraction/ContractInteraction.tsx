@@ -10,9 +10,10 @@ import { buildTs } from '@/utility/typescriptHelper';
 import { SandboxContract } from '@ton-community/sandbox';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
+import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useRef, useState } from 'react';
 import ABIUi from '../ABIUi';
-import OpenFile from '../OpenFile/OpenFile';
+import CellBuilder, { generateCellCode } from '../BuildProject/CellBuilder';
 import { globalWorkspace } from '../globalWorkspace';
 import s from './ContractInteraction.module.scss';
 
@@ -35,28 +36,39 @@ const ContractInteraction: FC<Props> = ({
   const [tonConnector] = useTonConnectUI();
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
-  const { getFileByPath } = useWorkspaceActions();
+  const { getFileByPath, updateProjectById } = useWorkspaceActions();
   const { createLog } = useLogActivity();
   const { sandboxWallet: wallet } = globalWorkspace;
+  const [messageForm] = useForm();
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
-  const createCell = async () => {
+  const createCell = async (cell: any) => {
     if (!cellBuilderRef.current?.contentWindow) return;
+    let cellCode = '';
+
     const contractCellContent = await getFileByPath(
       'message.cell.ts',
       projectId
     );
-    if (contractCellContent && !contractCellContent.content) {
+    if (contractCellContent && !contractCellContent.content && !cell) {
       throw 'Cell data is missing in file message.cell.ts';
     }
-    if (!contractCellContent?.content?.includes('cell')) {
-      throw 'cell variable is missing in file message.cell.ts';
+    if (cell) {
+      cellCode = generateCellCode(cell as any);
+      updateProjectById(
+        {
+          cellABI: { setter: cell },
+        },
+        projectId
+      );
+    } else {
+      cellCode = contractCellContent?.content || '';
     }
     try {
       const jsOutout = await buildTs(
         {
-          'message.cell.ts': contractCellContent?.content,
+          'message.cell.ts': cellCode,
           'cell.ts': 'import cell from "./message.cell.ts"; cell;',
         },
         'cell.ts'
@@ -94,7 +106,7 @@ const ContractInteraction: FC<Props> = ({
 
     try {
       setIsLoading('setter');
-      await createCell();
+      await createCell(formValues?.cell);
     } catch (error: any) {
       setIsLoading('');
       console.log(error);
@@ -108,6 +120,18 @@ const ContractInteraction: FC<Props> = ({
     } finally {
       setIsLoading('');
     }
+  };
+
+  const cellBuilder = (info: string) => {
+    if (!language || language !== 'func') return <></>;
+    return (
+      <CellBuilder
+        form={messageForm}
+        info={info}
+        projectId={projectId}
+        type="setter"
+      />
+    );
   };
 
   useEffect(() => {
@@ -191,16 +215,8 @@ const ContractInteraction: FC<Props> = ({
       </h3>
       {language !== 'tact' && (
         <>
-          <p>
-            Update cell data in{' '}
-            <OpenFile
-              projectId={projectId}
-              name="message.cell.ts"
-              path="message.cell.ts"
-            />{' '}
-            and then send message
-          </p>
-          <Form className={s.form} onFinish={onSubmit}>
+          <Form className={s.form} form={messageForm} onFinish={onSubmit}>
+            {cellBuilder('Update cell in ')}
             <Button
               type="default"
               htmlType="submit"

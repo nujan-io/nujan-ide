@@ -27,6 +27,10 @@ export interface InitParams {
   optional: boolean;
 }
 
+interface CellABI {
+  deploy?: InitParams;
+  setter?: InitParams;
+}
 export interface Project {
   id: string;
   userId?: string;
@@ -42,6 +46,7 @@ export interface Project {
   isPublic?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  cellABI?: CellABI;
 }
 
 export type WorkspaceState = {

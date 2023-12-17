@@ -19,10 +19,10 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import { Address, Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
-import OpenFile from '../OpenFile/OpenFile';
 import s from './BuildProject.module.scss';
 
 import AppIcon from '@/components/ui/icon';
+import { useForm } from 'antd/lib/form/Form';
 import {
   AddressInput,
   AmountInput,
@@ -33,6 +33,7 @@ import {
   StringInput,
 } from '../abiInputs';
 import { globalWorkspace } from '../globalWorkspace';
+import CellBuilder, { generateCellCode } from './CellBuilder';
 
 const blankABI = {
   getters: [],
@@ -106,6 +107,7 @@ const BuildProject: FC<Props> = ({
   const { sandboxBlockchain } = globalWorkspace;
 
   const { Option } = Select;
+  const [deployForm] = useForm();
 
   const {
     projectFiles,
@@ -142,6 +144,19 @@ const BuildProject: FC<Props> = ({
       });
   };
 
+  const cellBuilder = (info: string) => {
+    if (!activeProject?.language || activeProject?.language !== 'func')
+      return <></>;
+    return (
+      <CellBuilder
+        form={deployForm}
+        info={info}
+        projectId={projectId}
+        type="deploy"
+      />
+    );
+  };
+
   const deployView = () => {
     const _contractsToDeploy = contractsToDeploy();
 
@@ -151,8 +166,10 @@ const BuildProject: FC<Props> = ({
 
     return (
       <>
+        <hr />
         <Form
           className={`${s.form} app-form`}
+          form={deployForm}
           onFinish={initDeploy}
           onValuesChange={(changedValues) => {
             if (Object.hasOwn(changedValues, 'contract')) {
@@ -177,6 +194,7 @@ const BuildProject: FC<Props> = ({
               ))}
             </Select>
           </Form.Item>
+          {cellBuilder('Update initial contract state in ')}
           {contractABI?.initParams && (
             <div>
               {contractABI?.initParams?.map((item, index) => {
@@ -218,6 +236,9 @@ const BuildProject: FC<Props> = ({
     if (_temp.queryId) {
       delete _temp.queryId;
     }
+    if (_temp.cell) {
+      delete _temp.cell;
+    }
     const initParamsData = contractABI?.initParams;
     let parametrsType: any = {};
     if (initParamsData) {
@@ -254,6 +275,9 @@ const BuildProject: FC<Props> = ({
       // }
     }
     initParams = initParams?.slice(0, -1);
+    if (formValues.cell) {
+      initParams = formValues.cell;
+    }
 
     try {
       if (!tonConnector.connected && environment !== 'SANDBOX') {
@@ -371,17 +395,29 @@ const BuildProject: FC<Props> = ({
           'tact.ts'
         );
       } else {
-        const stateInitContent = await getFileByPath(
+        let stateInitContent = await getFileByPath(
           'stateInit.cell.ts',
           projectId
         );
-        if (stateInitContent && !stateInitContent.content) {
+        let cellCode = '';
+        if (stateInitContent && !stateInitContent.content && !initParams) {
           throw 'State init data is missing in file stateInit.cell.ts';
+        }
+        if (initParams) {
+          cellCode = generateCellCode(initParams as any);
+          updateProjectById(
+            {
+              cellABI: { deploy: initParams },
+            },
+            projectId
+          );
+        } else {
+          cellCode = stateInitContent?.content || '';
         }
 
         jsOutout = await buildTs(
           {
-            'stateInit.cell.ts': stateInitContent?.content,
+            'stateInit.cell.ts': cellCode,
             'cell.ts': 'import cell from "./stateInit.cell.ts"; cell;',
           },
           'cell.ts'
@@ -590,17 +626,6 @@ const BuildProject: FC<Props> = ({
 
       {environment !== 'SANDBOX' && <TonAuth />}
 
-      {activeProject?.language !== 'tact' && (
-        <p className={s.info}>
-          - Update initial contract state in{' '}
-          <OpenFile
-            projectId={projectId}
-            name="stateInit.cell.ts"
-            path="stateInit.cell.ts"
-          />{' '}
-        </p>
-      )}
-
       <div className={s.actionWrapper}>
         <ExecuteFile
           file={currentActiveFile}
@@ -611,7 +636,7 @@ const BuildProject: FC<Props> = ({
               ? 'Build'
               : 'Build'
           }
-          description="- Select a contract file to build and deploy"
+          description="- Select a contract to build"
           allowedFile={['fc', 'tact']}
           onCompile={() => {
             if (

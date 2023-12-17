@@ -10,7 +10,7 @@ import {
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2, FiEye } from 'react-icons/fi';
-import { GoTriangleRight } from 'react-icons/go';
+import { GoTriangleDown, GoTriangleRight, GoTriangleUp } from 'react-icons/go';
 import { GrClear } from 'react-icons/gr';
 import { HiDocumentText } from 'react-icons/hi';
 import { MdFeedback } from 'react-icons/md';
@@ -42,6 +42,8 @@ export type AppIconType =
   | 'Beaker'
   | 'Plus'
   | 'Home'
+  | 'AngleUp'
+  | 'AngleDown'
   | 'AngleRight'
   | 'Test'
   | 'Google'
@@ -77,6 +79,8 @@ const Components = {
   Home: AiOutlineHome,
   Code,
   Beaker,
+  AngleUp: GoTriangleUp,
+  AngleDown: GoTriangleDown,
   AngleRight: GoTriangleRight,
   Test: Test,
   Google: AiOutlineGoogle,

@@ -54,4 +54,37 @@
     margin-top: 1rem;
     font-size: 0.9rem;
   }
+  .cellActions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+  }
+  .addMoreField {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+  .fieldGroup {
+    width: 100%;
+    margin: 1rem 0 0 0;
+
+    [class*='ant-form-item-control-input-content'] {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+  }
+  [class*='ant-form-item-explain-error'] {
+    position: relative;
+    top: -8px;
+    pointer-events: none;
+  }
 }
