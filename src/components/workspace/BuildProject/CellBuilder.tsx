@@ -85,7 +85,7 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
   }, [isCellBuilder]);
 
   return (
-    <div>
+    <div className={s.cellBuilder}>
       <p className={s.info}>
         - {info}
         <OpenFile
@@ -137,18 +137,29 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                       </Select>
                     </Form.Item>
                     <Form.Item
-                      {...restField}
-                      name={[name, 'value']}
-                      validateTrigger={['onChange', 'onBlur']}
-                      rules={[
-                        {
-                          required: true,
-                          message: 'Please input value',
-                        },
-                      ]}
                       noStyle
+                      shouldUpdate={(prev, next) => {
+                        return true;
+                      }}
                     >
-                      <Input placeholder={getPlaceHolder(key)} />
+                      {({ getFieldValue }) => {
+                        return getFieldValue(['cell', index]) ? (
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'value']}
+                            validateTrigger={['onChange', 'onBlur']}
+                            rules={[
+                              {
+                                required: true,
+                                message: 'Please input value',
+                              },
+                            ]}
+                            noStyle
+                          >
+                            <Input placeholder={getPlaceHolder(index)} />
+                          </Form.Item>
+                        ) : null;
+                      }}
                     </Form.Item>
                     <div className={s.cellActions}>
                       <Button

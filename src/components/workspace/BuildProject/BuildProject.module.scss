@@ -82,9 +82,11 @@
       gap: 0.2rem;
     }
   }
-  [class*='ant-form-item-explain-error'] {
-    position: relative;
-    top: -8px;
-    pointer-events: none;
+  .cellBuilder {
+    [class*='ant-form-item-explain-error'] {
+      position: relative;
+      top: -10px;
+      pointer-events: none;
+    }
   }
 }

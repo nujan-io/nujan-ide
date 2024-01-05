@@ -215,13 +215,17 @@ const ContractInteraction: FC<Props> = ({
       </h3>
       {language !== 'tact' && (
         <>
-          <Form className={s.form} form={messageForm} onFinish={onSubmit}>
+          <Form
+            className={`${s.form} app-form`}
+            form={messageForm}
+            onFinish={onSubmit}
+          >
             {cellBuilder('Update cell in ')}
             <Button
               type="default"
               htmlType="submit"
               loading={isLoading === 'setter'}
-              className={s.sendMessage}
+              className={`${s.sendMessage} bordered-gradient`}
             >
               Send
             </Button>
