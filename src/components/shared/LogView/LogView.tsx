@@ -1,22 +1,29 @@
-import { LogType } from '@/interfaces/log.interface';
+import { useLogActivity } from '@/hooks/logActivity.hooks';
 import EventEmitter from '@/utility/eventEmitter';
-import { FC, createRef, useRef } from 'react';
+import { FC, createRef, useEffect, useRef, useState } from 'react';
 import { useEffectOnce } from 'react-use';
 
 import 'xterm/css/xterm.css';
 
+import { Filter } from '@/components/workspace/BottomPanel/BottomPanel';
 import { AppConfig } from '@/config/AppConfig';
+import { LogEntry, LogType } from '@/interfaces/log.interface';
+import { delay } from '@/utility/utils';
 import s from './LogView.module.scss';
 
 interface Props {
-  type?: LogType | undefined;
-  text?: string | undefined;
+  filter: Filter;
 }
 
-const LogView: FC<Props> = ({ type, text }) => {
+const LogView: FC<Props> = ({ filter }) => {
+  const { clearLog, getLog } = useLogActivity();
   const logViewerRef = createRef<HTMLDivElement>();
   const isTerminalLoaded = useRef(false);
   const fitAddon = useRef<any>();
+  const terminal = useRef<any>();
+
+  const searchAddon = useRef<any>();
+  const [filterType, setFilterType] = useState<LogType | 'all'>('all');
 
   const formatTimestamp = (timestamp: string | number | Date) => {
     if (!timestamp) return '\x1b[0m \x1b[0m';
@@ -33,54 +40,96 @@ const LogView: FC<Props> = ({ type, text }) => {
     reset: '\x1b[0m',
   };
 
+  const printLog = (data: LogEntry) => {
+    if (!terminal.current) return;
+    let timestamp = `${colorMap.grey} ${formatTimestamp(data.timestamp)} ${
+      colorMap.reset
+    }`;
+    if (!data.timestamp) {
+      timestamp = '';
+    }
+    terminal.current!!.writeln(
+      `${(colorMap as any)[data.type]}${data.text}${
+        colorMap.reset
+      } ${timestamp}`
+    );
+  };
+
+  useEffect(() => {
+    (async () => {
+      let logs: LogEntry[] = [];
+      if (filter.type !== filterType) {
+        setFilterType(filter.type);
+        EventEmitter.emit('LOG_CLEAR');
+        if (filter.type === 'all') {
+          logs = getLog(null);
+        } else if (filter.type) {
+          logs = getLog({ type: filter.type });
+        }
+        for (const log of logs) {
+          printLog(log);
+        }
+      }
+      if (!searchAddon?.current) {
+        return;
+      }
+      if (logs.length !== 0) {
+        await delay(500);
+      }
+      searchAddon.current?.findNext(filter?.text);
+    })();
+  }, [filter]);
+
   useEffectOnce(() => {
-    let terminal: any | null = null;
+    let _terminal: any | null = null;
 
     const initTerminal = async () => {
       if (!logViewerRef.current) return;
       const appTerminal = document.getElementById('app-terminal');
-
-      if (appTerminal?.children.length === 1) {
-        return;
+      while (appTerminal?.children.length) {
+        appTerminal?.removeChild(appTerminal?.children[0]);
+        EventEmitter.off('LOG');
+        EventEmitter.off('LOG_CLEAR');
       }
 
       const { Terminal } = await import('xterm');
-      const { FitAddon } = await import('xterm-addon-fit');
-      terminal = new Terminal({
+      const [FitAddon, SeachAddon] = await Promise.all([
+        import('xterm-addon-fit'),
+        import('@xterm/addon-search'),
+      ]);
+      _terminal = new Terminal({
         fontSize: 17,
         cursorBlink: false,
         cursorStyle: 'bar',
         disableStdin: true,
       });
-      const _fitAddon = new FitAddon();
+
+      terminal.current = _terminal;
+
+      const _searchAddon = new SeachAddon.SearchAddon();
+      _terminal.loadAddon(_searchAddon);
+      searchAddon.current = _searchAddon;
+
+      const _fitAddon = new FitAddon.FitAddon();
       fitAddon.current = _fitAddon;
 
-      terminal.loadAddon(_fitAddon);
+      _terminal.loadAddon(_fitAddon);
 
-      terminal.open(appTerminal);
-      terminal!!.writeln(
+      _terminal.open(appTerminal);
+      _terminal!!.writeln(
         `${(colorMap as any)['info']}Welcome to ${AppConfig.name} IDE${
           colorMap.reset
         }`
       );
+      _searchAddon.activate(_terminal);
       _fitAddon.fit();
 
       EventEmitter.on('LOG_CLEAR', (data) => {
-        terminal.clear();
+        _terminal.clear();
       });
 
       EventEmitter.on('LOG', (data) => {
-        let timestamp = `${colorMap.grey} ${formatTimestamp(data.timestamp)} ${
-          colorMap.reset
-        }`;
-        if (!data.timestamp) {
-          timestamp = '';
-        }
-        terminal!!.writeln(
-          `${(colorMap as any)[data.type]}${data.text}${
-            colorMap.reset
-          } ${timestamp}`
-        );
+        printLog(data);
       });
     };
     if (typeof window === 'undefined') {
@@ -104,7 +153,9 @@ const LogView: FC<Props> = ({ type, text }) => {
       viewport.style.height = documentPane.clientHeight + 'px';
       scrollArea.style.height = screen.style.height;
 
-      fitAddon.current.fit();
+      try {
+        fitAddon.current.fit();
+      } catch {}
     }
 
     EventEmitter.on('ON_SPLIT_DRAG_END', (data) => {
@@ -116,7 +167,7 @@ const LogView: FC<Props> = ({ type, text }) => {
       EventEmitter.off('LOG');
       EventEmitter.off('LOG_CLEAR');
       EventEmitter.off('ON_SPLIT_DRAG_END');
-      terminal?.dispose();
+      terminal.current?.dispose();
     };
   });
 

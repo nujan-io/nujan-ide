@@ -4,12 +4,14 @@ import AppIcon from '@/components/ui/icon';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { LogOptions, LogType } from '@/interfaces/log.interface';
 import { debounce } from '@/utility/utils';
+import { Input, Select } from 'antd';
 import { FC, useState } from 'react';
 import { useEffectOnce } from 'react-use';
 import s from './BottomPanel.module.scss';
 
 type logType = LogType | 'all';
-interface Filter {
+export interface Filter {
+  counter: number;
   text: string;
   type: logType;
 }
@@ -19,6 +21,7 @@ const BottomPanel: FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const [filter, setFilter] = useState<Filter>({
+    counter: 0,
     text: '',
     type: 'all',
   });
@@ -39,7 +42,10 @@ const BottomPanel: FC = () => {
   };
 
   const filterLogs = debounce((searchTerm) => {
-    setFilter({ text: searchTerm, type: filter.type });
+    updateFilter({
+      counter: filter.counter + 1,
+      text: searchTerm,
+    });
   }, 200);
 
   useEffectOnce(() => {
@@ -51,17 +57,22 @@ const BottomPanel: FC = () => {
       <div className={s.tabsContainer}>
         <div className={s.tab}>LOG</div>
         <div className={s.actions}>
-          {/* <Input
+          <Input
             className={s.filterText}
             onChange={(e) => filterLogs(e.target.value)}
             placeholder="Filter logs by text"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                updateFilter({ counter: filter.counter + 1 });
+              }
+            }}
           />
           <Select
-            style={{ width: 115 }}
+            style={{ width: 150 }}
             defaultValue="all"
             onChange={(value: logType) => updateFilter({ type: value })}
             options={logList}
-          /> */}
+          />
           <Tooltip title="Clear log" placement="left">
             <span className={s.clearLog} onClick={clearLog}>
               <AppIcon name="Clear" className={s.icon} />
@@ -69,10 +80,7 @@ const BottomPanel: FC = () => {
           </Tooltip>
         </div>
       </div>
-      <LogView
-        text={filter?.text || undefined}
-        type={filter.type !== 'all' ? filter.type : undefined}
-      />
+      <LogView filter={filter} />
     </div>
   );
 };
