@@ -8,6 +8,7 @@ export const settingState = atom<SettingInterface>({
   key: 'settingState',
   default: {
     contractDebug: false,
+    formatOnSave: false,
   },
   effects_UNSTABLE: [persistAtom],
 });

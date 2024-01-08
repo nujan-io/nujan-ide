@@ -1,3 +1,4 @@
 export interface SettingInterface {
-    contractDebug: boolean;
+  contractDebug: boolean;
+  formatOnSave: boolean;
 }

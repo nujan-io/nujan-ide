@@ -31,7 +31,12 @@ const WorkspaceSidebar: FC<Props> = ({
 }) => {
   const { isProjectEditable } = useWorkspaceActions();
   const { user } = useAuthAction();
-  const { isContractDebugEnabled, toggleContractDebug } = useSettingAction();
+  const {
+    isContractDebugEnabled,
+    toggleContractDebug,
+    isFormatOnSave,
+    toggleFormatOnSave,
+  } = useSettingAction();
 
   const hasEditAccess = isProjectEditable(projectId as string, user);
 
@@ -74,6 +79,20 @@ const WorkspaceSidebar: FC<Props> = ({
             Contract rebuild and redeploy <br /> required after an update
           </small>
         </p>
+      </div>
+      <div className={s.settingItem}>
+        <Form.Item
+          style={{ marginBottom: 0 }}
+          label="Format code on save"
+          valuePropName="checked"
+        >
+          <Switch
+            checked={isFormatOnSave()}
+            onChange={(toggleState) => {
+              toggleFormatOnSave(toggleState);
+            }}
+          />
+        </Form.Item>
       </div>
     </div>
   );

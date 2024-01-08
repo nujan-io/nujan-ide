@@ -1,4 +1,5 @@
 import { useAuthAction } from '@/hooks/auth.hooks';
+import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ContractLanguage, Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
@@ -27,6 +28,8 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     openedFiles,
   } = useWorkspaceActions();
 
+  const { isFormatOnSave } = useSettingAction();
+
   const { user } = useAuthAction();
 
   const [isLoaded, setIsLoaded] = useState(false);
@@ -51,6 +54,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     const fileContent = editorRef?.current?.getValue() || '';
     if (!fileContent) return;
     try {
+      if (isFormatOnSave()) {
+        editorRef.current.trigger('editor', 'editor.action.formatDocument');
+      }
       updateFileContent(file.id, fileContent, projectId);
     } catch (error) {}
   };

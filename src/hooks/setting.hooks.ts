@@ -7,6 +7,8 @@ export function useSettingAction() {
   return {
     isContractDebugEnabled,
     toggleContractDebug,
+    isFormatOnSave,
+    toggleFormatOnSave,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -25,6 +27,16 @@ export function useSettingAction() {
   function toggleContractDebug(active: boolean = !setting.contractDebug) {
     return updateStateByKey({
       contractDebug: active,
+    });
+  }
+
+  function isFormatOnSave() {
+    return setting.formatOnSave;
+  }
+
+  function toggleFormatOnSave(active: boolean = !setting.formatOnSave) {
+    return updateStateByKey({
+      formatOnSave: active,
     });
   }
 }
