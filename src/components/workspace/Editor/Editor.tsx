@@ -44,6 +44,8 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<Monaco | null>(null);
 
+  let lspWebSocket: WebSocket;
+
   const saveFile = () => {
     if (!file.id) return;
     const fileContent = editorRef?.current?.getValue() || '';
@@ -152,6 +154,16 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monacoRef.current]);
 
+  useEffect(() => {
+    window.onbeforeunload = () => {
+      // On page reload/exit, close web socket connection
+      lspWebSocket?.close();
+    };
+    return () => {
+      lspWebSocket?.close();
+    };
+  }, []);
+
   if (!isLoaded) {
     return <div className={`${s.container} ${className}`}>Loading...</div>;
   }
@@ -183,6 +195,8 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
           setIsEditorInitialized(true);
           editorOnMount(editor, monaco);
+          const { startLSP } = await import('./lsp');
+          startLSP(editor, monaco, lspWebSocket);
         }}
       />
     </div>

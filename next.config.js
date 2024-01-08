@@ -8,6 +8,14 @@ const nextConfig = withTM({
   reactStrictMode: true,
   webpack: (config, options) => {
     config.resolve.fallback = { fs: false };
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      vscode: require.resolve(
+        "@codingame/monaco-languageclient/lib/vscode-compatibility"
+      ),
+    };
+
+    config.resolve.extensions.push(".js");
 
     config.plugins.push(
       new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {

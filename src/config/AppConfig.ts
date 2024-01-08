@@ -18,4 +18,5 @@ export const AppConfig = {
     key: process.env.NEXT_PUBLIC_PROXY_KEY || '',
     url: process.env.NEXT_PUBLIC_PROXY_URL || 'https://proxy.cors.sh/',
   },
+  lspServer: process.env.NEXT_PUBLIC_LSP_SERVER_URL || '',
 };
