@@ -7,7 +7,7 @@ import {
   Project,
 } from '@/interfaces/workspace.interface';
 import { capitalizeFirstLetter, convertToText } from '@/utility/utils';
-import { Network, getHttpEndpoint } from '@orbs-network/ton-access';
+import { Config, Network } from '@orbs-network/ton-access';
 import {
   SandboxContract,
   SendMessageResult,
@@ -33,6 +33,12 @@ import {
   storeStateInit,
   toNano,
 } from 'ton-core';
+
+const getHttpEndpoint = ({ network }: Config) => {
+  return `https://${
+    network === 'testnet' ? 'testnet.' : ''
+  }toncenter.com/api/v2/jsonRPC`;
+};
 
 export function useContractAction() {
   const [tonConnector] = useTonConnectUI();
