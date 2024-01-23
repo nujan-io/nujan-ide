@@ -94,7 +94,7 @@ export default function App({
         >
           <TonConnectUIProvider
             uiPreferences={{ theme: THEME.LIGHT }}
-            manifestUrl="https://ton-ide-nujan.vercel.app/assets/ton/tonconnect-manifest.json"
+            manifestUrl="https://ide.nujan.io/assets/ton/tonconnect-manifest.json"
           >
             <Layout>
               <Component {...pageProps} />
