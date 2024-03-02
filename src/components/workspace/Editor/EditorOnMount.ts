@@ -1,3 +1,4 @@
+import { tactSnippets } from '@/assets/ton/tact/snippets';
 import { editor } from 'monaco-editor';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
@@ -35,6 +36,32 @@ export const editorOnMount = async (
   const types = ['int', 'var'];
 
   const messageMethods = ['recv_internal', 'recv_external'];
+
+  monaco.languages.registerCompletionItemProvider('tact', {
+    provideCompletionItems: (model, position) => {
+      var word = model.getWordUntilPosition(position);
+      var range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn,
+      };
+      return {
+        suggestions: tactSnippets.map((snippet) => {
+          return {
+            label: snippet.label,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            insertText: snippet.code,
+            documentation: snippet.description || '',
+            detail: snippet.description || '',
+            range,
+          };
+        }),
+      };
+    },
+  });
 
   monaco.languages.registerCompletionItemProvider('func', {
     provideCompletionItems: (model, position) => {
