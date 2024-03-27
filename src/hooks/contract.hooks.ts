@@ -272,9 +272,17 @@ export function useContractAction() {
         messageParams = methodName || '';
       }
       stack?.forEach((item: any) => {
+        switch (item.type) {
+          case 'address':
+            item.value = Address.parse(item.value);
+            break;
+          default:
+            item.value = BigInt(item.value || 0);
+            break;
+        }
         messageParams = {
           ...messageParams,
-          [item.name]: BigInt(item.value || 0),
+          [item.name]: item.value,
         };
       });
 

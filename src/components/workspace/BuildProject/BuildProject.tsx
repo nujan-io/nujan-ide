@@ -266,9 +266,7 @@ const BuildProject: FC<Props> = ({
       // if (value) {
       switch (type) {
         case 'Address':
-          initParams += eval(
-            `(Address) => { return Address.parse(${value}"; }`
-          )(Address);
+          initParams += `window.TonCore.Address.parse('${value}'),`;
           continue;
         case 'Bool':
           initParams += `${!!value},`;
