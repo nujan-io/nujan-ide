@@ -325,6 +325,7 @@ const importUserFile = async (
   const sysrootArchiveReader = new ZipReader(new BlobReader(file));
   const sysrootArchiveEntries = await sysrootArchiveReader.getEntries();
   const filesToSkip = [
+    '._',
     '._.DS_Store',
     '.DS_Store',
     'node_modules',
