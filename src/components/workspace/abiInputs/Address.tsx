@@ -1,6 +1,6 @@
+import { Address } from '@ton/core';
 import { Form, Input } from 'antd';
 import { Rule, RuleObject } from 'antd/es/form';
-import { Address } from 'ton-core';
 
 interface Props {
   name?: string;

@@ -1,5 +1,5 @@
 export const CounterContract = {
-  testScript: `import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
+  testScript: `import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
 
 export type ContractConfig = {
     id: number;
@@ -66,8 +66,8 @@ export class CounterContract implements Contract {
     }
 }
     `,
-  testCases: `import { Blockchain, SandboxContract } from '@ton-community/sandbox';
-import { Cell, toNano } from 'ton-core';
+  testCases: `import { Blockchain, SandboxContract } from '@ton/sandbox';
+import { Cell, toNano } from '@ton/core';
 import { CounterContract } from './CounterContract';
 
 describe('CounterContract', () => {
@@ -132,10 +132,10 @@ describe('CounterContract', () => {
     });
 });
 `,
-  tactTestCases: `import { Blockchain, SandboxContract } from '@ton-community/sandbox';
-import { toNano } from 'ton-core';
+  tactTestCases: `import { Blockchain, SandboxContract } from '@ton/sandbox';
+import { toNano } from '@ton/core';
 import { TactCounter } from '../dist/tact_TactCounter';
-import '@ton-community/test-utils';
+import '@ton/test-utils';
 
 describe('TactCounter', () => {
     let blockchain: Blockchain;

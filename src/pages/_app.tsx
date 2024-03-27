@@ -38,9 +38,9 @@ export default function App({
                   "type": "module",
                   "dependencies": {
                     "jest": "29.6.2",
-                    "ton-core": "^0.48.0",
-                    "@ton-community/test-utils": "0.3.0",
-                    "@ton-community/sandbox": "^0.11.0"
+                    "@ton/core": "^0.56.3",
+                    "@ton/test-utils": "0.4.2",
+                    "@ton/sandbox": "^0.15.0"
                   }
                 }`,
             },

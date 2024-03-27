@@ -1,6 +1,6 @@
+import { Cell } from '@ton/core';
 import { Form, Input } from 'antd';
 import { RuleObject } from 'antd/es/form';
-import { Cell } from 'ton-core';
 
 interface Props {
   name?: string;

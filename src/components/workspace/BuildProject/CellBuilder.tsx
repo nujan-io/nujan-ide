@@ -56,7 +56,7 @@ export const generateCellCode = (cellValues: CellValues[]) => {
     return code + '.' + cellValueCode;
   }, '');
 
-  return `import { beginCell, address, toNano } from "ton-core";
+  return `import { beginCell, address, toNano } from "@ton/core";
 
     const cell = beginCell()
            ${cellCode}

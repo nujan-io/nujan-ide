@@ -7,7 +7,7 @@ import {
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
-import { SandboxContract } from '@ton-community/sandbox';
+import { SandboxContract } from '@ton/sandbox';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';

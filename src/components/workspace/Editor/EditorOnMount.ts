@@ -112,10 +112,10 @@ export const editorOnMount = async (
 
   monaco.languages.typescript.typescriptDefaults.addExtraLib(
     tonCoreText,
-    'file:///node_modules/@types/ton-core/index.d.ts'
+    'file:///node_modules/@types/ton__core/index.d.ts'
   );
   monaco.languages.typescript.typescriptDefaults.addExtraLib(
     tonSanboxText,
-    'file:///node_modules/@types/@ton-community/sandbox/index.d.ts'
+    'file:///node_modules/@types/ton-community__sandbox/index.d.ts'
   );
 };

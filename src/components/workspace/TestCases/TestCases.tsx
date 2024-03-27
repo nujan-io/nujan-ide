@@ -84,7 +84,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
         testCaseCode = `
         const {
         Cell,
-      } = require("ton-core");
+      } = require("@ton/core");
         ${testCaseCode}
         `;
       } catch (error: any) {
@@ -102,15 +102,18 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     testCaseCode = testCaseCode
       .replace(/import\s*\'@ton-community\/test-utils\';+$/, '')
+      .replace(/import\s*'@ton\/test-utils';\s*\n?/, '')
       .replace(/import\s*{/g, 'const {')
       .replace(
         /}\s*from\s*'@ton-community\/sandbox';/,
-        '} = require("@ton-community/sandbox");'
+        '} = require("@ton/sandbox");'
       )
-      .replace(/}\s*from\s*'ton-core';/, '} = require("ton-core");');
+      .replace(/}\s*from\s*'@ton\/sandbox';/, '} = require("@ton/sandbox");')
+      .replace(/}\s*from\s*'@ton\/core';/, '} = require("@ton/core");')
+      .replace(/}\s*from\s*'ton-core';/, '} = require("@ton/core");');
 
     testCaseCode = `
-    require("@ton-community/test-utils");
+    require("@ton\/test-utils");
     function bocToCell(codeBoc) {
       return Cell.fromBoc(Buffer.from(codeBoc, "base64"))[0];
     }

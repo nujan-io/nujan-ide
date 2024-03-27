@@ -130,7 +130,7 @@ export const commonProjectFiles = [
     parent: null,
     type: 'file' as const,
     path: 'stateInit.cell.ts',
-    content: `import { beginCell } from "ton-core";
+    content: `import { beginCell } from "@ton/core";
 
 const cell = beginCell().endCell();
 
@@ -143,7 +143,7 @@ export default cell;`,
     parent: null,
     type: 'file' as const,
     path: 'message.cell.ts',
-    content: `import { beginCell } from "ton-core";
+    content: `import { beginCell } from "@ton/core";
 
 const cell = beginCell().endCell();
 
@@ -240,7 +240,7 @@ export const ProjectTemplate = {
         parent: null,
         type: 'file' as const,
         path: 'stateInit.cell.ts',
-        content: `import { beginCell } from "ton-core";
+        content: `import { beginCell } from "@ton/core";
 
 const cell = beginCell()
       .storeUint(1, 32)
@@ -256,7 +256,7 @@ export default cell;`,
         parent: null,
         type: 'file' as const,
         path: 'message.cell.ts',
-        content: `import { beginCell } from "ton-core";
+        content: `import { beginCell } from "@ton/core";
 
 const cell = beginCell()
         .storeUint('0x7e8764ef', 32) // op (op #0x7e8764ef = increment)

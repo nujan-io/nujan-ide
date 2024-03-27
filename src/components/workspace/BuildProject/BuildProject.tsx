@@ -11,11 +11,12 @@ import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
 import { getContractLINK, getFileExtension } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
+import { Cell } from '@ton/core';
+import { Blockchain } from '@ton/sandbox';
 import { CHAIN, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { Address, Cell } from 'ton-core';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import s from './BuildProject.module.scss';
@@ -250,6 +251,9 @@ const BuildProject: FC<Props> = ({
 
     for (const [key, value] of Object.entries(_temp)) {
       const type = parametrsType[key];
+      if (key === 'contract') {
+        continue;
+      }
       if (
         type?.includes('int') ||
         type == 'Int' ||
@@ -269,6 +273,8 @@ const BuildProject: FC<Props> = ({
         case 'Bool':
           initParams += `${!!value},`;
           continue;
+        default:
+          initParams += `${value},`;
       }
       if (parametrsType[key] == 'Address') {
       }

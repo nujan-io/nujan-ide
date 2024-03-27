@@ -1,5 +1,5 @@
 export const BlankContract = {
-  testScript: `import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from 'ton-core';
+  testScript: `import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
 
 export type BlankContractConfig = {};
 
@@ -28,8 +28,8 @@ export class BlankContract implements Contract {
         });
     }
 }`,
-  testCases: `import { Blockchain, SandboxContract } from '@ton-community/sandbox';
-import { Cell, toNano } from 'ton-core';
+  testCases: `import { Blockchain, SandboxContract } from '@ton/sandbox';
+import { Cell, toNano } from '@ton/core';
 import { BlankContract } from './BlankContract';
 
 describe('BlankContract', () => {
@@ -64,10 +64,10 @@ describe('BlankContract', () => {
         // blockchain and blankContract are ready to use
     });
 });`,
-  tactTestCase: `import { Blockchain, SandboxContract } from '@ton-community/sandbox';
-import { toNano } from 'ton-core';
+  tactTestCase: `import { Blockchain, SandboxContract } from '@ton/sandbox';
+import { toNano } from '@ton/core';
 import { BlankContract } from '../dist/tact_BlankContract';
-import '@ton-community/test-utils';
+import '@ton/test-utils';
 
 describe('BlankContract', () => {
 let blockchain: Blockchain;

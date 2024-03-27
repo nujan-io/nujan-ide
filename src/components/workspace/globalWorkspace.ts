@@ -1,8 +1,4 @@
-import {
-  Blockchain,
-  SandboxContract,
-  TreasuryContract,
-} from '@ton-community/sandbox';
+import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
 
 interface GlobalWorkspace {
   sandboxBlockchain: Blockchain | null;

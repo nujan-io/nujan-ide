@@ -6,7 +6,7 @@ import {
   ContractLanguage,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
-import { SandboxContract } from '@ton-community/sandbox';
+import { SandboxContract } from '@ton/sandbox';
 import { Button, Form, Input, Select } from 'antd';
 import { FC, useState } from 'react';
 import s from './ABIUi.module.scss';

@@ -1,6 +1,6 @@
 import { FileExtensionToFileType, FileType } from '@/enum/file';
 import { NetworkEnvironment } from '@/interfaces/workspace.interface';
-import { Address, Cell, Dictionary, Slice } from 'ton-core';
+import { Address, Cell, Dictionary, Slice } from '@ton/core';
 
 export function fileTypeFromFileName(name: string): FileType {
   return fileTypeForExtension(name.split('.').pop() || '');

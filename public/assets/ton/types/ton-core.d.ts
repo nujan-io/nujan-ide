@@ -5,6 +5,70 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export { ADNLAddress } from './address/ADNLAddress';
+export { Address, address } from './address/Address';
+export { ExternalAddress } from './address/ExternalAddress';
+export { contractAddress } from './address/contractAddress';
+export { BitBuilder } from './boc/BitBuilder';
+export { BitReader } from './boc/BitReader';
+export { BitString } from './boc/BitString';
+export { Builder, beginCell } from './boc/Builder';
+export { Cell } from './boc/Cell';
+export { CellType } from './boc/CellType';
+export { Slice } from './boc/Slice';
+export { Writable } from './boc/Writable';
+export { exoticMerkleProof } from './boc/cell/exoticMerkleProof';
+export { exoticMerkleUpdate } from './boc/cell/exoticMerkleUpdate';
+export { exoticPruned } from './boc/cell/exoticPruned';
+export { ComputeError } from './contract/ComputeError';
+export { Contract } from './contract/Contract';
+export {
+  ABIArgument,
+  ABIError,
+  ABIField,
+  ABIGetter,
+  ABIReceiver,
+  ABIReceiverMessage,
+  ABIType,
+  ABITypeRef,
+  ContractABI,
+} from './contract/ContractABI';
+export {
+  ContractGetMethodResult,
+  ContractProvider,
+} from './contract/ContractProvider';
+export { ContractState } from './contract/ContractState';
+export { Sender, SenderArguments } from './contract/Sender';
+export { OpenedContract, openContract } from './contract/openContract';
+export { safeSign, safeSignVerify } from './crypto/safeSign';
+export {
+  Dictionary,
+  DictionaryKey,
+  DictionaryKeyTypes,
+  DictionaryValue,
+} from './dict/Dictionary';
+export { generateMerkleProof } from './dict/generateMerkleProof';
+export { generateMerkleUpdate } from './dict/generateMerkleUpdate';
+export { TupleBuilder } from './tuple/builder';
+export { TupleReader } from './tuple/reader';
+export {
+  Tuple,
+  TupleItem,
+  TupleItemBuilder,
+  TupleItemCell,
+  TupleItemInt,
+  TupleItemNaN,
+  TupleItemNull,
+  TupleItemSlice,
+  parseTuple,
+  serializeTuple,
+} from './tuple/tuple';
+export * from './types/_export';
+export { base32Decode, base32Encode } from './utils/base32';
+export { fromNano, toNano } from './utils/convert';
+export { crc16 } from './utils/crc16';
+export { crc32c } from './utils/crc32c';
+export { getMethodId } from './utils/getMethodId';
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -16,7 +80,8 @@
 
 export declare class Address {
   static isAddress(src: any): src is Address;
-  static isFriendly(source: String): boolean;
+  static isFriendly(source: string): boolean;
+  static isRaw(source: string): boolean;
   static normalize(source: string | Address): string;
   static parse(source: string): Address;
   static parseRaw(source: string): Address;
@@ -50,6 +115,30 @@ export declare function address(src: string): Address;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export declare class ExternalAddress {
+  static isAddress(src: any): src is ExternalAddress;
+  readonly value: bigint;
+  readonly bits: number;
+  constructor(value: bigint, bits: number);
+  toString(): string;
+  [inspectSymbol]: () => string;
+}
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 /// <reference types="node" />
 
 export declare class ADNLAddress {
@@ -69,6 +158,34 @@ export declare class ADNLAddress {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare function safeSign(
+  cell: Cell,
+  secretKey: Buffer,
+  seed?: string
+): Buffer;
+export declare function safeSignVerify(
+  cell: Cell,
+  signature: Buffer,
+  publicKey: Buffer,
+  seed?: string
+): boolean;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 export declare function contractAddress(
   workchain: number,
@@ -81,239 +198,7 @@ export declare function contractAddress(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type ABIError = {
-  message: string;
-};
-export type ABITypeRef =
-  | {
-      kind: 'simple';
-      type: string;
-      optional?: Maybe<boolean>;
-      format?: Maybe<string | number | boolean>;
-    }
-  | {
-      kind: 'dict';
-      format?: Maybe<string | number | boolean>;
-      key: string;
-      keyFormat?: Maybe<string | number | boolean>;
-      value: string;
-      valueFormat?: Maybe<string | number | boolean>;
-    };
-export type ABIField = {
-  name: string;
-  type: ABITypeRef;
-};
-export type ABIType = {
-  name: string;
-  header?: Maybe<number>;
-  fields: ABIField[];
-};
-export type ABIArgument = {
-  name: string;
-  type: ABITypeRef;
-};
-export type ABIGetter = {
-  name: string;
-  methodId?: Maybe<number>;
-  arguments?: Maybe<ABIArgument[]>;
-  returnType?: Maybe<ABITypeRef>;
-};
-export type ABIReceiverMessage =
-  | {
-      kind: 'typed';
-      type: string;
-    }
-  | {
-      kind: 'any';
-    }
-  | {
-      kind: 'empty';
-    }
-  | {
-      kind: 'text';
-      text?: Maybe<string>;
-    };
-export type ABIReceiver = {
-  receiver: 'internal' | 'external';
-  message: ABIReceiverMessage;
-};
-export type ContractABI = {
-  name?: Maybe<string>;
-  types?: Maybe<ABIType[]>;
-  errors?: Maybe<{
-    [key: number]: ABIError;
-  }>;
-  getters?: Maybe<ABIGetter[]>;
-  receivers?: Maybe<ABIReceiver[]>;
-};
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export interface Contract {
-  readonly address: Address;
-  readonly init?: Maybe<{
-    code: Cell;
-    data: Cell;
-  }>;
-  readonly abi?: Maybe<ContractABI>;
-}
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type ContractGetMethodResult = {
-  stack: TupleReader;
-  gasUsed?: Maybe<bigint>;
-  logs?: Maybe<string>;
-};
-export interface ContractProvider {
-  getState(): Promise<ContractState>;
-  get(name: string, args: TupleItem[]): Promise<ContractGetMethodResult>;
-  external(message: Cell): Promise<void>;
-  internal(
-    via: Sender,
-    args: {
-      value: bigint | string;
-      bounce?: Maybe<boolean>;
-      sendMode?: SendMode;
-      body?: Maybe<Cell | string>;
-    }
-  ): Promise<void>;
-}
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-
-export type ContractState = {
-  balance: bigint;
-  last: {
-    lt: bigint;
-    hash: Buffer;
-  } | null;
-  state:
-    | {
-        type: 'uninit';
-      }
-    | {
-        type: 'active';
-        code: Maybe<Buffer>;
-        data: Maybe<Buffer>;
-      }
-    | {
-        type: 'frozen';
-        stateHash: Buffer;
-      };
-};
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type SenderArguments = {
-  value: bigint;
-  to: Address;
-  sendMode?: Maybe<SendMode>;
-  bounce?: Maybe<boolean>;
-  init?: Maybe<{
-    code?: Maybe<Cell>;
-    data?: Maybe<Cell>;
-  }>;
-  body?: Maybe<Cell>;
-};
-export interface Sender {
-  readonly address?: Address;
-  send(args: SenderArguments): Promise<void>;
-}
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type OpenedContract<F> = {
-  [P in keyof F]: P extends `${'get' | 'send'}${string}`
-    ? F[P] extends (x: ContractProvider, ...args: infer P) => infer R
-      ? (...args: P) => R
-      : never
-    : F[P];
-};
-export declare function openContract<T extends Contract>(
-  src: T,
-  factory: (params: {
-    address: Address;
-    init: {
-      code: Cell;
-      data: Cell;
-    } | null;
-  }) => ContractProvider
-): OpenedContract<T>;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export declare class ExternalAddress {
-  static isAddress(src: any): src is ExternalAddress;
-  readonly value: bigint;
-  readonly bits: number;
-  constructor(value: bigint, bits: number);
-  toString(): string;
-  [inspectSymbol]: () => string;
-}
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -401,7 +286,297 @@ export declare class BitBuilder {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/// <reference types="node" />
 
+/**
+ * BitString is a class that represents a bitstring in a buffer with a specified offset and length
+ */
+export declare class BitString {
+  static readonly EMPTY: BitString;
+  private readonly _offset;
+  private readonly _length;
+  private readonly _data;
+  /**
+   * Checks if supplied object is BitString
+   * @param src is unknow object
+   * @returns true if object is BitString and false otherwise
+   **/
+  static isBitString(src: unknown): src is BitString;
+  /**
+   * Constructing BitString from a buffer
+   * @param data data that contains the bitstring data. NOTE: We are expecting this buffer to be NOT modified
+   * @param offset offset in bits from the start of the buffer
+   * @param length length of the bitstring in bits
+   */
+  constructor(data: Buffer, offset: number, length: number);
+  /**
+   * Returns the length of the bitstring
+   */
+  get length(): number;
+  /**
+   * Returns the bit at the specified index
+   * @param index index of the bit
+   * @throws Error if index is out of bounds
+   * @returns true if the bit is set, false otherwise
+   */
+  at(index: number): boolean;
+  /**
+   * Get a subscring of the bitstring
+   * @param offset
+   * @param length
+   * @returns
+   */
+  substring(offset: number, length: number): BitString;
+  /**
+   * Try to get a buffer from the bitstring without allocations
+   * @param offset offset in bits
+   * @param length length in bits
+   * @returns buffer if the bitstring is aligned to bytes, null otherwise
+   */
+  subbuffer(offset: number, length: number): Buffer | null;
+  /**
+   * Checks for equality
+   * @param b other bitstring
+   * @returns true if the bitstrings are equal, false otherwise
+   */
+  equals(b: BitString): boolean;
+  /**
+   * Format to canonical string
+   * @returns formatted bits as a string
+   */
+  toString(): string;
+  [inspectSymbol]: () => string;
+}
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+/**
+ * Class for reading bit strings
+ */
+export declare class BitReader {
+  private _bits;
+  private _offset;
+  private _checkpoints;
+  constructor(bits: BitString, offset?: number);
+  /**
+   * Offset in source bit string
+   */
+  get offset(): number;
+  /**
+   * Number of bits remaining
+   */
+  get remaining(): number;
+  /**
+   * Skip bits
+   * @param bits number of bits to skip
+   */
+  skip(bits: number): void;
+  /**
+   * Reset to the beginning or latest checkpoint
+   */
+  reset(): void;
+  /**
+   * Save checkpoint
+   */
+  save(): void;
+  /**
+   * Load a single bit
+   * @returns true if the bit is set, false otherwise
+   */
+  loadBit(): boolean;
+  /**
+   * Preload bit
+   * @returns true if the bit is set, false otherwise
+   */
+  preloadBit(): boolean;
+  /**
+   * Load bit string
+   * @param bits number of bits to read
+   * @returns new bitstring
+   */
+  loadBits(bits: number): BitString;
+  /**
+   * Preload bit string
+   * @param bits number of bits to read
+   * @returns new bitstring
+   */
+  preloadBits(bits: number): BitString;
+  /**
+   * Load buffer
+   * @param bytes number of bytes
+   * @returns new buffer
+   */
+  loadBuffer(bytes: number): Buffer;
+  /**
+   * Preload buffer
+   * @param bytes number of bytes
+   * @returns new buffer
+   */
+  preloadBuffer(bytes: number): Buffer;
+  /**
+   * Load uint value
+   * @param bits uint bits
+   * @returns read value as number
+   */
+  loadUint(bits: number): number;
+  /**
+   * Load uint value as bigint
+   * @param bits uint bits
+   * @returns read value as bigint
+   */
+  loadUintBig(bits: number): bigint;
+  /**
+   * Preload uint value
+   * @param bits uint bits
+   * @returns read value as number
+   */
+  preloadUint(bits: number): number;
+  /**
+   * Preload uint value as bigint
+   * @param bits uint bits
+   * @returns read value as bigint
+   */
+  preloadUintBig(bits: number): bigint;
+  /**
+   * Load int value
+   * @param bits int bits
+   * @returns read value as bigint
+   */
+  loadInt(bits: number): number;
+  /**
+   * Load int value as bigint
+   * @param bits int bits
+   * @returns read value as bigint
+   */
+  loadIntBig(bits: number): bigint;
+  /**
+   * Preload int value
+   * @param bits int bits
+   * @returns read value as bigint
+   */
+  preloadInt(bits: number): number;
+  /**
+   * Preload int value
+   * @param bits int bits
+   * @returns read value as bigint
+   */
+  preloadIntBig(bits: number): bigint;
+  /**
+   * Load varuint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  loadVarUint(bits: number): number;
+  /**
+   * Load varuint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  loadVarUintBig(bits: number): bigint;
+  /**
+   * Preload varuint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  preloadVarUint(bits: number): number;
+  /**
+   * Preload varuint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  preloadVarUintBig(bits: number): bigint;
+  /**
+   * Load varint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  loadVarInt(bits: number): number;
+  /**
+   * Load varint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  loadVarIntBig(bits: number): bigint;
+  /**
+   * Preload varint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  preloadVarInt(bits: number): number;
+  /**
+   * Preload varint value
+   * @param bits number of bits to read the size
+   * @returns read value as bigint
+   */
+  preloadVarIntBig(bits: number): bigint;
+  /**
+   * Load coins value
+   * @returns read value as bigint
+   */
+  loadCoins(): bigint;
+  /**
+   * Preload coins value
+   * @returns read value as bigint
+   */
+  preloadCoins(): bigint;
+  /**
+   * Load Address
+   * @returns Address
+   */
+  loadAddress(): Address;
+  /**
+   * Load internal address
+   * @returns Address or null
+   */
+  loadMaybeAddress(): Address | null;
+  /**
+   * Load external address
+   * @returns ExternalAddress
+   */
+  loadExternalAddress(): ExternalAddress;
+  /**
+   * Load external address
+   * @returns ExternalAddress or null
+   */
+  loadMaybeExternalAddress(): ExternalAddress | null;
+  /**
+   * Read address of any type
+   * @returns Address or ExternalAddress or null
+   */
+  loadAddressAny(): Address | ExternalAddress | null;
+  /**
+   * Load bit string that was padded to make it byte alligned. Used in BOC serialization
+   * @param bytes number of bytes to read
+   */
+  loadPaddedBits(bits: number): BitString;
+  /**
+   * Clone BitReader
+   */
+  clone(): BitReader;
+  /**
+   * Preload int from specific offset
+   * @param bits bits to preload
+   * @param offset offset to start from
+   * @returns read value as bigint
+   */
+  private _preloadInt;
+  /**
+   * Preload uint from specific offset
+   * @param bits bits to preload
+   * @param offset offset to start from
+   * @returns read value as bigint
+   */
+  private _preloadUint;
+  private _preloadBuffer;
+  private _loadInternalAddress;
+  private _loadExternalAddress;
+}
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -638,9 +813,10 @@ export declare class Builder {
   ): this;
   /**
    * Complete cell
+   * @param opts options
    * @returns cell
    */
-  endCell(): Cell;
+  endCell(opts?: { exotic?: boolean }): Cell;
   /**
    * Convert to cell
    * @returns cell
@@ -659,23 +835,7 @@ export declare class Builder {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -787,6 +947,22 @@ export declare enum CellType {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 /// <reference types="node" />
 
 /**
@@ -795,15 +971,24 @@ export declare enum CellType {
 export declare class Slice {
   private _reader;
   private _refs;
+  private _refsOffset;
   constructor(reader: BitReader, refs: Cell[]);
   /**
    * Get remaining bits
    */
   get remainingBits(): number;
   /**
+   * Get offset bits
+   */
+  get offsetBits(): number;
+  /**
    * Get remaining refs
    */
   get remainingRefs(): number;
+  /**
+   * Get offset refs
+   */
+  get offsetRefs(): number;
   /**
    * Skip bits
    * @param bits
@@ -1089,7 +1274,7 @@ export declare class Slice {
    * Clone slice
    * @returns cloned slice
    */
-  clone(): Slice;
+  clone(fromStart?: boolean): Slice;
   /**
    * Print slice as string by converting it to cell
    * @returns string
@@ -1104,10 +1289,7 @@ export declare class Slice {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-export type Writable = {
-  writeTo: (builder: Builder) => void;
-};
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1136,60 +1318,11 @@ export declare class ComputeError extends Error {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/// <reference types="node" />
 
-/**
- * BitString is a class that represents a bitstring in a buffer with a specified offset and length
- */
-export declare class BitString {
-  static readonly EMPTY: BitString;
-  private readonly _offset;
-  private readonly _length;
-  private readonly _data;
-  /**
-   * Constructing BitString from a buffer
-   * @param data data that contains the bitstring data. NOTE: We are expecting this buffer to be NOT modified
-   * @param offset offset in bits from the start of the buffer
-   * @param length length of the bitstring in bits
-   */
-  constructor(data: Buffer, offset: number, length: number);
-  /**
-   * Returns the length of the bitstring
-   */
-  get length(): number;
-  /**
-   * Returns the bit at the specified index
-   * @param index index of the bit
-   * @throws Error if index is out of bounds
-   * @returns true if the bit is set, false otherwise
-   */
-  at(index: number): boolean;
-  /**
-   * Get a subscring of the bitstring
-   * @param offset
-   * @param length
-   * @returns
-   */
-  substring(offset: number, length: number): BitString;
-  /**
-   * Try to get a buffer from the bitstring without allocations
-   * @param offset offset in bits
-   * @param length length in bits
-   * @returns buffer if the bitstring is aligned to bytes, null otherwise
-   */
-  subbuffer(offset: number, length: number): Buffer | null;
-  /**
-   * Checks for equality
-   * @param b other bitstring
-   * @returns true if the bitstrings are equal, false otherwise
-   */
-  equals(b: BitString): boolean;
-  /**
-   * Format to canonical string
-   * @returns formatted bits as a string
-   */
-  toString(): string;
-  [inspectSymbol]: () => string;
+export interface Contract {
+  readonly address: Address;
+  readonly init?: Maybe<StateInit>;
+  readonly abi?: Maybe<ContractABI>;
 }
 /**
  * Copyright (c) Whales Corp.
@@ -1198,19 +1331,136 @@ export declare class BitString {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+export type ABIError = {
+  message: string;
+};
+export type ABITypeRef =
+  | {
+      kind: 'simple';
+      type: string;
+      optional?: Maybe<boolean>;
+      format?: Maybe<string | number | boolean>;
+    }
+  | {
+      kind: 'dict';
+      format?: Maybe<string | number | boolean>;
+      key: string;
+      keyFormat?: Maybe<string | number | boolean>;
+      value: string;
+      valueFormat?: Maybe<string | number | boolean>;
+    };
+export type ABIField = {
+  name: string;
+  type: ABITypeRef;
+};
+export type ABIType = {
+  name: string;
+  header?: Maybe<number>;
+  fields: ABIField[];
+};
+export type ABIArgument = {
+  name: string;
+  type: ABITypeRef;
+};
+export type ABIGetter = {
+  name: string;
+  methodId?: Maybe<number>;
+  arguments?: Maybe<ABIArgument[]>;
+  returnType?: Maybe<ABITypeRef>;
+};
+export type ABIReceiverMessage =
+  | {
+      kind: 'typed';
+      type: string;
+    }
+  | {
+      kind: 'any';
+    }
+  | {
+      kind: 'empty';
+    }
+  | {
+      kind: 'text';
+      text?: Maybe<string>;
+    };
+export type ABIReceiver = {
+  receiver: 'internal' | 'external';
+  message: ABIReceiverMessage;
+};
+export type ContractABI = {
+  name?: Maybe<string>;
+  types?: Maybe<ABIType[]>;
+  errors?: Maybe<{
+    [key: number]: ABIError;
+  }>;
+  getters?: Maybe<ABIGetter[]>;
+  receivers?: Maybe<ABIReceiver[]>;
+};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 /// <reference types="node" />
 
-export declare function safeSign(
-  cell: Cell,
-  secretKey: Buffer,
-  seed?: string
-): Buffer;
-export declare function safeSignVerify(
-  cell: Cell,
-  signature: Buffer,
-  publicKey: Buffer,
-  seed?: string
-): boolean;
+export type ContractState = {
+  balance: bigint;
+  last: {
+    lt: bigint;
+    hash: Buffer;
+  } | null;
+  state:
+    | {
+        type: 'uninit';
+      }
+    | {
+        type: 'active';
+        code: Maybe<Buffer>;
+        data: Maybe<Buffer>;
+      }
+    | {
+        type: 'frozen';
+        stateHash: Buffer;
+      };
+};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export type ContractGetMethodResult = {
+  stack: TupleReader;
+  gasUsed?: Maybe<bigint>;
+  logs?: Maybe<string>;
+};
+export interface ContractProvider {
+  getState(): Promise<ContractState>;
+  get(name: string, args: TupleItem[]): Promise<ContractGetMethodResult>;
+  external(message: Cell): Promise<void>;
+  internal(
+    via: Sender,
+    args: {
+      value: bigint | string;
+      bounce?: Maybe<boolean>;
+      sendMode?: SendMode;
+      body?: Maybe<Cell | string>;
+    }
+  ): Promise<void>;
+  open<T extends Contract>(contract: T): OpenedContract<T>;
+  getTransactions(
+    address: Address,
+    lt: bigint,
+    hash: Buffer,
+    limit?: number
+  ): Promise<Transaction[]>;
+}
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1219,11 +1469,45 @@ export declare function safeSignVerify(
  * LICENSE file in the root directory of this source tree.
  */
 
-export declare function parseDict<V>(
-  sc: Slice | null,
-  keySize: number,
-  extractor: (src: Slice) => V
-): Map<bigint, V>;
+export type SenderArguments = {
+  value: bigint;
+  to: Address;
+  sendMode?: Maybe<SendMode>;
+  bounce?: Maybe<boolean>;
+  init?: Maybe<StateInit>;
+  body?: Maybe<Cell>;
+};
+export interface Sender {
+  readonly address?: Address;
+  send(args: SenderArguments): Promise<void>;
+}
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export type Writable = {
+  writeTo: (builder: Builder) => void;
+};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1233,7 +1517,7 @@ export declare function parseDict<V>(
  */
 /// <reference types="node" />
 
-export type DictionaryKeyTypes = Address | number | bigint | Buffer;
+export type DictionaryKeyTypes = Address | number | bigint | Buffer | BitString;
 export type DictionaryKey<K extends DictionaryKeyTypes> = {
   bits: number;
   serialize(src: K): bigint;
@@ -1280,6 +1564,15 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
      * @returns DictionaryKey<Buffer>
      */
     Buffer: (bytes: number) => DictionaryKey<Buffer>;
+    /**
+     * Create BitString key
+     * @param bits key length
+     * @returns DictionaryKey<BitString>
+     * Point is that Buffer has to be 8 bit aligned,
+     * while key is TVM dictionary doesn't have to be
+     * aligned at all.
+     */
+    BitString: (bits: number) => DictionaryKey<BitString>;
   };
   static Values: {
     /**
@@ -1337,6 +1630,14 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
      * @returns DictionaryValue<Builder>
      */
     Buffer: (bytes: number) => DictionaryValue<Buffer>;
+    /**
+     * Create BitString value
+     * @param requested bit length
+     * @returns DictionaryValue<BitString>
+     * Point is that Buffer is not applicable
+     * when length is not 8 bit alligned.
+     */
+    BitString: (bits: number) => DictionaryValue<BitString>;
     /**
      * Create dictionary value
      * @param key
@@ -1406,7 +1707,22 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
     key?: Maybe<DictionaryKey<K>>,
     value?: Maybe<DictionaryValue<V>>
   ): void;
+  generateMerkleProof(key: K): Cell;
+  generateMerkleUpdate(key: K, newValue: V): Cell;
 }
+
+export declare function generateMerkleProof<K extends DictionaryKeyTypes, V>(
+  dict: Dictionary<K, V>,
+  key: K,
+  keyObject: DictionaryKey<K>
+): Cell;
+
+export declare function generateMerkleUpdate<K extends DictionaryKeyTypes, V>(
+  dict: Dictionary<K, V>,
+  key: K,
+  keyObject: DictionaryKey<K>,
+  newValue: V
+): Cell;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1415,6 +1731,11 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
  * LICENSE file in the root directory of this source tree.
  */
 
+export declare function parseDict<V>(
+  sc: Slice | null,
+  keySize: number,
+  extractor: (src: Slice) => V
+): Map<bigint, V>;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1422,21 +1743,7 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/// <reference types="node" />
-
-export declare class TupleBuilder {
-  private _tuple;
-  writeNumber(v?: Maybe<bigint | number>): void;
-  writeBoolean(v?: Maybe<boolean>): void;
-  writeBuffer(v?: Maybe<Buffer | null | undefined>): void;
-  writeString(v?: Maybe<string>): void;
-  writeCell(v?: Maybe<Cell | Slice>): void;
-  writeSlice(v?: Maybe<Cell | Slice>): void;
-  writeBuilder(v?: Maybe<Cell | Slice>): void;
-  writeTuple(v?: Maybe<TupleItem[]>): void;
-  writeAddress(v?: Maybe<Address>): void;
-  build(): TupleItem[];
-}
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1485,7 +1792,7 @@ export declare function serializeDict<T>(
   serializer: (src: T, cell: Builder) => void,
   to: Builder
 ): void;
-
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1493,32 +1800,7 @@ export declare function serializeDict<T>(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/// <reference types="node" />
-
-export declare class TupleReader {
-  private readonly items;
-  constructor(items: TupleItem[]);
-  get remaining(): number;
-  peek(): TupleItem;
-  pop(): TupleItem;
-  skip(num?: number): this;
-  readBigNumber(): bigint;
-  readBigNumberOpt(): bigint | null;
-  readNumber(): number;
-  readNumberOpt(): number | null;
-  readBoolean(): boolean;
-  readBooleanOpt(): boolean | null;
-  readAddress(): import('..').Address;
-  readAddressOpt(): import('..').Address | null;
-  readCell(): import('..').Cell;
-  readCellOpt(): import('..').Cell | null;
-  readTuple(): TupleReader;
-  readTupleOpt(): TupleReader | null;
-  readBuffer(): Buffer;
-  readBufferOpt(): Buffer | null;
-  readString(): string;
-  readStringOpt(): string | null;
-}
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1527,142 +1809,20 @@ export declare class TupleReader {
  * LICENSE file in the root directory of this source tree.
  */
 
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type Tuple = {
-  type: 'tuple';
-  items: TupleItem[];
+export type OpenedContract<F> = {
+  [P in keyof F]: P extends `${'get' | 'send'}${string}`
+    ? F[P] extends (x: ContractProvider, ...args: infer P) => infer R
+      ? (...args: P) => R
+      : never
+    : F[P];
 };
-export type TupleItemNull = {
-  type: 'null';
-};
-export type TupleItemInt = {
-  type: 'int';
-  value: bigint;
-};
-export type TupleItemNaN = {
-  type: 'nan';
-};
-export type TupleItemCell = {
-  type: 'cell';
-  cell: Cell;
-};
-export type TupleItemSlice = {
-  type: 'slice';
-  cell: Cell;
-};
-export type TupleItemBuilder = {
-  type: 'builder';
-  cell: Cell;
-};
-export type TupleItem =
-  | TupleItemNull
-  | TupleItemInt
-  | TupleItemNaN
-  | TupleItemCell
-  | TupleItemSlice
-  | TupleItemBuilder
-  | Tuple;
-export declare function serializeTuple(src: TupleItem[]): Cell;
-export declare function parseTuple(src: Cell): TupleItem[];
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-export declare function base32Encode(buffer: Buffer): string;
-export declare function base32Decode(input: string): Buffer;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export declare function toNano(src: number | string | bigint): bigint;
-export declare function fromNano(src: bigint | number | string): string;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-export declare function crc16(data: Buffer): Buffer;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
+export declare function openContract<T extends Contract>(
+  src: T,
+  factory: (params: {
+    address: Address;
+    init: StateInit | null;
+  }) => ContractProvider
+): OpenedContract<T>;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -1678,310 +1838,6 @@ export type Account = {
 };
 export declare function loadAccount(slice: Slice): Account;
 export declare function storeAccount(src: Account): (builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export type Maybe<T> = T | null | undefined;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-
-/**
- * Class for reading bit strings
- */
-export declare class BitReader {
-  private _bits;
-  private _offset;
-  private _checkpoints;
-  constructor(bits: BitString, offset?: number);
-  /**
-   * Number of bits remaining
-   */
-  get remaining(): number;
-  /**
-   * Skip bits
-   * @param bits number of bits to skip
-   */
-  skip(bits: number): void;
-  /**
-   * Reset to the beginning or latest checkpoint
-   */
-  reset(): void;
-  /**
-   * Save checkpoint
-   */
-  save(): void;
-  /**
-   * Load a single bit
-   * @returns true if the bit is set, false otherwise
-   */
-  loadBit(): boolean;
-  /**
-   * Preload bit
-   * @returns true if the bit is set, false otherwise
-   */
-  preloadBit(): boolean;
-  /**
-   * Load bit string
-   * @param bits number of bits to read
-   * @returns new bitstring
-   */
-  loadBits(bits: number): BitString;
-  /**
-   * Preload bit string
-   * @param bits number of bits to read
-   * @returns new bitstring
-   */
-  preloadBits(bits: number): BitString;
-  /**
-   * Load buffer
-   * @param bytes number of bytes
-   * @returns new buffer
-   */
-  loadBuffer(bytes: number): Buffer;
-  /**
-   * Preload buffer
-   * @param bytes number of bytes
-   * @returns new buffer
-   */
-  preloadBuffer(bytes: number): Buffer;
-  /**
-   * Load uint value
-   * @param bits uint bits
-   * @returns read value as number
-   */
-  loadUint(bits: number): number;
-  /**
-   * Load uint value as bigint
-   * @param bits uint bits
-   * @returns read value as bigint
-   */
-  loadUintBig(bits: number): bigint;
-  /**
-   * Preload uint value
-   * @param bits uint bits
-   * @returns read value as number
-   */
-  preloadUint(bits: number): number;
-  /**
-   * Preload uint value as bigint
-   * @param bits uint bits
-   * @returns read value as bigint
-   */
-  preloadUintBig(bits: number): bigint;
-  /**
-   * Load int value
-   * @param bits int bits
-   * @returns read value as bigint
-   */
-  loadInt(bits: number): number;
-  /**
-   * Load int value as bigint
-   * @param bits int bits
-   * @returns read value as bigint
-   */
-  loadIntBig(bits: number): bigint;
-  /**
-   * Preload int value
-   * @param bits int bits
-   * @returns read value as bigint
-   */
-  preloadInt(bits: number): number;
-  /**
-   * Preload int value
-   * @param bits int bits
-   * @returns read value as bigint
-   */
-  preloadIntBig(bits: number): bigint;
-  /**
-   * Load varuint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  loadVarUint(bits: number): number;
-  /**
-   * Load varuint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  loadVarUintBig(bits: number): bigint;
-  /**
-   * Preload varuint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  preloadVarUint(bits: number): number;
-  /**
-   * Preload varuint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  preloadVarUintBig(bits: number): bigint;
-  /**
-   * Load varint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  loadVarInt(bits: number): number;
-  /**
-   * Load varint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  loadVarIntBig(bits: number): bigint;
-  /**
-   * Preload varint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  preloadVarInt(bits: number): number;
-  /**
-   * Preload varint value
-   * @param bits number of bits to read the size
-   * @returns read value as bigint
-   */
-  preloadVarIntBig(bits: number): bigint;
-  /**
-   * Load coins value
-   * @returns read value as bigint
-   */
-  loadCoins(): bigint;
-  /**
-   * Preload coins value
-   * @returns read value as bigint
-   */
-  preloadCoins(): bigint;
-  /**
-   * Load Address
-   * @returns Address
-   */
-  loadAddress(): Address;
-  /**
-   * Load internal address
-   * @returns Address or null
-   */
-  loadMaybeAddress(): Address | null;
-  /**
-   * Load external address
-   * @returns ExternalAddress
-   */
-  loadExternalAddress(): ExternalAddress;
-  /**
-   * Load external address
-   * @returns ExternalAddress or null
-   */
-  loadMaybeExternalAddress(): ExternalAddress | null;
-  /**
-   * Read address of any type
-   * @returns Address or ExternalAddress or null
-   */
-  loadAddressAny(): Address | ExternalAddress | null;
-  /**
-   * Load bit string that was padded to make it byte alligned. Used in BOC serialization
-   * @param bytes number of bytes to read
-   */
-  loadPaddedBits(bits: number): BitString;
-  /**
-   * Clone BitReader
-   */
-  clone(): BitReader;
-  /**
-   * Preload int from specific offset
-   * @param bits bits to preload
-   * @param offset offset to start from
-   * @returns read value as bigint
-   */
-  private _preloadInt;
-  /**
-   * Preload uint from specific offset
-   * @param bits bits to preload
-   * @param offset offset to start from
-   * @returns read value as bigint
-   */
-  private _preloadUint;
-  private _preloadBuffer;
-  private _loadInternalAddress;
-  private _loadExternalAddress;
-}
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export declare function getMethodId(name: string): number;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type AccountStatus =
-  | 'uninitialized'
-  | 'frozen'
-  | 'active'
-  | 'non-existing';
-/**
- * Load account state from slice
- * @param slice
- * @returns AccountState
- */
-export declare function loadAccountStatus(slice: Slice): AccountStatus;
-/**
- * Store account state to builder
- * @param src account state
- * @param builder buidler
- */
-export declare function storeAccountStatus(
-  src: AccountStatus
-): (builder: Builder) => Builder;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type AccountStatusChange = 'unchanged' | 'frozen' | 'deleted';
-export declare function loadAccountStatusChange(
-  slice: Slice
-): AccountStatusChange;
-export declare function storeAccountStatusChange(
-  src: AccountStatusChange
-): (builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-export declare function crc32c(source: Buffer): Buffer;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export declare function bitsForNumber(
-  src: bigint | number,
-  mode: 'int' | 'uint'
-): number;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2032,15 +1888,12 @@ export declare function storeCommonMessageInfo(
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface CurrencyCollection {
-  other?: Maybe<Dictionary<number, bigint>>;
-  coins: bigint;
-}
-export declare function loadCurrencyCollection(
+export type AccountStatusChange = 'unchanged' | 'frozen' | 'deleted';
+export declare function loadAccountStatusChange(
   slice: Slice
-): CurrencyCollection;
-export declare function storeCurrencyCollection(
-  collection: CurrencyCollection
+): AccountStatusChange;
+export declare function storeAccountStatusChange(
+  src: AccountStatusChange
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2049,14 +1902,23 @@ export declare function storeCurrencyCollection(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
-export type DepthBalanceInfo = {
-  splitDepth: number;
+export type AccountStorage = {
+  lastTransLt: bigint;
   balance: CurrencyCollection;
+  state: AccountState;
 };
-export declare function loadDepthBalanceInfo(slice: Slice): DepthBalanceInfo;
-export declare function storeDepthBalanceInfo(
-  src: DepthBalanceInfo
+export declare function loadAccountStorage(slice: Slice): AccountStorage;
+export declare function storeAccountStorage(
+  src: AccountStorage
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2103,6 +1965,24 @@ export declare function storeCommonMessageInfoRelaxed(
  * LICENSE file in the root directory of this source tree.
  */
 
+export interface CurrencyCollection {
+  other?: Maybe<Dictionary<number, bigint>>;
+  coins: bigint;
+}
+export declare function loadCurrencyCollection(
+  slice: Slice
+): CurrencyCollection;
+export declare function storeCurrencyCollection(
+  collection: CurrencyCollection
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 export type ComputeSkipReason = 'no-state' | 'bad-state' | 'no-gas';
 export declare function loadComputeSkipReason(slice: Slice): ComputeSkipReason;
 export declare function storeComputeSkipReason(
@@ -2116,14 +1996,22 @@ export declare function storeComputeSkipReason(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type MasterchainStateExtra = {
-  configAddress: bigint;
-  config: Dictionary<number, Cell>;
-  globalBalance: CurrencyCollection;
+export type DepthBalanceInfo = {
+  splitDepth: number;
+  balance: CurrencyCollection;
 };
-export declare function loadMasterchainStateExtra(
-  cs: Slice
-): MasterchainStateExtra;
+export declare function loadDepthBalanceInfo(slice: Slice): DepthBalanceInfo;
+export declare function storeDepthBalanceInfo(
+  src: DepthBalanceInfo
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2152,32 +2040,7 @@ export declare const MessageValue: DictionaryValue<Message>;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/// <reference types="node" />
-
-export type HashUpdate = {
-  oldHash: Buffer;
-  newHash: Buffer;
-};
-export declare function loadHashUpdate(slice: Slice): HashUpdate;
-export declare function storeHashUpdate(
-  src: HashUpdate
-): (builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2202,6 +2065,26 @@ export declare function storeShardAccount(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+export type MessageRelaxed = {
+  info: CommonMessageInfoRelaxed;
+  init?: Maybe<StateInit>;
+  body: Cell;
+};
+export declare function loadMessageRelaxed(slice: Slice): MessageRelaxed;
+export declare function storeMessageRelaxed(
+  message: MessageRelaxed,
+  opts?: {
+    forceRef?: boolean;
+  }
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 export declare enum SendMode {
   CARRY_ALL_REMAINING_BALANCE = 128,
   CARRY_ALL_REMAINING_INCOMING_VALUE = 64,
@@ -2218,6 +2101,24 @@ export declare enum SendMode {
  * LICENSE file in the root directory of this source tree.
  */
 
+export interface OutActionSendMsg {
+  type: 'sendMsg';
+  mode: SendMode;
+  outMsg: MessageRelaxed;
+}
+export interface OutActionSetCode {
+  type: 'setCode';
+  newCode: Cell;
+}
+export type OutAction = OutActionSendMsg | OutActionSetCode;
+export declare function storeOutAction(
+  action: OutAction
+): (builder: Builder) => void;
+export declare function loadOutAction(slice: Slice): OutAction;
+export declare function storeOutList(
+  actions: OutAction[]
+): (builder: Builder) => void;
+export declare function loadOutList(slice: Slice): OutAction[];
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2225,9 +2126,23 @@ export declare enum SendMode {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-export declare function testAddress(workchain: number, seed: string): Address;
-export declare function testExternalAddress(seed: string): ExternalAddress;
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2245,6 +2160,25 @@ export declare function loadShardIdent(slice: Slice): ShardIdent;
 export declare function storeShardIdent(
   src: ShardIdent
 ): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export type ShardAccountRef = {
+  shardAccount: ShardAccount;
+  depthBalanceInfo: DepthBalanceInfo;
+};
+export declare const ShardAccountRefValue: DictionaryValue<ShardAccountRef>;
+export declare function loadShardAccounts(
+  cs: Slice
+): Dictionary<bigint, ShardAccountRef>;
+export declare function storeShardAccounts(
+  src: Dictionary<bigint, ShardAccountRef>
+): (Builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2274,23 +2208,6 @@ export declare function loadShardStateUnsplit(cs: Slice): ShardStateUnsplit;
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface SimpleLibrary {
-  public: boolean;
-  root: Cell;
-}
-export declare function loadSimpleLibrary(slice: Slice): SimpleLibrary;
-export declare function storeSimpleLibrary(
-  src: SimpleLibrary
-): (builder: Builder) => void;
-export declare const SimpleLibraryValue: DictionaryValue<SimpleLibrary>;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 export type SplitMergeInfo = {
   currentShardPrefixLength: number;
   accountSplitDepth: number;
@@ -2308,7 +2225,15 @@ export declare function storeSplitMergeInfo(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2317,16 +2242,14 @@ export declare function storeSplitMergeInfo(
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface StateInit {
-  splitDepth?: Maybe<number>;
-  special?: Maybe<TickTock>;
-  code?: Maybe<Cell>;
-  data?: Maybe<Cell>;
-  libraries?: Maybe<Dictionary<bigint, SimpleLibrary>>;
-}
-export declare function loadStateInit(slice: Slice): StateInit;
-export declare function storeStateInit(
-  src: StateInit
+export type StorageInfo = {
+  used: StorageUsed;
+  lastPaid: number;
+  duePayment?: Maybe<bigint>;
+};
+export declare function loadStorageInfo(slice: Slice): StorageInfo;
+export declare function storeStorageInfo(
+  src: StorageInfo
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2336,57 +2259,24 @@ export declare function storeStateInit(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type StorageUsed = {
-  cells: bigint;
-  bits: bigint;
-  publicCells: bigint;
+export type AccountState =
+  | AccountStateUninit
+  | AccountStateActive
+  | AccountStateFrozen;
+export type AccountStateUninit = {
+  type: 'uninit';
 };
-export declare function loadStorageUsed(cs: Slice): StorageUsed;
-export declare function storeStorageUsed(
-  src: StorageUsed
-): (builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type ShardAccountRef = {
-  shardAccount: ShardAccount;
-  depthBalanceInfo: DepthBalanceInfo;
+export type AccountStateActive = {
+  type: 'active';
+  state: StateInit;
 };
-export declare const ShardAccountRefValue: DictionaryValue<ShardAccountRef>;
-export declare function loadShardAccounts(
-  cs: Slice
-): Dictionary<bigint, ShardAccountRef>;
-export declare function storeShardAccounts(
-  src: Dictionary<bigint, ShardAccountRef>
-): (Builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type TickTock = {
-  tick: boolean;
-  tock: boolean;
+export type AccountStateFrozen = {
+  type: 'frozen';
+  stateHash: bigint;
 };
-export declare function loadTickTock(slice: Slice): TickTock;
-export declare function storeTickTock(
-  src: TickTock
+export declare function loadAccountState(cs: Slice): AccountState;
+export declare function storeAccountState(
+  src: AccountState
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2412,6 +2302,24 @@ export declare function storeStorageUsedShort(
  * LICENSE file in the root directory of this source tree.
  */
 
+export type StorageUsed = {
+  cells: bigint;
+  bits: bigint;
+  publicCells: bigint;
+};
+export declare function loadStorageUsed(cs: Slice): StorageUsed;
+export declare function storeStorageUsed(
+  src: StorageUsed
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
 export type Transaction = {
   address: bigint;
   lt: bigint;
@@ -2426,22 +2334,10 @@ export type Transaction = {
   totalFees: CurrencyCollection;
   stateUpdate: HashUpdate;
   description: TransactionDescription;
+  raw: Cell;
+  hash: () => Buffer;
 };
-export declare function loadTransaction(slice: Slice): {
-  address: bigint;
-  lt: bigint;
-  prevTransactionHash: bigint;
-  prevTransactionLt: bigint;
-  now: number;
-  outMessagesCount: number;
-  oldStatus: AccountStatus;
-  endStatus: AccountStatus;
-  inMessage: Message | undefined;
-  outMessages: Dictionary<number, Message>;
-  totalFees: CurrencyCollection;
-  stateUpdate: HashUpdate;
-  description: TransactionDescription;
-};
+export declare function loadTransaction(slice: Slice): Transaction;
 export declare function storeTransaction(
   src: Transaction
 ): (builder: Builder) => void;
@@ -2453,22 +2349,13 @@ export declare function storeTransaction(
  * LICENSE file in the root directory of this source tree.
  */
 
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type AccountStorage = {
-  lastTransLt: bigint;
-  balance: CurrencyCollection;
-  state: AccountState;
+export type TickTock = {
+  tick: boolean;
+  tock: boolean;
 };
-export declare function loadAccountStorage(slice: Slice): AccountStorage;
-export declare function storeAccountStorage(
-  src: AccountStorage
+export declare function loadTickTock(slice: Slice): TickTock;
+export declare function storeTickTock(
+  src: TickTock
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2496,35 +2383,68 @@ export declare function storeTransactionCreditPhase(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type TransactionComputePhase =
-  | TransactionComputeSkipped
-  | TransactionComputeVm;
-export type TransactionComputeSkipped = {
-  type: 'skipped';
-  reason: ComputeSkipReason;
+export type TransactionBouncePhase =
+  | TransactionBounceNegativeFunds
+  | TransactionBounceNoFunds
+  | TransactionBounceOk;
+export type TransactionBounceNegativeFunds = {
+  type: 'negative-funds';
 };
-export type TransactionComputeVm = {
-  type: 'vm';
-  success: boolean;
-  messageStateUsed: boolean;
-  accountActivated: boolean;
-  gasFees: bigint;
-  gasUsed: bigint;
-  gasLimit: bigint;
-  gasCredit?: Maybe<bigint>;
-  mode: number;
-  exitCode: number;
-  exitArg?: Maybe<number>;
-  vmSteps: number;
-  vmInitStateHash: bigint;
-  vmFinalStateHash: bigint;
+export type TransactionBounceNoFunds = {
+  type: 'no-funds';
+  messageSize: StorageUsedShort;
+  requiredForwardFees: bigint;
 };
-export declare function loadTransactionComputePhase(
+export type TransactionBounceOk = {
+  type: 'ok';
+  messageSize: StorageUsedShort;
+  messageFees: bigint;
+  forwardFees: bigint;
+};
+export declare function loadTransactionBouncePhase(
   slice: Slice
-): TransactionComputePhase;
-export declare function storeTransactionComputePhase(
-  src: TransactionComputePhase
+): TransactionBouncePhase;
+export declare function storeTransactionBouncePhase(
+  src: TransactionBouncePhase
 ): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export type TransactionActionPhase = {
+  success: boolean;
+  valid: boolean;
+  noFunds: boolean;
+  statusChange: AccountStatusChange;
+  totalFwdFees?: Maybe<bigint>;
+  totalActionFees?: Maybe<bigint>;
+  resultCode: number;
+  resultArg?: Maybe<number>;
+  totalActions: number;
+  specActions: number;
+  skippedActions: number;
+  messagesCreated: number;
+  actionListHash: bigint;
+  totalMessageSize: StorageUsedShort;
+};
+export declare function loadTransactionActionPhase(
+  slice: Slice
+): TransactionActionPhase;
+export declare function storeTransactionActionPhase(
+  src: TransactionActionPhase
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2611,6 +2531,46 @@ export declare function storeTransactionDescription(
  * LICENSE file in the root directory of this source tree.
  */
 
+export declare function internal(src: {
+  to: Address | string;
+  value: bigint | string;
+  bounce?: Maybe<boolean>;
+  init?: Maybe<StateInit>;
+  body?: Maybe<Cell | string>;
+}): MessageRelaxed;
+export declare function external(src: {
+  to: Address | string;
+  init?: Maybe<StateInit>;
+  body?: Maybe<Cell>;
+}): Message;
+export declare function comment(src: string): Cell;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export interface StateInit {
+  splitDepth?: Maybe<number>;
+  special?: Maybe<TickTock>;
+  code?: Maybe<Cell>;
+  data?: Maybe<Cell>;
+  libraries?: Maybe<Dictionary<bigint, SimpleLibrary>>;
+}
+export declare function loadStateInit(slice: Slice): StateInit;
+export declare function storeStateInit(
+  src: StateInit
+): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 export type TransactionStoragePhase = {
   storageFeesCollected: bigint;
   storageFeesDue?: Maybe<bigint>;
@@ -2630,15 +2590,25 @@ export declare function storeTransactionsStoragePhase(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type StorageInfo = {
-  used: StorageUsed;
-  lastPaid: number;
-  duePayment?: Maybe<bigint>;
-};
-export declare function loadStorageInfo(slice: Slice): StorageInfo;
-export declare function storeStorageInfo(
-  src: StorageInfo
-): (builder: Builder) => void;
+export type AccountStatus =
+  | 'uninitialized'
+  | 'frozen'
+  | 'active'
+  | 'non-existing';
+/**
+ * Load account state from slice
+ * @param slice
+ * @returns AccountState
+ */
+export declare function loadAccountStatus(slice: Slice): AccountStatus;
+/**
+ * Store account state to builder
+ * @param src account state
+ * @param builder buidler
+ */
+export declare function storeAccountStatus(
+  src: AccountStatus
+): (builder: Builder) => Builder;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2647,18 +2617,51 @@ export declare function storeStorageInfo(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type MessageRelaxed = {
-  info: CommonMessageInfoRelaxed;
-  init?: Maybe<StateInit>;
-  body: Cell;
-};
-export declare function loadMessageRelaxed(slice: Slice): MessageRelaxed;
-export declare function storeMessageRelaxed(
-  message: MessageRelaxed,
-  opts?: {
-    forceRef?: boolean;
-  }
+export interface SimpleLibrary {
+  public: boolean;
+  root: Cell;
+}
+export declare function loadSimpleLibrary(slice: Slice): SimpleLibrary;
+export declare function storeSimpleLibrary(
+  src: SimpleLibrary
 ): (builder: Builder) => void;
+export declare const SimpleLibraryValue: DictionaryValue<SimpleLibrary>;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare class TupleReader {
+  private readonly items;
+  constructor(items: TupleItem[]);
+  get remaining(): number;
+  peek(): TupleItem;
+  pop(): TupleItem;
+  skip(num?: number): this;
+  readBigNumber(): bigint;
+  readBigNumberOpt(): bigint | null;
+  readNumber(): number;
+  readNumberOpt(): number | null;
+  readBoolean(): boolean;
+  readBooleanOpt(): boolean | null;
+  readAddress(): import('..').Address;
+  readAddressOpt(): import('..').Address | null;
+  readCell(): import('..').Cell;
+  readCellOpt(): import('..').Cell | null;
+  readTuple(): TupleReader;
+  readTupleOpt(): TupleReader | null;
+  private static readLispList;
+  readLispListDirect(): TupleItem[];
+  readLispList(): TupleItem[];
+  readBuffer(): Buffer;
+  readBufferOpt(): Buffer | null;
+  readString(): string;
+  readStringOpt(): string | null;
+}
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2667,57 +2670,53 @@ export declare function storeMessageRelaxed(
  * LICENSE file in the root directory of this source tree.
  */
 
-export type AccountState =
-  | AccountStateUninit
-  | AccountStateActive
-  | AccountStateFrozen;
-export type AccountStateUninit = {
-  type: 'uninit';
+export type TransactionComputePhase =
+  | TransactionComputeSkipped
+  | TransactionComputeVm;
+export type TransactionComputeSkipped = {
+  type: 'skipped';
+  reason: ComputeSkipReason;
 };
-export type AccountStateActive = {
-  type: 'active';
-  state: StateInit;
+export type TransactionComputeVm = {
+  type: 'vm';
+  success: boolean;
+  messageStateUsed: boolean;
+  accountActivated: boolean;
+  gasFees: bigint;
+  gasUsed: bigint;
+  gasLimit: bigint;
+  gasCredit?: Maybe<bigint>;
+  mode: number;
+  exitCode: number;
+  exitArg?: Maybe<number>;
+  vmSteps: number;
+  vmInitStateHash: bigint;
+  vmFinalStateHash: bigint;
 };
-export type AccountStateFrozen = {
-  type: 'frozen';
-  stateHash: bigint;
-};
-export declare function loadAccountState(cs: Slice): AccountState;
-export declare function storeAccountState(
-  src: AccountState
-): (builder: Builder) => void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export type TransactionBouncePhase =
-  | TransactionBounceNegativeFunds
-  | TransactionBounceNoFunds
-  | TransactionBounceOk;
-export type TransactionBounceNegativeFunds = {
-  type: 'negative-funds';
-};
-export type TransactionBounceNoFunds = {
-  type: 'no-funds';
-  messageSize: StorageUsedShort;
-  requiredForwardFees: bigint;
-};
-export type TransactionBounceOk = {
-  type: 'ok';
-  messageSize: StorageUsedShort;
-  messageFees: bigint;
-  forwardFees: bigint;
-};
-export declare function loadTransactionBouncePhase(
+export declare function loadTransactionComputePhase(
   slice: Slice
-): TransactionBouncePhase;
-export declare function storeTransactionBouncePhase(
-  src: TransactionBouncePhase
+): TransactionComputePhase;
+export declare function storeTransactionComputePhase(
+  src: TransactionComputePhase
 ): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+export declare function base32Encode(buffer: Buffer): string;
+export declare function base32Decode(input: string): Buffer;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2787,6 +2786,15 @@ export {
   loadMessageRelaxed,
   storeMessageRelaxed,
 } from './MessageRelaxed';
+export {
+  OutAction,
+  OutActionSendMsg,
+  OutActionSetCode,
+  loadOutAction,
+  loadOutList,
+  storeOutAction,
+  storeOutList,
+} from './OutList';
 export { SendMode } from './SendMode';
 export {
   ShardAccount,
@@ -2871,26 +2879,8 @@ export { comment, external, internal } from './_helpers';
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-export declare function internal(src: {
-  to: Address | string;
-  value: bigint | string;
-  bounce?: Maybe<boolean>;
-  init?: Maybe<{
-    code?: Maybe<Cell>;
-    data?: Maybe<Cell>;
-  }>;
-  body?: Maybe<Cell | string>;
-}): MessageRelaxed;
-export declare function external(src: {
-  to: Address | string;
-  init?: Maybe<{
-    code?: Maybe<Cell>;
-    data?: Maybe<Cell>;
-  }>;
-  body?: Maybe<Cell>;
-}): Message;
-export declare function comment(src: string): Cell;
+/// <reference types="node" />
+export declare function crc16(data: Buffer): Buffer;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2899,28 +2889,281 @@ export declare function comment(src: string): Cell;
  * LICENSE file in the root directory of this source tree.
  */
 
-export type TransactionActionPhase = {
-  success: boolean;
-  valid: boolean;
-  noFunds: boolean;
-  statusChange: AccountStatusChange;
-  totalFwdFees?: Maybe<bigint>;
-  totalActionFees?: Maybe<bigint>;
-  resultCode: number;
-  resultArg?: Maybe<number>;
-  totalActions: number;
-  specActions: number;
-  skippedActions: number;
-  messagesCreated: number;
-  actionListHash: bigint;
-  totalMessageSize: StorageUsedShort;
+export type Tuple = {
+  type: 'tuple';
+  items: TupleItem[];
 };
-export declare function loadTransactionActionPhase(
-  slice: Slice
-): TransactionActionPhase;
-export declare function storeTransactionActionPhase(
-  src: TransactionActionPhase
+export type TupleItemNull = {
+  type: 'null';
+};
+export type TupleItemInt = {
+  type: 'int';
+  value: bigint;
+};
+export type TupleItemNaN = {
+  type: 'nan';
+};
+export type TupleItemCell = {
+  type: 'cell';
+  cell: Cell;
+};
+export type TupleItemSlice = {
+  type: 'slice';
+  cell: Cell;
+};
+export type TupleItemBuilder = {
+  type: 'builder';
+  cell: Cell;
+};
+export type TupleItem =
+  | TupleItemNull
+  | TupleItemInt
+  | TupleItemNaN
+  | TupleItemCell
+  | TupleItemSlice
+  | TupleItemBuilder
+  | Tuple;
+export declare function serializeTuple(src: TupleItem[]): Cell;
+export declare function parseTuple(src: Cell): TupleItem[];
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export declare function bitsForNumber(
+  src: bigint | number,
+  mode: 'int' | 'uint'
+): number;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+export declare function crc32c(source: Buffer): Buffer;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export type MasterchainStateExtra = {
+  configAddress: bigint;
+  config: Dictionary<number, Cell>;
+  globalBalance: CurrencyCollection;
+};
+export declare function loadMasterchainStateExtra(
+  cs: Slice
+): MasterchainStateExtra;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export type HashUpdate = {
+  oldHash: Buffer;
+  newHash: Buffer;
+};
+export declare function loadHashUpdate(slice: Slice): HashUpdate;
+export declare function storeHashUpdate(
+  src: HashUpdate
 ): (builder: Builder) => void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare class TupleBuilder {
+  private _tuple;
+  writeNumber(v?: Maybe<bigint | number>): void;
+  writeBoolean(v?: Maybe<boolean>): void;
+  writeBuffer(v?: Maybe<Buffer | null | undefined>): void;
+  writeString(v?: Maybe<string>): void;
+  writeCell(v?: Maybe<Cell | Slice>): void;
+  writeSlice(v?: Maybe<Cell | Slice>): void;
+  writeBuilder(v?: Maybe<Cell | Slice>): void;
+  writeTuple(v?: Maybe<TupleItem[]>): void;
+  writeAddress(v?: Maybe<Address>): void;
+  build(): TupleItem[];
+}
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export declare function toNano(src: number | string | bigint): bigint;
+export declare function fromNano(src: bigint | number | string): string;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export type Maybe<T> = T | null | undefined;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export declare function getMethodId(name: string): number;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export declare function testAddress(workchain: number, seed: string): Address;
+export declare function testExternalAddress(seed: string): ExternalAddress;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export declare function readString(slice: Slice): string;
+export declare function stringToCell(src: string): Cell;
+export declare function writeString(src: string, builder: Builder): void;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare function bitsToPaddedBuffer(bits: BitString): Buffer;
+export declare function paddedBufferToBits(buff: Buffer): BitString;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export declare class LevelMask {
+  private _mask;
+  private _hashIndex;
+  private _hashCount;
+  constructor(mask?: number);
+  get value(): number;
+  get level(): number;
+  get hashIndex(): number;
+  get hashCount(): number;
+  apply(level: number): LevelMask;
+  isSignificant(level: number): boolean;
+}
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare function getRefsDescriptor(
+  refs: Cell[],
+  levelMask: number,
+  type: CellType
+): number;
+export declare function getBitsDescriptor(bits: BitString): number;
+export declare function getRepr(
+  originalBits: BitString,
+  bits: BitString,
+  refs: Cell[],
+  level: number,
+  levelMask: number,
+  type: CellType
+): Buffer;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+export declare function exoticLibrary(bits: BitString, refs: Cell[]): {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2944,8 +3187,45 @@ export declare function exoticMerkleProof(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+/// <reference types="node" />
 
-export declare function exoticLibrary(bits: BitString, refs: Cell[]): {};
+export declare function resolveExotic(
+  bits: BitString,
+  refs: Cell[]
+): {
+  type: CellType;
+  depths: number[];
+  hashes: Buffer[];
+  mask: LevelMask;
+};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+/// <reference types="node" />
+
+export declare function parseBoc(src: Buffer): {
+  size: number;
+  offBytes: number;
+  cells: number;
+  roots: number;
+  absent: number;
+  totalCellSize: number;
+  index: Buffer | null;
+  cellData: Buffer;
+  root: number[];
+};
+export declare function deserializeBoc(src: Buffer): Cell[];
+export declare function serializeBoc(
+  root: Cell,
+  opts: {
+    idx: boolean;
+    crc32: boolean;
+  }
+): Buffer;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -2991,27 +3271,7 @@ export declare function exoticPruned(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-/// <reference types="node" />
-
-export declare function parseBoc(src: Buffer): {
-  size: number;
-  offBytes: number;
-  cells: number;
-  roots: number;
-  absent: number;
-  totalCellSize: number;
-  index: Buffer | null;
-  cellData: Buffer;
-  root: number[];
-};
-export declare function deserializeBoc(src: Buffer): Cell[];
-export declare function serializeBoc(
-  root: Cell,
-  opts: {
-    idx: boolean;
-    crc32: boolean;
-  }
-): Buffer;
+export {};
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.
@@ -3037,117 +3297,6 @@ export declare function wonderCalculator(
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-export declare function readString(slice: Slice): string;
-export declare function stringToCell(src: string): Cell;
-export declare function writeString(src: string, builder: Builder): void;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-
-export declare function bitsToPaddedBuffer(bits: BitString): Buffer;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export declare class LevelMask {
-  private _mask;
-  private _hashIndex;
-  private _hashCount;
-  constructor(mask?: number);
-  get value(): number;
-  get level(): number;
-  get hashIndex(): number;
-  get hashCount(): number;
-  apply(level: number): LevelMask;
-  isSignificant(level: number): boolean;
-}
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-
-export declare function resolveExotic(
-  bits: BitString,
-  refs: Cell[]
-): {
-  type: CellType;
-  depths: number[];
-  hashes: Buffer[];
-  mask: LevelMask;
-};
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-/// <reference types="node" />
-
-export declare function getRefsDescriptor(
-  refs: Cell[],
-  level: number,
-  type: CellType
-): number;
-export declare function getBitsDescriptor(bits: BitString): number;
-export declare function getRepr(
-  bits: BitString,
-  refs: Cell[],
-  level: number,
-  type: CellType
-): Buffer;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-export declare function findCommonPrefix(src: string[]): string;
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
- * Copyright (c) Whales Corp.
- * All Rights Reserved.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
 export declare function serializeInternalKey(value: any): string;
 export declare function deserializeInternalKey(value: string): any;
 /**
@@ -3157,7 +3306,28 @@ export declare function deserializeInternalKey(value: string): any;
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+export {};
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export declare function findCommonPrefix(
+  src: string[],
+  startPos?: number
+): string;
+/**
+ * Copyright (c) Whales Corp.
+ * All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+export {};
 
+export declare function readUnaryLength(slice: Slice): number;
 /**
  * Copyright (c) Whales Corp.
  * All Rights Reserved.

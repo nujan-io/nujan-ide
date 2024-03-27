@@ -9,16 +9,6 @@ import {
 import { capitalizeFirstLetter, convertToText } from '@/utility/utils';
 import { Config, Network } from '@orbs-network/ton-access';
 import {
-  SandboxContract,
-  SendMessageResult,
-  TreasuryContract,
-} from '@ton-community/sandbox';
-import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
-import { useTonConnectUI } from '@tonconnect/ui-react';
-import { message } from 'antd';
-import BN from 'bn.js';
-import { StateInit, TonClient } from 'ton';
-import {
   Address,
   Cell,
   Contract,
@@ -32,7 +22,17 @@ import {
   fromNano,
   storeStateInit,
   toNano,
-} from 'ton-core';
+} from '@ton/core';
+import {
+  SandboxContract,
+  SendMessageResult,
+  TreasuryContract,
+} from '@ton/sandbox';
+import { StateInit, TonClient } from '@ton/ton';
+import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
+import { useTonConnectUI } from '@tonconnect/ui-react';
+import { message } from 'antd';
+import BN from 'bn.js';
 
 const getHttpEndpoint = ({ network }: Config) => {
   return `https://${

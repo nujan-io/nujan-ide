@@ -1,7 +1,7 @@
+import { Address } from '@ton/ton';
 import { TonProofItemReplySuccess } from '@tonconnect/protocol';
 import { Wallet } from '@tonconnect/sdk';
 import { createHash } from 'crypto';
-import { Address } from 'ton';
 import nacl from 'tweetnacl';
 
 interface Domain {
