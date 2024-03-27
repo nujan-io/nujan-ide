@@ -9,10 +9,9 @@ import * as TonCore from '@ton/core';
 import { Blockchain } from '@ton/sandbox';
 import { Spin } from 'antd';
 import { useRouter } from 'next/router';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import Split from 'react-split';
 import { useEffectOnce } from 'react-use';
-import * as TonCore from 'ton-core';
 import BottomPanel from '../BottomPanel/BottomPanel';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
@@ -40,7 +39,10 @@ const WorkSpace: FC = () => {
   const { id: projectId, tab } = router.query;
 
   const activeFile = workspaceAction.activeFile(projectId as string);
-  const activeProject = workspaceAction.project(projectId as string);
+
+  const activeProject = useMemo(() => {
+    return workspaceAction.project(projectId as string);
+  }, [projectId]);
 
   const commitItemCreation = (type: string, name: string) => {
     workspaceAction.createNewItem('', name, type, projectId as string);
@@ -52,13 +54,19 @@ const WorkSpace: FC = () => {
     }
     const blockchain = await Blockchain.create();
     globalWorkspace.sandboxBlockchain = blockchain;
+    const wallet = await blockchain.treasury('user');
+    globalWorkspace.sandboxWallet = wallet;
   };
 
   useEffect(() => {
-    if (activeProject) {
-      createLog(`Project '${activeProject?.name}' is opened`);
+    if (!activeProject) {
+      return;
     }
-    createSandbox();
+    createLog(`Project '${activeProject?.name}' is opened`);
+    createSandbox(true);
+  }, [activeProject]);
+
+  useEffect(() => {
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
