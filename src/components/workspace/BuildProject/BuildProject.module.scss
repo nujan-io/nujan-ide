@@ -30,6 +30,15 @@
       display: block;
     }
   }
+  .connectedWallet {
+    font-size: 0.8rem;
+    color: #ccc;
+    margin-top: 1rem;
+    span {
+      font-size: 0.9rem;
+      color: #fff;
+    }
+  }
   .contractAddress {
     margin: 1rem 0;
     font-size: 0.8rem;

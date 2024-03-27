@@ -11,8 +11,7 @@ import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
 import { getContractLINK, getFileExtension } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
-import { Blockchain } from '@ton-community/sandbox';
-import { CHAIN, useTonConnectUI } from '@tonconnect/ui-react';
+import { CHAIN, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
 import React, { FC, useEffect, useRef, useState } from 'react';
@@ -103,6 +102,7 @@ const BuildProject: FC<Props> = ({
 
   const [tonConnector] = useTonConnectUI();
   const chain = tonConnector.wallet?.account.chain;
+  const connectedWalletAddress = useTonAddress();
 
   const { sandboxBlockchain } = globalWorkspace;
 
@@ -555,6 +555,24 @@ const BuildProject: FC<Props> = ({
     });
   };
 
+  const getConnectedWallet = () => {
+    let _connectedWalletAddress =
+      globalWorkspace.sandboxWallet?.address.toString();
+
+    if (environment !== 'SANDBOX' && connectedWalletAddress) {
+      _connectedWalletAddress = connectedWalletAddress;
+    }
+    if (!_connectedWalletAddress) {
+      return <></>;
+    }
+
+    return (
+      <div className={`${s.connectedWallet} wrap-text`}>
+        Connected Wallet: <span>{_connectedWalletAddress}</span>
+      </div>
+    );
+  };
+
   useEffect(() => {
     updateABI();
   }, [selectedContract]);
@@ -625,6 +643,7 @@ const BuildProject: FC<Props> = ({
       </Form.Item>
 
       {environment !== 'SANDBOX' && <TonAuth />}
+      {getConnectedWallet()}
 
       <div className={s.actionWrapper}>
         <ExecuteFile
