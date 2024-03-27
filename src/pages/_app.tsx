@@ -24,6 +24,7 @@ export default function App({
   const { darkAlgorithm } = theme;
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_DISABLE_WEBCONTAINER) return;
     (async () => {
       try {
         (window as any).webcontainerInstance = await WebContainer.boot({
