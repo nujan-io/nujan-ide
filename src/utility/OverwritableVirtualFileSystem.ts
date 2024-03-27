@@ -1,63 +1,73 @@
 import { VirtualFileSystem } from '@tact-lang/compiler';
 
+import { Buffer } from 'buffer';
+
 export class OverwritableVirtualFileSystem implements VirtualFileSystem {
   root: string;
-  overwrites: Map<string, Buffer> = new Map();
-  projectFiles: { [key: string]: string };
+  overwrites: Map<string, Buffer> = new Map(); // It will be used to store build output files
+  files: Map<string, Buffer> = new Map(); // Simulate a file system
 
-  constructor(files: { [key: string]: string }) {
-    this.root = '/';
-    this.projectFiles = files;
+  constructor(root: string = '/') {
+    this.root = this.normalizePath(root);
+  }
+
+  private normalizePath(path: string): string {
+    // Ensure there is no trailing slash and replace backslashes with forward slashes
+    return path.replace(/\\/g, '/').replace(/\/+$/, '');
+  }
+
+  private resolvePath(...pathSegments: string[]): string {
+    let pathParts = this.root.split('/');
+    for (const segment of pathSegments) {
+      const normalizedSegment = this.normalizePath(segment);
+      const parts = normalizedSegment.split('/');
+
+      for (const part of parts) {
+        if (part === '..') {
+          // Go up one directory level
+          if (pathParts.length > 0) {
+            pathParts.pop();
+          }
+        } else if (part !== '.' && part !== '') {
+          // Navigate down to the directory
+          pathParts.push(part);
+        }
+        // Ignore '.' and empty segments as they represent the current directory
+      }
+    }
+    return pathParts.join('/');
   }
 
   resolve(...path: string[]): string {
-    const _path = this.root + path.join('/').replace('./', '');
-    return this.normalize(_path);
+    return this.resolvePath(...path);
   }
 
-  exists(_path: string): boolean {
-    let path = this.normalize(_path);
-
-    if (typeof this.overwrites.get(path) === 'string') {
-      return true;
-    } else if (typeof this.projectFiles[path] === 'string') {
-      return true;
-    }
-    return false;
+  exists(path: string): boolean {
+    const resolvedPath = this.resolvePath(path);
+    return this.files.has(resolvedPath) || this.overwrites.has(resolvedPath);
   }
 
-  readFile(_path: string): any {
-    let path = this.normalize(_path);
+  readFile(path: string): Buffer {
+    const resolvedPath = this.resolvePath(path);
 
-    if (this.overwrites.get(path)) {
-      return this.overwrites.get(path)
-        ? Buffer.from(this.projectFiles[path], 'utf-8')
-        : Buffer.from('');
-    }
-    return this.projectFiles[path];
-  }
-
-  writeFile(path: string, content: string | Buffer): void {
-    this.overwrites.set(
-      path,
-      typeof content === 'string' ? Buffer.from(content, 'utf-8') : content
+    return (
+      this.overwrites.get(resolvedPath) ??
+      this.files.get(resolvedPath) ??
+      Buffer.from('')
     );
   }
 
-  normalize(path: string): string {
-    // TODO: Was getting base file path also in beginning. so added this hack. Need to resolve in future
-    let pathArray = path.split('/');
+  writeContractFile(path: string, content: string | Buffer): void {
+    const resolvedPath = this.resolvePath(path);
+    const bufferContent =
+      typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
+    this.files.set(resolvedPath, bufferContent);
+  }
 
-    const tactIndex = pathArray.findIndex((item) => item.endsWith('.tact'));
-
-    // Check if '.tact' is found and it's not the last element
-    if (tactIndex !== -1 && tactIndex < pathArray.length - 1) {
-      pathArray.splice(0, 1);
-    }
-
-    let newPath = pathArray.join('/');
-    newPath = newPath.startsWith('.') ? newPath.replace('.', '/') : newPath;
-
-    return newPath;
+  writeFile(path: string, content: string | Buffer): void {
+    const resolvedPath = this.resolvePath(path);
+    const bufferContent =
+      typeof content === 'string' ? Buffer.from(content, 'utf-8') : content;
+    this.overwrites.set(resolvedPath, bufferContent);
   }
 }

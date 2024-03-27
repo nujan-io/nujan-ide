@@ -189,18 +189,15 @@ export function useProjectActions() {
       }
     });
 
+    const fs = new OverwritableVirtualFileSystem();
+
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
       const file = await getFileByPath(fileToProcess, projectId);
-      if (file?.content) {
-        fileList['/' + file.path!!] = file.content;
-      }
-      if (!file?.content) {
-        continue;
+      if (file?.path) {
+        fs.writeContractFile(file.path!!, file?.content || '');
       }
     }
-
-    const fs = new OverwritableVirtualFileSystem(fileList);
 
     let ctx = new CompilerContext({ shared: {} });
     let stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
