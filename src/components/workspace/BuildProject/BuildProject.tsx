@@ -561,6 +561,7 @@ const BuildProject: FC<Props> = ({
 
   const getConnectedWallet = () => {
     let _connectedWalletAddress =
+      environment === 'SANDBOX' &&
       globalWorkspace.sandboxWallet?.address.toString();
 
     if (environment !== 'SANDBOX' && connectedWalletAddress) {
