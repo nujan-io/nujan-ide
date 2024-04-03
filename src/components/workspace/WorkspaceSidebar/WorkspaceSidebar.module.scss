@@ -55,3 +55,25 @@
     font-size: 1.3rem;
   }
 }
+.settingItem {
+  margin: 0 !important;
+  padding: 1rem 0;
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  > div {
+    margin: 0 !important;
+  }
+}
+.resetAmount {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  height: 100%;
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+  &:hover {
+    background-color: rgba(177, 213, 221, 0.2);
+  }
+}

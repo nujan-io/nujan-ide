@@ -5,7 +5,7 @@ import { useAuthAction } from '@/hooks/auth.hooks';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
-import { Form, Popover, Switch } from 'antd';
+import { Form, Input, Popover, Switch } from 'antd';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './WorkspaceSidebar.module.scss';
@@ -36,6 +36,8 @@ const WorkspaceSidebar: FC<Props> = ({
     toggleContractDebug,
     isFormatOnSave,
     toggleFormatOnSave,
+    updateTonAmountForInteraction,
+    getTonAmountForInteraction,
   } = useSettingAction();
 
   const hasEditAccess = isProjectEditable(projectId as string, user);
@@ -81,11 +83,7 @@ const WorkspaceSidebar: FC<Props> = ({
         </p>
       </div>
       <div className={s.settingItem}>
-        <Form.Item
-          style={{ marginBottom: 0 }}
-          label="Format code on save"
-          valuePropName="checked"
-        >
+        <Form.Item label="Format code on save" valuePropName="checked">
           <Switch
             checked={isFormatOnSave()}
             onChange={(toggleState) => {
@@ -93,6 +91,39 @@ const WorkspaceSidebar: FC<Props> = ({
             }}
           />
         </Form.Item>
+      </div>
+
+      <div className={s.settingItem}>
+        <Form.Item
+          style={{ marginBottom: 0 }}
+          label="TON Amount for Interaction"
+        >
+          <Input
+            style={{ marginBottom: 0, width: '6rem' }}
+            value={getTonAmountForInteraction() as string}
+            onChange={(e) => {
+              if (isNaN(Number(e.target.value))) return;
+              updateTonAmountForInteraction(e.target.value);
+            }}
+            placeholder="in TON"
+            suffix={
+              <div
+                title="Reset"
+                className={s.resetAmount}
+                onClick={() => updateTonAmountForInteraction('', true)}
+              >
+                <AppIcon name="Reload" />
+              </div>
+            }
+          />
+        </Form.Item>
+        <p>
+          *{' '}
+          <small>
+            This amount will be used for all the <br /> contract interaction
+            like deployment and sending internal messages.
+          </small>
+        </p>
       </div>
     </div>
   );

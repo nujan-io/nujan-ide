@@ -6,6 +6,7 @@ import {
   AiOutlineHome,
   AiOutlineLogout,
   AiOutlineProject,
+  AiOutlineReload,
 } from 'react-icons/ai';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FaRegClone } from 'react-icons/fa';
@@ -63,7 +64,8 @@ export type AppIconType =
   | 'Eye'
   | 'Clear'
   | 'Download'
-  | 'Import';
+  | 'Import'
+  | 'Reload';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -101,6 +103,7 @@ const Components = {
   Clear: GrClear,
   Download: AiOutlineDownload,
   Import,
+  Reload: AiOutlineReload,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

@@ -33,6 +33,7 @@ import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
 import BN from 'bn.js';
+import { useSettingAction } from './setting.hooks';
 
 const getHttpEndpoint = ({ network }: Config) => {
   return `https://${
@@ -42,6 +43,8 @@ const getHttpEndpoint = ({ network }: Config) => {
 
 export function useContractAction() {
   const [tonConnector] = useTonConnectUI();
+  const { getTonAmountForInteraction } = useSettingAction();
+  const tonAmountForInteraction = toNano(getTonAmountForInteraction());
 
   return {
     deployContract,
@@ -65,8 +68,6 @@ export function useContractAction() {
 
     let sender: Sender | null = null;
 
-    // Amount to send to contract. Gas fee
-    const value = toNano('0.05');
     let stateInit: StateInit = {};
     if (project.language === 'tact') {
       const _contractInit = (window as any).contractInit;
@@ -124,7 +125,7 @@ export function useContractAction() {
       const response = await _userContract.send(
         sender,
         {
-          value,
+          value: tonAmountForInteraction,
         },
         messageParams
       );
@@ -161,7 +162,11 @@ export function useContractAction() {
         stateInit.data as Cell
       );
       const userContract = sandboxBlockchain.openContract(_userContract);
-      const response = await userContract.sendData(sandboxWallet!!.getSender());
+      const response = await userContract.sendData(
+        sandboxWallet!!.getSender(),
+        Cell.EMPTY,
+        tonAmountForInteraction
+      );
       if (network.toUpperCase() !== 'SANDBOX') {
         message.success('Contract Deployed');
       }
@@ -192,7 +197,7 @@ export function useContractAction() {
       messages: [
         {
           address: _contractAddress.toString(),
-          amount: value.toString(),
+          amount: tonAmountForInteraction.toString(),
           stateInit: initCell.toBoc().toString('base64'),
         },
       ],
@@ -223,7 +228,11 @@ export function useContractAction() {
         message.error('Contract is not deployed');
         return;
       }
-      const call = await contract.sendData(wallet.getSender(), _dataCell);
+      const call = await contract.sendData(
+        wallet.getSender(),
+        _dataCell,
+        tonAmountForInteraction
+      );
       return;
     }
     try {
@@ -232,7 +241,7 @@ export function useContractAction() {
         messages: [
           {
             address: contractAddress,
-            amount: toNano('0.02').toString(),
+            amount: tonAmountForInteraction.toString(),
             payload: _dataCell.toBoc().toString('base64'),
           },
         ],
@@ -295,7 +304,7 @@ export function useContractAction() {
 
       const response = await (contract as any).send(
         sender,
-        { value: toNano('0.1') },
+        { value: tonAmountForInteraction },
         messageParams
       );
       return {
@@ -409,10 +418,11 @@ export class UserContract implements Contract {
   async sendData(
     provider: ContractProvider,
     via: Sender,
-    body: Cell = Cell.EMPTY
+    body: Cell = Cell.EMPTY,
+    amount: bigint
   ) {
     await provider.internal(via, {
-      value: '0.02',
+      value: amount,
       bounce: false,
       body,
     });

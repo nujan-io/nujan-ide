@@ -1,3 +1,4 @@
+import { SettingInterface } from '@/interfaces/setting.interface';
 import { settingState } from '@/state/setting.state';
 import { useRecoilState } from 'recoil';
 
@@ -5,10 +6,13 @@ export function useSettingAction() {
   const [setting, updateSetting] = useRecoilState(settingState);
 
   return {
+    getSettingStateByKey,
     isContractDebugEnabled,
     toggleContractDebug,
     isFormatOnSave,
     toggleFormatOnSave,
+    updateTonAmountForInteraction,
+    getTonAmountForInteraction,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -18,6 +22,10 @@ export function useSettingAction() {
         ...(dataByKey as any),
       };
     });
+  }
+
+  function getSettingStateByKey(key: keyof SettingInterface) {
+    return setting[key];
   }
 
   function isContractDebugEnabled() {
@@ -37,6 +45,16 @@ export function useSettingAction() {
   function toggleFormatOnSave(active: boolean = !setting.formatOnSave) {
     return updateStateByKey({
       formatOnSave: active,
+    });
+  }
+
+  function getTonAmountForInteraction() {
+    return setting.tonAmountForInteraction || '0.05';
+  }
+
+  function updateTonAmountForInteraction(value: string, reset = false) {
+    return updateStateByKey({
+      tonAmountForInteraction: reset ? '0.05' : value,
     });
   }
 }
