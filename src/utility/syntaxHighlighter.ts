@@ -56,9 +56,37 @@ export async function highlightCodeSnippets(
         },
       };
 
-      const languageConfiguration: monaco.languages.LanguageConfiguration = {
+      const autoPairingRules = {
+        func: {},
+        tact: {
+          surroundingPairs: [
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '(', close: ')' },
+            { open: '<', close: '>' },
+            { open: '"', close: '"' },
+          ],
+          autoClosingPairs: [
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '(', close: ')' },
+            { open: '<', close: '>' },
+            { open: '"', close: '"', notIn: ['string', 'comment'] },
+          ],
+        },
+      };
+
+      let languageConfiguration: monaco.languages.LanguageConfiguration = {
         comments: commentRules[language] as any,
       };
+
+      if (language === 'tact') {
+        languageConfiguration = {
+          ...languageConfiguration,
+          ...autoPairingRules.tact,
+        };
+      }
+
       monaco.languages.setLanguageConfiguration(
         language,
         languageConfiguration
