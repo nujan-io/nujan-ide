@@ -7,7 +7,7 @@ const { persistAtom } = recoilPersist();
 export const settingState = atom<SettingInterface>({
   key: 'settingState',
   default: {
-    contractDebug: false,
+    contractDebug: true,
     formatOnSave: false,
     tonAmountForInteraction: '0.05',
   },
