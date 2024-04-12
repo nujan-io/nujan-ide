@@ -61,14 +61,12 @@ export async function highlightCodeSnippets(
         tact: {
           surroundingPairs: [
             { open: '{', close: '}' },
-            { open: '[', close: ']' },
             { open: '(', close: ')' },
             { open: '<', close: '>' },
             { open: '"', close: '"' },
           ],
           autoClosingPairs: [
             { open: '{', close: '}' },
-            { open: '[', close: ']' },
             { open: '(', close: ')' },
             { open: '<', close: '>' },
             { open: '"', close: '"', notIn: ['string', 'comment'] },
