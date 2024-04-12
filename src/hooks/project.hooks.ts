@@ -184,7 +184,10 @@ export function useProjectActions() {
     let filesToProcess = [file?.path];
 
     projectFiles(projectId).forEach((f) => {
-      if (f.name.includes('.tact') && !filesToProcess.includes(f.path)) {
+      if (
+        /\.(tact|fc|func)$/.test(f.name) &&
+        !filesToProcess.includes(f.path)
+      ) {
         filesToProcess.push(f.path);
       }
     });
