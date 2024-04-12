@@ -19,7 +19,7 @@ We are pleased to announce that our project is now live, and you can access it a
 
 ## IDE Preview
 
-![IDE Preview](https://res.cloudinary.com/don6qaqms/image/upload/v1696057097/lx7lfzeh0uanrafv8xrz.jpg)
+![IDE Preview](/images/screenshot.jpg)
 ## 📖 Documentation
 
 The documentation for Nujan can be found at [docs.nujan.io](https://docs.nujan.io/)
