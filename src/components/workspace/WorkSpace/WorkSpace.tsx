@@ -93,10 +93,21 @@ const WorkSpace: FC = () => {
       type: 'TON-func',
     });
 
+    document.addEventListener('consoleError', (e: any) => {
+      if (e?.detail?.data?.length === 0) return;
+      const _log = e.detail.data.join(', ');
+      // Some of the error aren't getting thrown by Tact compiler instead then are logged. So we need to check if the log contains '>' or 'compilation error'. This string is only present in the logs thrown by Tact compiler.
+      // console.error is not getting intercepted by the workspace because they stores reference to the original console.error method. So I have created global script(public/assets/js/log.js) which is getting loaded before any other script and it listens to the console.error and dispatches an event with the error message.
+      if (!(_log.includes('>') || _log.includes('compilation error'))) return;
+
+      createLog(_log, 'error', true, true);
+    });
+
     return () => {
       console.log = originalConsoleLog;
       try {
         document.removeEventListener('keydown', () => {});
+        document.removeEventListener('consoleError', () => {});
 
         clearLog();
       } catch (error) {}
