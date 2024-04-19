@@ -58,6 +58,23 @@ const WorkSpace: FC = () => {
     globalWorkspace.sandboxWallet = wallet;
   };
 
+  const interceptConsoleError = (e: any) => {
+    if (e?.detail?.data?.length === 0) return;
+    const _log = e.detail.data.join(', ');
+    // Some of the error aren't getting thrown by Tact compiler instead then are logged. So we need to check if the log contains '>' or 'compilation error'. This string is only present in the logs thrown by Tact compiler.
+    // console.error is not getting intercepted by the workspace because they stores reference to the original console.error method. So I have created global script(public/assets/js/log.js) which is getting loaded before any other script and it listens to the console.error and dispatches an event with the error message.
+    if (!(_log.includes('>') || _log.includes('compilation error'))) return;
+
+    createLog(_log, 'error', true, true);
+  };
+
+  const onKeydown = (e: KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      EventEmitter.emit('SAVE_FILE', () => {});
+    }
+  };
+
   useEffect(() => {
     if (!activeProject) {
       return;
@@ -67,12 +84,7 @@ const WorkSpace: FC = () => {
   }, [activeProject]);
 
   useEffect(() => {
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        EventEmitter.emit('SAVE_FILE', () => {});
-      }
-    });
+    document.addEventListener('keydown', onKeydown);
     const originalConsoleLog = console.log;
 
     console.log = (...args) => {
@@ -93,21 +105,13 @@ const WorkSpace: FC = () => {
       type: 'TON-func',
     });
 
-    document.addEventListener('consoleError', (e: any) => {
-      if (e?.detail?.data?.length === 0) return;
-      const _log = e.detail.data.join(', ');
-      // Some of the error aren't getting thrown by Tact compiler instead then are logged. So we need to check if the log contains '>' or 'compilation error'. This string is only present in the logs thrown by Tact compiler.
-      // console.error is not getting intercepted by the workspace because they stores reference to the original console.error method. So I have created global script(public/assets/js/log.js) which is getting loaded before any other script and it listens to the console.error and dispatches an event with the error message.
-      if (!(_log.includes('>') || _log.includes('compilation error'))) return;
-
-      createLog(_log, 'error', true, true);
-    });
+    document.addEventListener('consoleError', interceptConsoleError);
 
     return () => {
       console.log = originalConsoleLog;
       try {
-        document.removeEventListener('keydown', () => {});
-        document.removeEventListener('consoleError', () => {});
+        document.removeEventListener('keydown', onKeydown);
+        document.removeEventListener('consoleError', interceptConsoleError);
 
         clearLog();
       } catch (error) {}
