@@ -580,7 +580,7 @@ const BuildProject: FC<Props> = ({
 
   useEffect(() => {
     updateABI();
-  }, [selectedContract]);
+  }, [selectedContract, contract]);
 
   useEffect(() => {
     const handler = (
