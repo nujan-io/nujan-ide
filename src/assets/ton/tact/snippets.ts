@@ -31,7 +31,7 @@ export const tactSnippets = [
   },
   {
     label: 'map',
-    code: 'map[${1:type1}]${2:type2};',
+    code: 'map<${1:type1}, ${2:type2}>;',
     description: 'mapping declaration',
   },
   {
