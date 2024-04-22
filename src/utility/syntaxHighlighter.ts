@@ -76,6 +76,10 @@ export async function highlightCodeSnippets(
 
       let languageConfiguration: monaco.languages.LanguageConfiguration = {
         comments: commentRules[language] as any,
+        indentationRules: {
+          decreaseIndentPattern: /^\s*\}.*$/,
+          increaseIndentPattern: /^.*\{[^}]*$/,
+        },
       };
 
       if (language === 'tact') {
