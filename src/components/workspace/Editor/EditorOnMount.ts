@@ -46,8 +46,12 @@ export const editorOnMount = async (
         startColumn: word.startColumn,
         endColumn: word.endColumn,
       };
+      // Filter snippets based on the word starts with the snippet label
+      const filteredSnippets = tactSnippets.filter((snippet) =>
+        snippet.label.startsWith(word.word)
+      );
       return {
-        suggestions: tactSnippets.map((snippet) => {
+        suggestions: filteredSnippets.map((snippet) => {
           return {
             label: snippet.label,
             kind: monaco.languages.CompletionItemKind.Snippet,
