@@ -49,7 +49,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   let lspWebSocket: WebSocket;
 
-  const saveFile = () => {
+  const saveFile = async () => {
     if (!file.id) return;
     const fileContent = editorRef?.current?.getValue() || '';
     if (!fileContent) return;
@@ -58,6 +58,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
         editorRef.current.trigger('editor', 'editor.action.formatDocument');
       }
       updateFileContent(file.id, fileContent, projectId);
+      EventEmitter.emit('FILE_SAVED', file.id);
     } catch (error) {}
   };
 

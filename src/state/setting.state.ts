@@ -9,6 +9,7 @@ export const settingState = atom<SettingInterface>({
   default: {
     contractDebug: true,
     formatOnSave: false,
+    autoBuildAndDeploy: true,
     tonAmountForInteraction: '0.05',
   },
   effects_UNSTABLE: [persistAtom],

@@ -186,7 +186,8 @@ export function useProjectActions() {
     projectFiles(projectId).forEach((f) => {
       if (
         /\.(tact|fc|func)$/.test(f.name) &&
-        !filesToProcess.includes(f.path)
+        !filesToProcess.includes(f.path) &&
+        !f.path?.startsWith('dist/')
       ) {
         filesToProcess.push(f.path);
       }

@@ -13,6 +13,8 @@ export function useSettingAction() {
     toggleFormatOnSave,
     updateTonAmountForInteraction,
     getTonAmountForInteraction,
+    isAutoBuildAndDeployEnabled,
+    toggleAutoBuildAndDeploy,
   };
 
   function updateStateByKey(dataByKey: any) {
@@ -55,6 +57,20 @@ export function useSettingAction() {
   function updateTonAmountForInteraction(value: string, reset = false) {
     return updateStateByKey({
       tonAmountForInteraction: reset ? '0.05' : value,
+    });
+  }
+
+  function isAutoBuildAndDeployEnabled() {
+    return setting.autoBuildAndDeploy === undefined
+      ? true
+      : setting.autoBuildAndDeploy;
+  }
+
+  function toggleAutoBuildAndDeploy(
+    active: boolean = !setting.autoBuildAndDeploy
+  ) {
+    return updateStateByKey({
+      autoBuildAndDeploy: active,
     });
   }
 }

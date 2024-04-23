@@ -9,7 +9,7 @@ import {
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
-import { getContractLINK, getFileExtension } from '@/utility/utils';
+import { delay, getContractLINK, getFileExtension } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Cell } from '@ton/core';
 import { Blockchain } from '@ton/sandbox';
@@ -22,6 +22,7 @@ import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import s from './BuildProject.module.scss';
 
 import AppIcon from '@/components/ui/icon';
+import { useSettingAction } from '@/hooks/setting.hooks';
 import { useForm } from 'antd/lib/form/Form';
 import {
   AddressInput,
@@ -100,6 +101,8 @@ const BuildProject: FC<Props> = ({
   const [selectedContract, setSelectedContract] = useState<string | undefined>(
     undefined
   );
+
+  const { isAutoBuildAndDeployEnabled } = useSettingAction();
 
   const [tonConnector] = useTonConnectUI();
   const chain = tonConnector.wallet?.account.chain;
@@ -660,14 +663,21 @@ const BuildProject: FC<Props> = ({
               ? 'Build'
               : 'Build'
           }
-          description="- Select a contract to build"
+          description={`- Select a contract to build <br /> 
+            ${
+              isAutoBuildAndDeployEnabled()
+                ? '- Auto-build and deploy is enabled for Sandbox and can be changed in settings.'
+                : ''
+            }`}
           allowedFile={['fc', 'tact']}
-          onCompile={() => {
+          onCompile={async () => {
             if (
               environment == 'SANDBOX' &&
-              activeProject?.language !== 'tact'
+              activeProject?.language === 'tact'
             ) {
-              // initDeploy();
+              if (!isAutoBuildAndDeployEnabled()) return;
+              await delay(100);
+              deployForm.submit();
             }
           }}
         />

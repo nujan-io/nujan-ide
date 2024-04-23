@@ -184,8 +184,9 @@ const ContractInteraction: FC<Props> = ({
         sandbox="allow-scripts  allow-same-origin"
       />
       <p>
-        This will be used to send internal message and call getter method on
-        contract
+        Below options will be used to send internal message
+        {language === 'tact' ? '(call receiver)' : ''} and call getter method on
+        contract after the contract is deployed.
       </p>
       <br />
 
@@ -208,7 +209,7 @@ const ContractInteraction: FC<Props> = ({
       <br />
 
       <h3 className={s.label}>
-        Send internal message:{' '}
+        {language === 'tact' ? 'Receivers' : 'Send internal message'}
         {abi?.setters?.length && abi?.setters?.length > 0
           ? `(${abi?.setters?.length})`
           : ''}

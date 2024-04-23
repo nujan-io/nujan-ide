@@ -243,12 +243,12 @@ function useWorkspaceActions() {
     return { ...file, content: fileContent?.content };
   }
 
-  function updateFileContent(
+  async function updateFileContent(
     id: Tree['id'],
     content: string,
     projectId: Project['id']
   ) {
-    fileSystem.files.update(id, { content });
+    await fileSystem.files.update(id, { content });
     updateOpenFile(id, { isDirty: false }, projectId);
   }
 

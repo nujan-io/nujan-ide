@@ -1,11 +1,13 @@
 import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
+import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import { getFileExtension } from '@/utility/utils';
 import { Button, Select, message } from 'antd';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 import s from './ExecuteFile.module.scss';
 
 type ButtonClick =
@@ -36,6 +38,11 @@ const ExecuteFile: FC<Props> = ({
   const { compileFuncProgram, compileTactProgram } = useProjectActions();
   const { createLog } = useLogActivity();
   const [selectedFile, setSelectedFile] = useState<Tree | undefined>();
+  const selectedFileRef = useRef<Tree | undefined>();
+  const isAutoBuildAndDeployEnabled =
+    useSettingAction().isAutoBuildAndDeployEnabled();
+
+  const isAutoBuildAndDeployEnabledRef = useRef(false);
 
   const fileList = projectFiles(projectId).filter((f) => {
     const _fileExtension = getFileExtension(f?.name || '');
@@ -44,6 +51,7 @@ const ExecuteFile: FC<Props> = ({
   });
 
   const buildFile = async (e: ButtonClick) => {
+    const selectedFile = selectedFileRef.current;
     if (!selectedFile) {
       createLog('Please select a file', 'error');
       return;
@@ -107,13 +115,36 @@ const ExecuteFile: FC<Props> = ({
     setSelectedFile(selectedFile);
   };
 
+  const onFileSaved = () => {
+    if (!isAutoBuildAndDeployEnabledRef.current) return;
+    if (!selectedFileRef.current) return;
+    buildFile({} as ButtonClick);
+  };
+
+  useEffect(() => {
+    selectedFileRef.current = selectedFile;
+  }, [selectedFile]);
+
+  useEffect(() => {
+    isAutoBuildAndDeployEnabledRef.current = isAutoBuildAndDeployEnabled;
+  }, [isAutoBuildAndDeployEnabled]);
+
   useEffect(() => {
     setSelectedFile(fileList[0]);
+    EventEmitter.on('FILE_SAVED', onFileSaved);
+    return () => {
+      EventEmitter.off('FILE_SAVED', onFileSaved);
+    };
   }, []);
 
   return (
     <div className={s.root}>
-      {description && <p className={s.desc}>{description}</p>}
+      {description && (
+        <p
+          className={s.desc}
+          dangerouslySetInnerHTML={{ __html: description }}
+        ></p>
+      )}
       <Select
         placeholder="Select a file"
         notFoundContent="Required file not found"

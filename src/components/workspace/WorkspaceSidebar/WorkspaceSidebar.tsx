@@ -38,6 +38,8 @@ const WorkspaceSidebar: FC<Props> = ({
     toggleFormatOnSave,
     updateTonAmountForInteraction,
     getTonAmountForInteraction,
+    isAutoBuildAndDeployEnabled,
+    toggleAutoBuildAndDeploy,
   } = useSettingAction();
 
   const hasEditAccess = isProjectEditable(projectId as string, user);
@@ -91,6 +93,26 @@ const WorkspaceSidebar: FC<Props> = ({
             }}
           />
         </Form.Item>
+      </div>
+      <div className={s.settingItem}>
+        <Form.Item
+          label="Auto Build & Deploy in Sandbox"
+          valuePropName="checked"
+        >
+          <Switch
+            checked={isAutoBuildAndDeployEnabled()}
+            onChange={(toggleState) => {
+              toggleAutoBuildAndDeploy(toggleState);
+            }}
+          />
+        </Form.Item>
+        <p>
+          *{' '}
+          <small>
+            Automatically build and deploy the smart contract after the file is
+            saved <br /> if the environment is set to Sandbox.
+          </small>
+        </p>
       </div>
 
       <div className={s.settingItem}>
