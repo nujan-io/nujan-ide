@@ -182,7 +182,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     <div className={`${s.container} ${className}`}>
       <div className={s.editorInfo}>
         <span>
-          Line {cursorPosition[0]}, Column {cursorPosition[1]}
+          Ln {cursorPosition[0]}, Col {cursorPosition[1]}
         </span>
       </div>
       <EditorDefault
