@@ -27,7 +27,7 @@ contract TactCounter with Deployable {
     }
 
     receive(msg: Add) {
-        self.counter = (self.counter + msg.amount);
+        self.counter += msg.amount;
     }
 
     get fun counter(): Int {
