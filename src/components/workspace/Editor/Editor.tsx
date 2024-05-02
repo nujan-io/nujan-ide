@@ -34,6 +34,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState<[number, number]>([
+    0, 0,
+  ]);
 
   // Using this extra state to trigger save file from js event
   const [saveFileCounter, setSaveFileCounter] = useState(1);
@@ -177,6 +180,11 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   return (
     <div className={`${s.container} ${className}`}>
+      <div className={s.editorInfo}>
+        <span>
+          Line {cursorPosition[0]}, Column {cursorPosition[1]}
+        </span>
+      </div>
       <EditorDefault
         className={s.editor}
         path={file.id ? `${projectId}/${file.id}}` : ''}
@@ -202,6 +210,12 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
           setIsEditorInitialized(true);
           editorOnMount(editor, monaco);
+          editor.onDidChangeCursorPosition((e) => {
+            const position = editor.getPosition();
+            if (position) {
+              setCursorPosition([position.lineNumber, position.column]);
+            }
+          });
           const { startLSP } = await import('./lsp');
           startLSP(editor, monaco, lspWebSocket);
         }}

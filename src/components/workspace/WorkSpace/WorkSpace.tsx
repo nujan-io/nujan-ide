@@ -216,7 +216,7 @@ const WorkSpace: FC = () => {
                     <Tabs projectId={projectId as string} />
                   </div>
 
-                  <div style={{ height: '100%' }}>
+                  <div style={{ height: 'calc(100% - 43px)' }}>
                     {isLoaded && !projectId && !activeFile && (
                       <ProjectTemplate />
                     )}
