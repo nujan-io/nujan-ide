@@ -131,6 +131,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       editorRef.current.setValue(content);
     }
     setInitialFile({ id: file.id, content });
+    editorRef.current?.focus();
   };
 
   const markFileDirty = () => {
