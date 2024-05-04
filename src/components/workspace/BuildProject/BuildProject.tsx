@@ -24,6 +24,7 @@ import s from './BuildProject.module.scss';
 import AppIcon from '@/components/ui/icon';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useForm } from 'antd/lib/form/Form';
+import packageJson from 'package.json';
 import {
   AddressInput,
   AmountInput,
@@ -109,6 +110,10 @@ const BuildProject: FC<Props> = ({
   const connectedWalletAddress = useTonAddress();
 
   const { sandboxBlockchain } = globalWorkspace;
+  const tactVersion = packageJson.dependencies['@tact-lang/compiler'].replace(
+    '^',
+    ''
+  );
 
   const { Option } = Select;
   const [deployForm] = useForm();
@@ -666,9 +671,14 @@ const BuildProject: FC<Props> = ({
           description={`- Select a contract to build <br /> 
             ${
               isAutoBuildAndDeployEnabled()
-                ? '- Auto-build and deploy is enabled for Sandbox and can be changed in settings.'
+                ? '- Auto-build and deploy is enabled for Sandbox and can be changed in settings. <br />'
                 : ''
-            }`}
+            }
+            ${
+              activeProject?.language === 'tact' &&
+              '<br />- Tact version: ' + tactVersion
+            }
+            `}
           allowedFile={['fc', 'tact']}
           onCompile={async () => {
             if (
