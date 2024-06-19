@@ -43,7 +43,9 @@ export interface Project {
   contractScript?: Buffer;
   initParams?: InitParams[];
   contractName?: string;
+  selectedContract?: string;
   isPublic?: boolean;
+  network?: NetworkEnvironment;
   createdAt?: Date;
   updatedAt?: Date;
   cellABI?: CellABI;

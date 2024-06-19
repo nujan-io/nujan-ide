@@ -71,7 +71,7 @@ const ABIUi: FC<Props> = ({
 
       if (response?.logs) {
         for (const log of response?.logs) {
-          createLog(log);
+          createLog(log, response?.status || 'info');
         }
       } else {
         createLog(JSON.stringify(response));

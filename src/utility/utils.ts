@@ -1,5 +1,6 @@
 import { FileExtensionToFileType, FileType } from '@/enum/file';
 import { NetworkEnvironment } from '@/interfaces/workspace.interface';
+import { Config } from '@orbs-network/ton-access';
 import { Address, Cell, Dictionary, Slice } from '@ton/core';
 
 export function fileTypeFromFileName(name: string): FileType {
@@ -194,4 +195,10 @@ export const convertToText = (obj: any): string => {
   }
 
   return string.join(',');
+};
+
+export const tonHttpEndpoint = ({ network }: Config) => {
+  return `https://${
+    network === 'testnet' ? 'testnet.' : ''
+  }toncenter.com/api/v2/jsonRPC`;
 };
