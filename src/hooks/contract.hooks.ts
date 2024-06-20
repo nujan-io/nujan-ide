@@ -6,8 +6,12 @@ import {
   ParameterType,
   Project,
 } from '@/interfaces/workspace.interface';
-import { capitalizeFirstLetter, convertToText } from '@/utility/utils';
-import { Config, Network } from '@orbs-network/ton-access';
+import {
+  capitalizeFirstLetter,
+  convertToText,
+  tonHttpEndpoint as getHttpEndpoint,
+} from '@/utility/utils';
+import { Network } from '@orbs-network/ton-access';
 import {
   Address,
   Cell,
@@ -34,12 +38,6 @@ import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
 import BN from 'bn.js';
 import { useSettingAction } from './setting.hooks';
-
-const getHttpEndpoint = ({ network }: Config) => {
-  return `https://${
-    network === 'testnet' ? 'testnet.' : ''
-  }toncenter.com/api/v2/jsonRPC`;
-};
 
 export function useContractAction() {
   const [tonConnector] = useTonConnectUI();
@@ -225,7 +223,7 @@ export function useContractAction() {
     const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
     if (network.toUpperCase() === 'SANDBOX') {
       if (!contract) {
-        message.error('Contract is not deployed');
+        message.error('The contract has not been deployed yet.');
         return;
       }
       const call = await contract.sendData(
@@ -358,6 +356,12 @@ export function useContractAction() {
           };
       }
     });
+    if (network === 'SANDBOX' && !contract) {
+      return {
+        logs: ['The contract has not been deployed yet.'],
+        status: 'error',
+      };
+    }
     if (network === 'SANDBOX' && contract) {
       let responseValues = [];
       if (language === 'tact') {

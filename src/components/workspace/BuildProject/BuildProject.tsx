@@ -9,7 +9,12 @@ import {
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
-import { delay, getContractLINK, getFileExtension } from '@/utility/utils';
+import {
+  delay,
+  getContractLINK,
+  getFileExtension,
+  tonHttpEndpoint,
+} from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Cell } from '@ton/core';
 import { Blockchain } from '@ton/sandbox';
@@ -23,6 +28,7 @@ import s from './BuildProject.module.scss';
 
 import AppIcon from '@/components/ui/icon';
 import { useSettingAction } from '@/hooks/setting.hooks';
+import { TonClient } from '@ton/ton';
 import { useForm } from 'antd/lib/form/Form';
 import packageJson from 'package.json';
 import {
@@ -182,7 +188,7 @@ const BuildProject: FC<Props> = ({
           onFinish={initDeploy}
           onValuesChange={(changedValues) => {
             if (Object.hasOwn(changedValues, 'contract')) {
-              setSelectedContract(changedValues.contract);
+              updateSelectedContract(changedValues.contract);
             }
           }}
         >
@@ -231,7 +237,8 @@ const BuildProject: FC<Props> = ({
             disabled={selectedContract === undefined}
             className="w-100 item-center-align ant-btn-primary-gradient"
           >
-            <AppIcon name="Rocket" /> Deploy
+            <AppIcon name="Rocket" />
+            {activeProject?.contractAddress ? 'Redeploy' : 'Deploy'}
           </Button>
         </Form>
       </>
@@ -436,24 +443,17 @@ const BuildProject: FC<Props> = ({
         );
       }
 
-      const finalJsoutput = jsOutout[0].code
-        .replace(/^import\s+{/, 'const {')
-        .replace(/}\s+from\s.+/, '} = window.TonCore;')
-        .replace(/^\s*export\s+\{[^}]*\};\s*/m, '');
+      const finalJsoutput = fromJSModule(jsOutout[0].code);
 
-      const contractName = selectedContract
-        .replace('dist/', '')
-        .replace('.abi', '')
-        .replace('tact_', '')
-        .replace('func_', '');
+      const contractName = extractContractName(selectedContract);
 
       if (activeProject?.language == 'tact') {
         const _code = `async function main() {
           ${finalJsoutput}
           const contractInit  = await ${contractName}.fromInit(${initParams});
           return contractInit;
-        } main()`;
-        const contractInit = await eval(_code);
+        } return main()`;
+        const contractInit = await new Function(_code)();
         (window as any).contractInit = contractInit;
         deploy();
         return;
@@ -586,11 +586,128 @@ const BuildProject: FC<Props> = ({
     );
   };
 
+  const updatNetworkEnvironment = (network: NetworkEnvironment) => {
+    updateProjectById(
+      {
+        network,
+      },
+      projectId
+    );
+    setEnvironment(network);
+  };
+
+  const updateSelectedContract = (contract: string) => {
+    if (!contract) return;
+    setSelectedContract(contract);
+    updateProjectById(
+      {
+        selectedContract: contract,
+      },
+      projectId
+    );
+  };
+
+  const extractContractName = (currentContractName: string) => {
+    return currentContractName
+      .replace('dist/', '')
+      .replace('.abi', '')
+      .replace('tact_', '')
+      .replace('func_', '');
+  };
+
+  const fromJSModule = (jsModuleCode: string) => {
+    return jsModuleCode
+      .replace(/^import\s+{/, 'const {')
+      .replace(/}\s+from\s.+/, '} = window.TonCore;')
+      .replace(/^\s*export\s+\{[^}]*\};\s*/m, '');
+  };
+
+  const getSelectedContractJsBuild = async (
+    currentContractName: String,
+    language: 'tact' | 'func',
+    supressErrors = false
+  ) => {
+    const contractScriptPath = currentContractName?.replace('.abi', '.ts');
+    const contractScript = await getFileByPath(contractScriptPath, projectId);
+    if (language === 'tact' && !contractScript?.content) {
+      if (supressErrors) {
+        return;
+      }
+      throw 'Contract script is missing. Rebuild the contract.';
+    }
+
+    let jsOutout = await buildTs(
+      {
+        'tact.ts': contractScript?.content,
+      },
+      'tact.ts'
+    );
+
+    const finalJsoutput = fromJSModule(jsOutout[0].code);
+
+    return { finalJsoutput };
+  };
+
+  const updateContractInstance = async () => {
+    if (
+      !selectedContract ||
+      !activeProject?.contractAddress ||
+      activeProject?.language !== 'tact' ||
+      (window as any).contractInit
+    ) {
+      return;
+    }
+
+    if (activeProject?.contractAddress && environment == 'SANDBOX') {
+      return;
+    }
+
+    const output = await getSelectedContractJsBuild(
+      selectedContract,
+      'tact',
+      true
+    );
+    if (!output) return;
+
+    const contractName = extractContractName(selectedContract);
+
+    const _code = `async function main() {
+      ${output.finalJsoutput}
+      const contractInit  = await ${contractName}.fromAddress(window.TonCore.Address.parse('${activeProject?.contractAddress}'));
+      return contractInit;
+    } return main()`;
+    const contractInit = await new Function(_code)();
+    (window as any).contractInit = contractInit;
+
+    const endpoint = tonHttpEndpoint({
+      network: environment?.toLocaleLowerCase() as Network,
+    });
+
+    const client = new TonClient({ endpoint });
+    const _userContract = client.open(contractInit);
+    updateContract(_userContract);
+  };
+
   useEffect(() => {
     updateABI();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContract, contract]);
 
   useEffect(() => {
+    try {
+      updateContractInstance();
+    } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedContract]);
+
+  useEffect(() => {
+    if (activeProject?.network) {
+      setEnvironment(activeProject?.network);
+    }
+    if (activeProject?.selectedContract) {
+      setSelectedContract(activeProject?.selectedContract);
+      deployForm.setFieldsValue({ contract: activeProject?.selectedContract });
+    }
     const handler = (
       event: MessageEvent<{
         name: string;
@@ -645,8 +762,10 @@ const BuildProject: FC<Props> = ({
         className={`${s.formItem} select-search-input-dark`}
       >
         <Select
-          defaultValue="SANDBOX"
-          onChange={(value) => setEnvironment(value as NetworkEnvironment)}
+          value={environment}
+          onChange={(value) =>
+            updatNetworkEnvironment(value as NetworkEnvironment)
+          }
           options={[
             { value: 'SANDBOX', label: 'Sandbox' },
             { value: 'TESTNET', label: 'Testnet' },
