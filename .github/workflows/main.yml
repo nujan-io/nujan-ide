@@ -1,19 +1,51 @@
-name: Deploy CI
+name: Test and Deploy
+
 on:
   push:
-    branches: [main, dev, beta]
+    branches: [main]
   pull_request:
-    branches: [main, dev, beta]
+    branches: [main]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix: &node-matrix
+        node-version: [18]
 
     steps:
       - uses: actions/checkout@v3
-      - name: Install vercel cli in global
-        run: npm install -g vercel@25.1.0
-      - uses: amondnet/vercel-action@v20
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Prettier check
+        run: npm run format:check
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      matrix: *node-matrix
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - uses: amondnet/vercel-action@v25
         id: now-deployment-staging
         if: github.ref != 'refs/heads/main'
         with:
@@ -23,7 +55,8 @@ jobs:
           scope: ${{ secrets.VERCEL_SCOPE }}
           alias-domains: |
             nujan-ide-{{BRANCH}}.vercel.app
-      - uses: amondnet/vercel-action@v20
+
+      - uses: amondnet/vercel-action@v25
         id: now-deployment-production
         if: github.ref == 'refs/heads/main'
         with:

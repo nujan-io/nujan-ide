@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
-const withTM = require("next-transpile-modules")(["monaco-editor", "@tact-lang/opcode"]);
+const withTM = require("next-transpile-modules")([
+  "monaco-editor",
+  "@tact-lang/opcode",
+]);
 const webpack = require("webpack");
 
 const nextConfig = withTM({
