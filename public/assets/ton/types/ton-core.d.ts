@@ -171,13 +171,13 @@ export {};
 export declare function safeSign(
   cell: Cell,
   secretKey: Buffer,
-  seed?: string
+  seed?: string,
 ): Buffer;
 export declare function safeSignVerify(
   cell: Cell,
   signature: Buffer,
   publicKey: Buffer,
-  seed?: string
+  seed?: string,
 ): boolean;
 /**
  * Copyright (c) Whales Corp.
@@ -189,7 +189,7 @@ export declare function safeSignVerify(
 
 export declare function contractAddress(
   workchain: number,
-  init: StateInit
+  init: StateInit,
 ): Address;
 /**
  * Copyright (c) Whales Corp.
@@ -760,7 +760,7 @@ export declare class Builder {
    * @returns this builder
    */
   storeMaybeWritable(
-    writer?: Maybe<((builder: Builder) => void) | Writable>
+    writer?: Maybe<((builder: Builder) => void) | Writable>,
   ): this;
   /**
    * Store object in this builder
@@ -799,7 +799,7 @@ export declare class Builder {
   storeDict<K extends DictionaryKeyTypes, V>(
     dict?: Maybe<Dictionary<K, V>>,
     key?: Maybe<DictionaryKey<K>>,
-    value?: Maybe<DictionaryValue<V>>
+    value?: Maybe<DictionaryValue<V>>,
   ): this;
   /**
    * Store dictionary in this builder directly
@@ -809,7 +809,7 @@ export declare class Builder {
   storeDictDirect<K extends DictionaryKeyTypes, V>(
     dict: Dictionary<K, V>,
     key?: Maybe<DictionaryKey<K>>,
-    value?: Maybe<DictionaryValue<V>>
+    value?: Maybe<DictionaryValue<V>>,
   ): this;
   /**
    * Complete cell
@@ -1245,7 +1245,7 @@ export declare class Slice {
    */
   loadDict<K extends DictionaryKeyTypes, V>(
     key: DictionaryKey<K>,
-    value: DictionaryValue<V>
+    value: DictionaryValue<V>,
   ): Dictionary<K, V>;
   /**
    * Loads dictionary directly from current slice
@@ -1255,7 +1255,7 @@ export declare class Slice {
    */
   loadDictDirect<K extends DictionaryKeyTypes, V>(
     key: DictionaryKey<K>,
-    value: DictionaryValue<V>
+    value: DictionaryValue<V>,
   ): Dictionary<K, V>;
   /**
    * Checks if slice is empty
@@ -1308,7 +1308,7 @@ export declare class ComputeError extends Error {
     opts?: {
       debugLogs?: Maybe<string>;
       logs?: Maybe<string>;
-    }
+    },
   );
 }
 /**
@@ -1451,14 +1451,14 @@ export interface ContractProvider {
       bounce?: Maybe<boolean>;
       sendMode?: SendMode;
       body?: Maybe<Cell | string>;
-    }
+    },
   ): Promise<void>;
   open<T extends Contract>(contract: T): OpenedContract<T>;
   getTransactions(
     address: Address,
     lt: bigint,
     hash: Buffer,
-    limit?: number
+    limit?: number,
   ): Promise<Transaction[]>;
 }
 /**
@@ -1645,7 +1645,7 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
      */
     Dictionary: <K_1 extends DictionaryKeyTypes, V_1>(
       key: DictionaryKey<K_1>,
-      value: DictionaryValue<V_1>
+      value: DictionaryValue<V_1>,
     ) => DictionaryValue<Dictionary<K_1, V_1>>;
   };
   /**
@@ -1656,7 +1656,7 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
    */
   static empty<K extends DictionaryKeyTypes, V>(
     key?: Maybe<DictionaryKey<K>>,
-    value?: Maybe<DictionaryValue<V>>
+    value?: Maybe<DictionaryValue<V>>,
   ): Dictionary<K, V>;
   /**
    * Load dictionary from slice
@@ -1668,7 +1668,7 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
   static load<K extends DictionaryKeyTypes, V>(
     key: DictionaryKey<K>,
     value: DictionaryValue<V>,
-    sc: Slice | Cell
+    sc: Slice | Cell,
   ): Dictionary<K, V>;
   /**
    * Low level method for rare dictionaries from system contracts.
@@ -1682,7 +1682,7 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
   static loadDirect<K extends DictionaryKeyTypes, V>(
     key: DictionaryKey<K>,
     value: DictionaryValue<V>,
-    sc: Slice | Cell | null
+    sc: Slice | Cell | null,
   ): Dictionary<K, V>;
   private readonly _key;
   private readonly _value;
@@ -1700,12 +1700,12 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
   store(
     builder: Builder,
     key?: Maybe<DictionaryKey<K>>,
-    value?: Maybe<DictionaryValue<V>>
+    value?: Maybe<DictionaryValue<V>>,
   ): void;
   storeDirect(
     builder: Builder,
     key?: Maybe<DictionaryKey<K>>,
-    value?: Maybe<DictionaryValue<V>>
+    value?: Maybe<DictionaryValue<V>>,
   ): void;
   generateMerkleProof(key: K): Cell;
   generateMerkleUpdate(key: K, newValue: V): Cell;
@@ -1714,14 +1714,14 @@ export declare class Dictionary<K extends DictionaryKeyTypes, V> {
 export declare function generateMerkleProof<K extends DictionaryKeyTypes, V>(
   dict: Dictionary<K, V>,
   key: K,
-  keyObject: DictionaryKey<K>
+  keyObject: DictionaryKey<K>,
 ): Cell;
 
 export declare function generateMerkleUpdate<K extends DictionaryKeyTypes, V>(
   dict: Dictionary<K, V>,
   key: K,
   keyObject: DictionaryKey<K>,
-  newValue: V
+  newValue: V,
 ): Cell;
 /**
  * Copyright (c) Whales Corp.
@@ -1734,7 +1734,7 @@ export declare function generateMerkleUpdate<K extends DictionaryKeyTypes, V>(
 export declare function parseDict<V>(
   sc: Slice | null,
   keySize: number,
-  extractor: (src: Slice) => V
+  extractor: (src: Slice) => V,
 ): Map<bigint, V>;
 /**
  * Copyright (c) Whales Corp.
@@ -1768,29 +1768,29 @@ type Edge<T> = {
 };
 export declare function buildTree<T>(
   src: Map<bigint, T>,
-  keyLength: number
+  keyLength: number,
 ): Edge<T>;
 export declare function writeLabelShort(src: string, to: Builder): Builder;
 export declare function writeLabelLong(
   src: string,
   keyLength: number,
-  to: Builder
+  to: Builder,
 ): Builder;
 export declare function writeLabelSame(
   value: number | boolean,
   length: number,
   keyLength: number,
-  to: Builder
+  to: Builder,
 ): void;
 export declare function detectLabelType(
   src: string,
-  keyLength: number
+  keyLength: number,
 ): 'short' | 'long' | 'same';
 export declare function serializeDict<T>(
   src: Map<bigint, T>,
   keyLength: number,
   serializer: (src: T, cell: Builder) => void,
-  to: Builder
+  to: Builder,
 ): void;
 export {};
 /**
@@ -1821,7 +1821,7 @@ export declare function openContract<T extends Contract>(
   factory: (params: {
     address: Address;
     init: StateInit | null;
-  }) => ContractProvider
+  }) => ContractProvider,
 ): OpenedContract<T>;
 /**
  * Copyright (c) Whales Corp.
@@ -1878,7 +1878,7 @@ export type CommonMessageInfoExternalOut = {
 };
 export declare function loadCommonMessageInfo(slice: Slice): CommonMessageInfo;
 export declare function storeCommonMessageInfo(
-  source: CommonMessageInfo
+  source: CommonMessageInfo,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -1890,10 +1890,10 @@ export declare function storeCommonMessageInfo(
 
 export type AccountStatusChange = 'unchanged' | 'frozen' | 'deleted';
 export declare function loadAccountStatusChange(
-  slice: Slice
+  slice: Slice,
 ): AccountStatusChange;
 export declare function storeAccountStatusChange(
-  src: AccountStatusChange
+  src: AccountStatusChange,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -1918,7 +1918,7 @@ export type AccountStorage = {
 };
 export declare function loadAccountStorage(slice: Slice): AccountStorage;
 export declare function storeAccountStorage(
-  src: AccountStorage
+  src: AccountStorage,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -1952,10 +1952,10 @@ export type CommonMessageInfoRelaxedExternalOut = {
   createdAt: number;
 };
 export declare function loadCommonMessageInfoRelaxed(
-  slice: Slice
+  slice: Slice,
 ): CommonMessageInfoRelaxed;
 export declare function storeCommonMessageInfoRelaxed(
-  source: CommonMessageInfoRelaxed
+  source: CommonMessageInfoRelaxed,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -1970,10 +1970,10 @@ export interface CurrencyCollection {
   coins: bigint;
 }
 export declare function loadCurrencyCollection(
-  slice: Slice
+  slice: Slice,
 ): CurrencyCollection;
 export declare function storeCurrencyCollection(
-  collection: CurrencyCollection
+  collection: CurrencyCollection,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -1986,7 +1986,7 @@ export declare function storeCurrencyCollection(
 export type ComputeSkipReason = 'no-state' | 'bad-state' | 'no-gas';
 export declare function loadComputeSkipReason(slice: Slice): ComputeSkipReason;
 export declare function storeComputeSkipReason(
-  src: ComputeSkipReason
+  src: ComputeSkipReason,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2002,7 +2002,7 @@ export type DepthBalanceInfo = {
 };
 export declare function loadDepthBalanceInfo(slice: Slice): DepthBalanceInfo;
 export declare function storeDepthBalanceInfo(
-  src: DepthBalanceInfo
+  src: DepthBalanceInfo,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2030,7 +2030,7 @@ export declare function storeMessage(
   message: Message,
   opts?: {
     forceRef?: boolean;
-  }
+  },
 ): (builder: Builder) => void;
 export declare const MessageValue: DictionaryValue<Message>;
 /**
@@ -2056,7 +2056,7 @@ export type ShardAccount = {
 };
 export declare function loadShardAccount(slice: Slice): ShardAccount;
 export declare function storeShardAccount(
-  src: ShardAccount
+  src: ShardAccount,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2076,7 +2076,7 @@ export declare function storeMessageRelaxed(
   message: MessageRelaxed,
   opts?: {
     forceRef?: boolean;
-  }
+  },
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2112,11 +2112,11 @@ export interface OutActionSetCode {
 }
 export type OutAction = OutActionSendMsg | OutActionSetCode;
 export declare function storeOutAction(
-  action: OutAction
+  action: OutAction,
 ): (builder: Builder) => void;
 export declare function loadOutAction(slice: Slice): OutAction;
 export declare function storeOutList(
-  actions: OutAction[]
+  actions: OutAction[],
 ): (builder: Builder) => void;
 export declare function loadOutList(slice: Slice): OutAction[];
 /**
@@ -2158,7 +2158,7 @@ export type ShardIdent = {
 };
 export declare function loadShardIdent(slice: Slice): ShardIdent;
 export declare function storeShardIdent(
-  src: ShardIdent
+  src: ShardIdent,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2174,10 +2174,10 @@ export type ShardAccountRef = {
 };
 export declare const ShardAccountRefValue: DictionaryValue<ShardAccountRef>;
 export declare function loadShardAccounts(
-  cs: Slice
+  cs: Slice,
 ): Dictionary<bigint, ShardAccountRef>;
 export declare function storeShardAccounts(
-  src: Dictionary<bigint, ShardAccountRef>
+  src: Dictionary<bigint, ShardAccountRef>,
 ): (Builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2216,7 +2216,7 @@ export type SplitMergeInfo = {
 };
 export declare function loadSplitMergeInfo(slice: Slice): SplitMergeInfo;
 export declare function storeSplitMergeInfo(
-  src: SplitMergeInfo
+  src: SplitMergeInfo,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2249,7 +2249,7 @@ export type StorageInfo = {
 };
 export declare function loadStorageInfo(slice: Slice): StorageInfo;
 export declare function storeStorageInfo(
-  src: StorageInfo
+  src: StorageInfo,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2276,7 +2276,7 @@ export type AccountStateFrozen = {
 };
 export declare function loadAccountState(cs: Slice): AccountState;
 export declare function storeAccountState(
-  src: AccountState
+  src: AccountState,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2292,7 +2292,7 @@ export type StorageUsedShort = {
 };
 export declare function loadStorageUsedShort(slice: Slice): StorageUsedShort;
 export declare function storeStorageUsedShort(
-  src: StorageUsedShort
+  src: StorageUsedShort,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2309,7 +2309,7 @@ export type StorageUsed = {
 };
 export declare function loadStorageUsed(cs: Slice): StorageUsed;
 export declare function storeStorageUsed(
-  src: StorageUsed
+  src: StorageUsed,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2339,7 +2339,7 @@ export type Transaction = {
 };
 export declare function loadTransaction(slice: Slice): Transaction;
 export declare function storeTransaction(
-  src: Transaction
+  src: Transaction,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2355,7 +2355,7 @@ export type TickTock = {
 };
 export declare function loadTickTock(slice: Slice): TickTock;
 export declare function storeTickTock(
-  src: TickTock
+  src: TickTock,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2370,10 +2370,10 @@ export type TransactionCreditPhase = {
   credit: CurrencyCollection;
 };
 export declare function loadTransactionCreditPhase(
-  slice: Slice
+  slice: Slice,
 ): TransactionCreditPhase;
 export declare function storeTransactionCreditPhase(
-  src: TransactionCreditPhase
+  src: TransactionCreditPhase,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2402,10 +2402,10 @@ export type TransactionBounceOk = {
   forwardFees: bigint;
 };
 export declare function loadTransactionBouncePhase(
-  slice: Slice
+  slice: Slice,
 ): TransactionBouncePhase;
 export declare function storeTransactionBouncePhase(
-  src: TransactionBouncePhase
+  src: TransactionBouncePhase,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2432,10 +2432,10 @@ export type TransactionActionPhase = {
   totalMessageSize: StorageUsedShort;
 };
 export declare function loadTransactionActionPhase(
-  slice: Slice
+  slice: Slice,
 ): TransactionActionPhase;
 export declare function storeTransactionActionPhase(
-  src: TransactionActionPhase
+  src: TransactionActionPhase,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2518,10 +2518,10 @@ export type TransactionDescriptionMergeInstall = {
   destroyed: boolean;
 };
 export declare function loadTransactionDescription(
-  slice: Slice
+  slice: Slice,
 ): TransactionDescription;
 export declare function storeTransactionDescription(
-  src: TransactionDescription
+  src: TransactionDescription,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2561,7 +2561,7 @@ export interface StateInit {
 }
 export declare function loadStateInit(slice: Slice): StateInit;
 export declare function storeStateInit(
-  src: StateInit
+  src: StateInit,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2577,10 +2577,10 @@ export type TransactionStoragePhase = {
   statusChange: AccountStatusChange;
 };
 export declare function loadTransactionStoragePhase(
-  slice: Slice
+  slice: Slice,
 ): TransactionStoragePhase;
 export declare function storeTransactionsStoragePhase(
-  src: TransactionStoragePhase
+  src: TransactionStoragePhase,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2607,7 +2607,7 @@ export declare function loadAccountStatus(slice: Slice): AccountStatus;
  * @param builder buidler
  */
 export declare function storeAccountStatus(
-  src: AccountStatus
+  src: AccountStatus,
 ): (builder: Builder) => Builder;
 /**
  * Copyright (c) Whales Corp.
@@ -2623,7 +2623,7 @@ export interface SimpleLibrary {
 }
 export declare function loadSimpleLibrary(slice: Slice): SimpleLibrary;
 export declare function storeSimpleLibrary(
-  src: SimpleLibrary
+  src: SimpleLibrary,
 ): (builder: Builder) => void;
 export declare const SimpleLibraryValue: DictionaryValue<SimpleLibrary>;
 /**
@@ -2694,10 +2694,10 @@ export type TransactionComputeVm = {
   vmFinalStateHash: bigint;
 };
 export declare function loadTransactionComputePhase(
-  slice: Slice
+  slice: Slice,
 ): TransactionComputePhase;
 export declare function storeTransactionComputePhase(
-  src: TransactionComputePhase
+  src: TransactionComputePhase,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -2934,7 +2934,7 @@ export declare function parseTuple(src: Cell): TupleItem[];
  */
 export declare function bitsForNumber(
   src: bigint | number,
-  mode: 'int' | 'uint'
+  mode: 'int' | 'uint',
 ): number;
 /**
  * Copyright (c) Whales Corp.
@@ -2991,7 +2991,7 @@ export type MasterchainStateExtra = {
   globalBalance: CurrencyCollection;
 };
 export declare function loadMasterchainStateExtra(
-  cs: Slice
+  cs: Slice,
 ): MasterchainStateExtra;
 /**
  * Copyright (c) Whales Corp.
@@ -3024,7 +3024,7 @@ export type HashUpdate = {
 };
 export declare function loadHashUpdate(slice: Slice): HashUpdate;
 export declare function storeHashUpdate(
-  src: HashUpdate
+  src: HashUpdate,
 ): (builder: Builder) => void;
 /**
  * Copyright (c) Whales Corp.
@@ -3144,7 +3144,7 @@ export declare class LevelMask {
 export declare function getRefsDescriptor(
   refs: Cell[],
   levelMask: number,
-  type: CellType
+  type: CellType,
 ): number;
 export declare function getBitsDescriptor(bits: BitString): number;
 export declare function getRepr(
@@ -3153,7 +3153,7 @@ export declare function getRepr(
   refs: Cell[],
   level: number,
   levelMask: number,
-  type: CellType
+  type: CellType,
 ): Buffer;
 /**
  * Copyright (c) Whales Corp.
@@ -3175,7 +3175,7 @@ export declare function exoticLibrary(bits: BitString, refs: Cell[]): {};
 
 export declare function exoticMerkleProof(
   bits: BitString,
-  refs: Cell[]
+  refs: Cell[],
 ): {
   proofDepth: number;
   proofHash: Buffer;
@@ -3191,7 +3191,7 @@ export declare function exoticMerkleProof(
 
 export declare function resolveExotic(
   bits: BitString,
-  refs: Cell[]
+  refs: Cell[],
 ): {
   type: CellType;
   depths: number[];
@@ -3224,7 +3224,7 @@ export declare function serializeBoc(
   opts: {
     idx: boolean;
     crc32: boolean;
-  }
+  },
 ): Buffer;
 /**
  * Copyright (c) Whales Corp.
@@ -3237,7 +3237,7 @@ export declare function serializeBoc(
 
 export declare function exoticMerkleUpdate(
   bits: BitString,
-  refs: Cell[]
+  refs: Cell[],
 ): {
   proofDepth1: number;
   proofDepth2: number;
@@ -3262,7 +3262,7 @@ export type ExoticPruned = {
 };
 export declare function exoticPruned(
   bits: BitString,
-  refs: Cell[]
+  refs: Cell[],
 ): ExoticPruned;
 /**
  * Copyright (c) Whales Corp.
@@ -3284,7 +3284,7 @@ export {};
 export declare function wonderCalculator(
   type: CellType,
   bits: BitString,
-  refs: Cell[]
+  refs: Cell[],
 ): {
   mask: LevelMask;
   hashes: Buffer[];
@@ -3316,7 +3316,7 @@ export {};
  */
 export declare function findCommonPrefix(
   src: string[],
-  startPos?: number
+  startPos?: number,
 ): string;
 /**
  * Copyright (c) Whales Corp.

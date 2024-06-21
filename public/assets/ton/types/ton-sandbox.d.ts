@@ -93,8 +93,8 @@ export type SendMessageResult = {
 type ExtendsContractProvider<T> = T extends ContractProvider
   ? true
   : T extends SandboxContractProvider
-  ? true
-  : false;
+    ? true
+    : false;
 export declare const SANDBOX_CONTRACT_SYMBOL: unique symbol;
 export type SandboxContract<F> = {
   [P in keyof F]: P extends `get${string}`
@@ -104,19 +104,19 @@ export type SandboxContract<F> = {
         : never
       : never
     : P extends `send${string}`
-    ? F[P] extends (x: infer CP, ...args: infer P) => infer R
-      ? ExtendsContractProvider<CP> extends true
-        ? (...args: P) => Promise<
-            SendMessageResult & {
-              result: R extends Promise<infer PR> ? PR : R;
-            }
-          >
+      ? F[P] extends (x: infer CP, ...args: infer P) => infer R
+        ? ExtendsContractProvider<CP> extends true
+          ? (...args: P) => Promise<
+              SendMessageResult & {
+                result: R extends Promise<infer PR> ? PR : R;
+              }
+            >
+          : never
         : never
-      : never
-    : F[P];
+      : F[P];
 };
 export declare function toSandboxContract<T>(
-  contract: OpenedContract<T>
+  contract: OpenedContract<T>,
 ): SandboxContract<T>;
 export type PendingMessage = (
   | ({
@@ -172,53 +172,53 @@ export declare class Blockchain {
   get configBase64(): string;
   sendMessage(
     message: Message | Cell,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<SendMessageResult>;
   sendMessageIter(
     message: Message | Cell,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<
     AsyncIterator<BlockchainTransaction> & AsyncIterable<BlockchainTransaction>
   >;
   runTickTock(
     on: Address | Address[],
     which: TickOrTock,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<SendMessageResult>;
   runGetMethod(
     address: Address,
     method: number | string,
     stack?: TupleItem[],
-    params?: GetMethodParams
+    params?: GetMethodParams,
   ): Promise<import('./SmartContract').GetMethodResult>;
   protected pushMessage(message: Message | Cell): Promise<void>;
   protected pushTickTock(on: Address, which: TickOrTock): Promise<void>;
   protected runQueue(params?: MessageParams): Promise<SendMessageResult>;
   protected txIter(
     needsLocking: boolean,
-    params?: MessageParams
+    params?: MessageParams,
   ): AsyncIterator<BlockchainTransaction> &
     AsyncIterable<BlockchainTransaction>;
   protected processInternal(
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<IteratorResult<BlockchainTransaction>>;
   protected processTx(
     needsLocking: boolean,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<IteratorResult<BlockchainTransaction>>;
   protected processQueue(
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<BlockchainTransaction[]>;
   provider(address: Address, init?: StateInit | null): ContractProvider;
   sender(address: Address): Sender;
   protected treasuryParamsToMapKey(workchain: number, seed: string): string;
   treasury(
     seed: string,
-    params?: TreasuryParams
+    params?: TreasuryParams,
   ): Promise<SandboxContract<TreasuryContract>>;
   createWallets(
     n: number,
-    params?: TreasuryParams
+    params?: TreasuryParams,
   ): Promise<SandboxContract<TreasuryContract>[]>;
   openContract<T extends Contract>(contract: T): SandboxContract<T>;
   protected startFetchingContract(address: Address): Promise<SmartContract>;
@@ -227,7 +227,7 @@ export declare class Blockchain {
   set verbosity(value: LogsVerbosity);
   setVerbosityForAddress(
     address: Address,
-    verbosity: Partial<LogsVerbosity> | Verbosity | undefined
+    verbosity: Partial<LogsVerbosity> | Verbosity | undefined,
   ): Promise<void>;
   setConfig(config: BlockchainConfig): void;
   setShardAccount(address: Address, account: ShardAccount): Promise<void>;
@@ -255,7 +255,7 @@ export interface RemoteBlockchainStorageClient {
   getLastBlockSeqno(): Promise<number>;
   getAccount(
     seqno: number,
-    address: Address
+    address: Address,
   ): Promise<{
     state: AccountState;
     balance: bigint;
@@ -273,7 +273,7 @@ export declare function wrapTonClient4ForRemote(client: {
   }>;
   getAccount(
     seqno: number,
-    address: Address
+    address: Address,
   ): Promise<{
     account: {
       state:
@@ -418,7 +418,7 @@ export declare class BlockchainSender implements Sender {
     blockchain: {
       pushMessage(message: Message): Promise<void>;
     },
-    address: Address
+    address: Address,
   );
   send(args: SenderArguments): Promise<void>;
 }
@@ -483,7 +483,7 @@ export declare class GetMethodError extends Error {
     gasUsed: bigint,
     blockchainLogs: string,
     vmLogs: string,
-    debugLogs: string
+    debugLogs: string,
   );
 }
 export declare class TimeError extends Error {
@@ -499,7 +499,7 @@ export declare class EmulationError extends Error {
   constructor(
     error: string,
     vmLogs?: string | undefined,
-    exitCode?: number | undefined
+    exitCode?: number | undefined,
   );
 }
 export type SmartContractSnapshot = {
@@ -529,25 +529,25 @@ export declare class SmartContract {
       code: Cell;
       data: Cell;
       balance: bigint;
-    }
+    },
   ): SmartContract;
   static empty(blockchain: Blockchain, address: Address): SmartContract;
   protected createCommonArgs(params?: MessageParams): RunCommonArgs;
   receiveMessage(
     message: Message,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<SmartContractTransaction>;
   runTickTock(
     which: TickOrTock,
-    params?: MessageParams
+    params?: MessageParams,
   ): Promise<SmartContractTransaction>;
   protected runCommon(
-    run: () => Promise<EmulationResult>
+    run: () => Promise<EmulationResult>,
   ): Promise<SmartContractTransaction>;
   get(
     method: string | number,
     stack?: TupleItem[],
-    params?: GetMethodParams
+    params?: GetMethodParams,
   ): Promise<GetMethodResult>;
   get verbosity(): LogsVerbosity;
   set verbosity(value: LogsVerbosity);
@@ -603,13 +603,13 @@ export declare class BlockchainContractProvider
       runGetMethod(
         address: Address,
         method: string,
-        args: TupleItem[]
+        args: TupleItem[],
       ): Promise<GetMethodResult>;
       pushTickTock(on: Address, which: TickOrTock): Promise<void>;
       openContract<T extends Contract>(contract: T): OpenedContract<T>;
     },
     address: Address,
-    init?: StateInit | null | undefined
+    init?: StateInit | null | undefined,
   );
   open<T extends Contract>(contract: T): OpenedContract<T>;
   getState(): Promise<ContractState>;
@@ -618,7 +618,7 @@ export declare class BlockchainContractProvider
     address: Address,
     lt: bigint,
     hash: Buffer,
-    limit?: number | undefined
+    limit?: number | undefined,
   ): Promise<Transaction[]>;
   external(message: Cell): Promise<void>;
   internal(
@@ -628,7 +628,7 @@ export declare class BlockchainContractProvider
       bounce?: boolean | null;
       sendMode?: SendMode;
       body?: string | Cell | null;
-    }
+    },
   ): Promise<void>;
   tickTock(which: TickOrTock): Promise<void>;
 }
@@ -646,7 +646,7 @@ export declare class TreasuryContract implements Contract {
   sendMessages(
     provider: ContractProvider,
     messages: MessageRelaxed[],
-    sendMode?: SendMode
+    sendMode?: SendMode,
   ): Promise<void>;
   send(provider: ContractProvider, args: SenderArguments): Promise<void>;
   getSender(provider: ContractProvider): Treasury;
@@ -679,7 +679,7 @@ export declare function testSubwalletId(seed: string): bigint;
 
 export declare function formatCoinsPure(
   value: bigint,
-  precision?: number
+  precision?: number,
 ): string;
 export declare function printTransactionFees(transactions: Transaction[]): void;
 export declare function getSelectorForMethod(methodName: string): number;

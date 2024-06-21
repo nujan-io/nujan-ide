@@ -80,7 +80,7 @@ const ExecuteFile: FC<Props> = ({
           try {
             const buildResponse = (await compileTactProgram(
               selectedFile,
-              projectId
+              projectId,
             )) as Map<string, Buffer>;
 
             if (onCompile) {
@@ -101,7 +101,7 @@ const ExecuteFile: FC<Props> = ({
         return;
       }
       message.error(
-        'Something went wrong. Check browser console for more details'
+        'Something went wrong. Check browser console for more details',
       );
       console.log('error', error);
     }

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -58,14 +58,14 @@
           let errorStack = error.stack.split("\n");
           errorStack = errorStack
             .filter(
-              (line) => line.trim() !== "" && !line.includes("tonweb.html")
+              (line) => line.trim() !== "" && !line.includes("tonweb.html"),
             )
             .map((item) => {
               // TODO: test this as cdn is not being used
               if (item.includes("ton-core.js")) {
                 return item.replace(
                   "https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/",
-                  ""
+                  "",
                 );
               }
               return item;

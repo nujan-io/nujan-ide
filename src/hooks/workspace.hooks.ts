@@ -90,7 +90,7 @@ function useWorkspaceActions() {
 
   function updateProjectList(
     projectId: string,
-    projectListItem: Project | any
+    projectListItem: Project | any,
   ) {
     const projectIndex = projects().findIndex((item) => item.id === projectId);
     if (projectIndex < 0) {
@@ -173,7 +173,7 @@ function useWorkspaceActions() {
   function updateOpenFile(
     id: Tree['id'],
     data: Partial<Tree>,
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     const openFiles = openedFiles(projectId).map((item) => {
       if (item.id === id) {
@@ -192,7 +192,7 @@ function useWorkspaceActions() {
   function onFileRename(
     fileId: Tree['id'],
     name: string,
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     let files = cloneDeep(openedFiles(projectId));
     if (!files) return;
@@ -218,7 +218,7 @@ function useWorkspaceActions() {
 
   async function getFileById(
     id: Tree['id'],
-    projectId: string
+    projectId: string,
   ): Promise<Tree | undefined> {
     const file = projectFiles(projectId).find((file) => file.id === id);
     const fileContent = await getFileContent(id);
@@ -233,7 +233,7 @@ function useWorkspaceActions() {
 
   async function getFileByPath(
     path: Tree['path'],
-    projectId: string
+    projectId: string,
   ): Promise<Tree | undefined> {
     const file = projectFiles(projectId).find((file) => file.path === path);
     if (!file) {
@@ -246,7 +246,7 @@ function useWorkspaceActions() {
   async function updateFileContent(
     id: Tree['id'],
     content: string,
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     await fileSystem.files.update(id, { content });
     updateOpenFile(id, { isDirty: false }, projectId);
@@ -307,7 +307,7 @@ function useWorkspaceActions() {
     }
 
     item.project = item.project.filter(
-      (file: any) => file.id !== id && file.parent !== id
+      (file: any) => file.id !== id && file.parent !== id,
     );
 
     closeFile(id, projectId);
@@ -317,7 +317,7 @@ function useWorkspaceActions() {
   async function moveFile(
     sourceId: Tree['id'],
     destinationId: Tree['id'],
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     let parent = destinationId ? destinationId : null;
 
@@ -347,7 +347,7 @@ function useWorkspaceActions() {
     name: string,
     type: string,
     projectId: string,
-    content: string = ''
+    content: string = '',
   ) {
     let parentId = id;
     let itemName = name;
@@ -377,7 +377,7 @@ function useWorkspaceActions() {
       type,
       itemName,
       parentId as string,
-      filePath || ''
+      filePath || '',
     );
     if (type === 'file') {
       await fileSystem.files.add({ id: newItem.id, content: content });
@@ -391,7 +391,7 @@ function useWorkspaceActions() {
   async function createFiles(
     files: Pick<Tree, 'path' | 'content'>[],
     directoryPath: string,
-    projectId: string
+    projectId: string,
   ) {
     let _projectFiles = cloneDeep(projectFiles(projectId));
     // check if file name contains directory. Then create a directory first and then create a file
@@ -411,7 +411,7 @@ function useWorkspaceActions() {
             'file',
             fileName!!,
             directoryItem?.id || '',
-            directoryPath || ''
+            directoryPath || '',
           );
           isNewFile = true;
         }
@@ -428,7 +428,7 @@ function useWorkspaceActions() {
         if (isNewFile) {
           _projectFiles.push(currentFile);
         }
-      })
+      }),
     );
     updateProjectFiles(_projectFiles, projectId);
   }
@@ -436,19 +436,19 @@ function useWorkspaceActions() {
   function isFileExists(
     name: string,
     projectId: string,
-    parentId: string = ''
+    parentId: string = '',
   ): boolean {
     let exists = false;
     if (!parentId) {
       exists = !!(
         projectFiles(projectId).findIndex(
-          (file) => file.parent == null && file.name === name
+          (file) => file.parent == null && file.name === name,
         ) >= 0
       );
     } else {
       exists =
         projectFiles(projectId).findIndex(
-          (file) => file.parent === parentId && file.name === name
+          (file) => file.parent === parentId && file.name === name,
         ) >= 0;
     }
     if (exists) {
@@ -464,7 +464,7 @@ function useWorkspaceActions() {
   function searchNode(
     id: string,
     projectId: string,
-    key: 'id' | 'parent' = 'id'
+    key: 'id' | 'parent' = 'id',
   ): { node: Tree | null; project: Tree[] } {
     let projectTemp = cloneDeep(projectFiles(projectId));
     const node = projectTemp.find((file) => file[key] === id);
@@ -476,7 +476,7 @@ function useWorkspaceActions() {
     type: string,
     name: string,
     parent: string,
-    parentPath: string
+    parentPath: string,
   ) {
     return {
       id: v4(),
@@ -494,7 +494,7 @@ function useWorkspaceActions() {
     }
 
     const tsFiles = projectFiles(projectId).filter((f) =>
-      f.name.endsWith('.ts')
+      f.name.endsWith('.ts'),
     );
     const filesWithContent: any = {};
 

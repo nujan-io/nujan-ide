@@ -55,7 +55,7 @@ export function useContractAction() {
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
     project: Project,
-    initParams: InitParams[]
+    initParams: InitParams[],
   ): Promise<{
     address: string;
     contract?: SandboxContract<UserContract>;
@@ -86,7 +86,7 @@ export function useContractAction() {
 
     if (initParams && initParams?.length > 0) {
       const hasQueryId = initParams?.findIndex(
-        (item) => item.name == 'queryId'
+        (item) => item.name == 'queryId',
       );
       const queryId = BigInt(0);
       if (hasQueryId > -1) {
@@ -125,13 +125,13 @@ export function useContractAction() {
         {
           value: tonAmountForInteraction,
         },
-        messageParams
+        messageParams,
       );
       let logMessages: string[] = [];
       if (response) {
         logMessages = terminalLogMessages(
           [response],
-          [_userContract as Contract]
+          [_userContract as Contract],
         );
       }
 
@@ -157,13 +157,13 @@ export function useContractAction() {
     if (network.toUpperCase() === 'SANDBOX' && sandboxBlockchain) {
       const _userContract = UserContract.createForDeploy(
         stateInit.code as Cell,
-        stateInit.data as Cell
+        stateInit.data as Cell,
       );
       const userContract = sandboxBlockchain.openContract(_userContract);
       const response = await userContract.sendData(
         sandboxWallet!!.getSender(),
         Cell.EMPTY,
-        tonAmountForInteraction
+        tonAmountForInteraction,
       );
       if (network.toUpperCase() !== 'SANDBOX') {
         message.success('Contract Deployed');
@@ -183,7 +183,7 @@ export function useContractAction() {
 
     if (await client.isContractDeployed(_contractAddress)) {
       message.error(
-        'Contract is already deployed for same codebase and initial state. Update code or initial state.'
+        'Contract is already deployed for same codebase and initial state. Update code or initial state.',
       );
       return { address: _contractAddress.toString() };
     }
@@ -218,7 +218,7 @@ export function useContractAction() {
     contractAddress: string,
     contract: SandboxContract<UserContract> | null = null,
     network: Network | Partial<NetworkEnvironment>,
-    wallet: SandboxContract<TreasuryContract>
+    wallet: SandboxContract<TreasuryContract>,
   ) {
     const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
     if (network.toUpperCase() === 'SANDBOX') {
@@ -229,7 +229,7 @@ export function useContractAction() {
       const call = await contract.sendData(
         wallet.getSender(),
         _dataCell,
-        tonAmountForInteraction
+        tonAmountForInteraction,
       );
       return;
     }
@@ -260,7 +260,7 @@ export function useContractAction() {
     language: ContractLanguage,
     kind?: string,
     stack?: TupleItem[],
-    network?: Network | Partial<NetworkEnvironment>
+    network?: Network | Partial<NetworkEnvironment>,
   ): Promise<{ message: string; logs?: string[] } | undefined> {
     if (language === 'tact' && contract) {
       let sender: Sender | null = null;
@@ -303,7 +303,7 @@ export function useContractAction() {
       const response = await (contract as any).send(
         sender,
         { value: tonAmountForInteraction },
-        messageParams
+        messageParams,
       );
       return {
         message: 'Message sent successfully',
@@ -326,7 +326,7 @@ export function useContractAction() {
     language: ContractLanguage,
     kind?: string,
     stack?: TupleItem[] | any,
-    network?: Network | Partial<NetworkEnvironment>
+    network?: Network | Partial<NetworkEnvironment>,
   ): Promise<{ message: string; logs?: string[] } | undefined | any> {
     const parsedStack = stack?.map((item: any) => {
       switch (item.type as ParameterType) {
@@ -351,7 +351,7 @@ export function useContractAction() {
           return {
             type: item.type,
             value: Cell.fromBoc(
-              Buffer.from((item as any).value.toString(), 'base64')
+              Buffer.from((item as any).value.toString(), 'base64'),
             )[0],
           };
       }
@@ -396,7 +396,7 @@ export function useContractAction() {
     const call = await client.runMethod(
       Address.parse(contractAddress),
       methodName,
-      stack
+      stack,
     );
 
     const responseValues = [];
@@ -410,7 +410,7 @@ export function useContractAction() {
 export class UserContract implements Contract {
   constructor(
     readonly address: Address,
-    readonly init?: { code: Cell; data: Cell }
+    readonly init?: { code: Cell; data: Cell },
   ) {}
 
   static createForDeploy(code: Cell, data: Cell) {
@@ -423,7 +423,7 @@ export class UserContract implements Contract {
     provider: ContractProvider,
     via: Sender,
     body: Cell = Cell.EMPTY,
-    amount: bigint
+    amount: bigint,
   ) {
     await provider.internal(via, {
       value: amount,
@@ -435,7 +435,7 @@ export class UserContract implements Contract {
   async getData(
     provider: ContractProvider,
     methodName: string,
-    stackInput: TupleItem[] = []
+    stackInput: TupleItem[] = [],
   ) {
     return provider.get(methodName, stackInput);
   }
@@ -487,7 +487,7 @@ class TonConnectSender implements Sender {
       )
     ) {
       throw new Error(
-        'Deployer sender does not support `sendMode` other than `PAY_GAS_SEPARATELY`'
+        'Deployer sender does not support `sendMode` other than `PAY_GAS_SEPARATELY`',
       );
     }
 
@@ -514,7 +514,7 @@ class TonConnectSender implements Sender {
 // Credit for below log message parsing: https://github.com/tact-lang/tact-by-example/blob/main/src/routes/(examples)/%2Blayout.svelte
 function terminalLogMessages(
   results: SendMessageResult[] = [],
-  contractInstances: Contract[]
+  contractInstances: Contract[],
 ) {
   const messages = [];
   for (const result of results) {
@@ -541,14 +541,14 @@ function terminalLogMessages(
                 }, ` +
                   `Exit Code: ${compute.exitCode}, Gas: ${shorten(
                     compute.gasFees,
-                    'coins'
-                  )}`
+                    'coins',
+                  )}`,
               );
               let foundError = false;
               for (const contractInstance of contractInstances) {
                 if (
                   transaction.inMessage?.info.dest.equals(
-                    contractInstance.address
+                    contractInstance.address,
                   )
                 ) {
                   if (compute.exitCode == -14) compute.exitCode = 13;
@@ -605,7 +605,7 @@ function terminalLogMessages(
             if (outMessage.info.dest == null) {
               const name = messageName(outMessage.body, contractInstances);
               messages.push(
-                `Log emitted: ${name}, from ${shorten(outMessage.info.src)}`
+                `Log emitted: ${name}, from ${shorten(outMessage.info.src)}`,
               );
             }
           }
@@ -615,11 +615,11 @@ function terminalLogMessages(
             const name = messageName(event.body, contractInstances);
             messages.push(
               `Message sent: ${name}, from ${shorten(event.from)}, to ${shorten(
-                event.to
+                event.to,
               )}, ` +
                 `value ${shorten(event.value, 'coins')}, ${
                   event.bounced ? '' : 'not '
-                }bounced`
+                }bounced`,
             );
           }
         }
@@ -652,7 +652,7 @@ function messageName(body: Cell, contractInstances: Contract[]): string {
 
 function shorten(
   long: Address | bigint,
-  format: 'default' | 'coins' = 'default'
+  format: 'default' | 'coins' = 'default',
 ) {
   if (long instanceof Address) {
     return `${long.toString().slice(0, 4)}..${long.toString().slice(-4)}`;

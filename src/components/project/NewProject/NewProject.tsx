@@ -77,7 +77,7 @@ const NewProject: FC<Props> = ({
         language,
         values.template || 'import',
         values?.file?.file,
-        files
+        files,
       );
 
       form.resetFields();

@@ -79,7 +79,7 @@ function useApiClient() {
         }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 }

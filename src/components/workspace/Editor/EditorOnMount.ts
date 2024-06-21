@@ -6,7 +6,7 @@ type Monaco = typeof monaco;
 
 export const editorOnMount = async (
   editor: editor.IStandaloneCodeEditor,
-  monaco: Monaco
+  monaco: Monaco,
 ) => {
   // monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   //   // experimentalDecorators: false,
@@ -48,7 +48,7 @@ export const editorOnMount = async (
       };
       // Filter snippets based on the word starts with the snippet label
       const filteredSnippets = tactSnippets.filter((snippet) =>
-        snippet.label.startsWith(word.word)
+        snippet.label.startsWith(word.word),
       );
       return {
         suggestions: filteredSnippets.map((snippet) => {
@@ -116,10 +116,10 @@ export const editorOnMount = async (
 
   monaco.languages.typescript.typescriptDefaults.addExtraLib(
     tonCoreText,
-    'file:///node_modules/@types/ton__core/index.d.ts'
+    'file:///node_modules/@types/ton__core/index.d.ts',
   );
   monaco.languages.typescript.typescriptDefaults.addExtraLib(
     tonSanboxText,
-    'file:///node_modules/@types/ton-community__sandbox/index.d.ts'
+    'file:///node_modules/@types/ton-community__sandbox/index.d.ts',
   );
 };

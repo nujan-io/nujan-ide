@@ -89,7 +89,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
 
   const isAllowed = () => {
     const isEditingItem = document.body.classList.contains(
-      'editing-file-folder'
+      'editing-file-folder',
     );
     if (!isEditingItem) {
       document.body.classList.add('editing-file-folder');

@@ -11,7 +11,7 @@ async function buildTs(file: any, rootFile: Tree['path']) {
     {
       format: 'es',
       name: 'bundle',
-    }
+    },
   );
 
   return result;

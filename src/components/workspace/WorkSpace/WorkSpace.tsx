@@ -84,7 +84,7 @@ const WorkSpace: FC = () => {
     if (activeFile) return;
     const projectFiles = workspaceAction.projectFiles(activeProject.id);
     const mainFile = projectFiles.find((file) =>
-      ['main.tact', 'main.fc'].includes(file.name)
+      ['main.tact', 'main.fc'].includes(file.name),
     );
     if (!mainFile) return;
     workspaceAction.openFile(mainFile?.id, activeProject.id);

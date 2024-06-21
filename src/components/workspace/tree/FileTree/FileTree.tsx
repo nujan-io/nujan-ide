@@ -32,7 +32,7 @@ const FileTree: FC<Props> = ({ projectId }) => {
     workspaceAction.moveFile(
       options.dragSourceId as string,
       options.dropTargetId as string,
-      projectId
+      projectId,
     );
   };
 

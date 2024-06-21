@@ -33,7 +33,7 @@ export function useLogActivity() {
     text: string,
     type: LogType = 'info',
     allowDuplicate = true,
-    disableTimestamp = false
+    disableTimestamp = false,
   ): void {
     if (
       !allowDuplicate &&

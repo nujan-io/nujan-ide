@@ -67,7 +67,7 @@ export function useSettingAction() {
   }
 
   function toggleAutoBuildAndDeploy(
-    active: boolean = !setting.autoBuildAndDeploy
+    active: boolean = !setting.autoBuildAndDeploy,
   ) {
     return updateStateByKey({
       autoBuildAndDeploy: active,

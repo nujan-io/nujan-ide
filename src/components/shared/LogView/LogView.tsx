@@ -51,7 +51,7 @@ const LogView: FC<Props> = ({ filter }) => {
     terminal.current!!.writeln(
       `${(colorMap as any)[data.type]}${data.text}${
         colorMap.reset
-      } ${timestamp}`
+      } ${timestamp}`,
     );
   };
 
@@ -119,7 +119,7 @@ const LogView: FC<Props> = ({ filter }) => {
       _terminal!!.writeln(
         `${(colorMap as any)['info']}Welcome to ${AppConfig.name} IDE${
           colorMap.reset
-        }`
+        }`,
       );
       _searchAddon.activate(_terminal);
       _fitAddon.fit();

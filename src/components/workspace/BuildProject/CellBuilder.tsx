@@ -132,7 +132,7 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                             <Option value={dataType.type} key={key}>
                               {dataType.type}
                             </Option>
-                          )
+                          ),
                         )}
                       </Select>
                     </Form.Item>
