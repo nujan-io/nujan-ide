@@ -22,7 +22,7 @@ interface ParsedMessage {
 export function SignatureVerify(
   pubkey: Buffer,
   message: Buffer,
-  signature: Buffer
+  signature: Buffer,
 ): boolean {
   return nacl.sign.detached.verify(message, signature, pubkey);
 }
@@ -63,7 +63,7 @@ export async function CreateMessage(message: ParsedMessage): Promise<Buffer> {
 
 export function ConvertTonProofMessage(
   walletInfo: Wallet,
-  tp: TonProofItemReplySuccess
+  tp: TonProofItemReplySuccess,
 ): ParsedMessage {
   const address = Address.parse(walletInfo.account.address);
 

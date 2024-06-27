@@ -18,13 +18,16 @@
   "[scss]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   // "prettier.singleQuote": true,
   "prettier.tabWidth": 2,
   "prettier.useTabs": true,
-  "editor.rulers": [
-    80,
-    120
-  ],
+  "editor.rulers": [80, 120],
   "workbench.colorCustomizations": {
     "editorRuler.foreground": "#c5124e75"
   },

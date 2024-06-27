@@ -66,7 +66,7 @@ const ABIUi: FC<Props> = ({
         language,
         abi?.kind,
         stack as any,
-        network
+        network,
       );
 
       if (response?.logs) {
@@ -81,7 +81,7 @@ const ABIUi: FC<Props> = ({
       if (error.message.includes('no healthy nodes for')) {
         createLog(
           'No healthy nodes for this network. Redeploy your contract.',
-          'error'
+          'error',
         );
         return;
       }

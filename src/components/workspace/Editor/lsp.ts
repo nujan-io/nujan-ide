@@ -15,7 +15,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 type Monaco = typeof monaco;
 
 export const createLanguageClient = (
-  connection: MessageConnection
+  connection: MessageConnection,
 ): MonacoLanguageClient => {
   return new MonacoLanguageClient({
     name: 'FunC Language Client',
@@ -32,7 +32,7 @@ export const createLanguageClient = (
     connectionProvider: {
       get: (errorHandler, closeHandler) => {
         return Promise.resolve(
-          createConnection(connection, errorHandler, closeHandler)
+          createConnection(connection, errorHandler, closeHandler),
         );
       },
     },
@@ -42,7 +42,7 @@ export const createLanguageClient = (
 export const startLSP = async (
   editor: editor.IStandaloneCodeEditor,
   monaco: Monaco,
-  lspWebSocket: WebSocket
+  lspWebSocket: WebSocket,
 ) => {
   console.log('AppConfig.lspServer', AppConfig.lspServer);
   if (!AppConfig.lspServer) {
@@ -65,7 +65,7 @@ export const startLSP = async (
     async (_, ...args: any[]) => {
       await navigator.clipboard.writeText(args.join(''));
       message.info(`Copied ${args.join(',')} to clipboard`);
-    }
+    },
   );
 };
 

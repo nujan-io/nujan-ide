@@ -12,12 +12,12 @@ const ProjectListing: FC = () => {
   const { projects, deleteProject } = useWorkspaceActions();
   const { user } = useAuthAction();
   const [projectToDelete, setProjectToDelete] = useState<Project['id'] | null>(
-    null
+    null,
   );
 
   const deleteSelectedProject = async (
     e: React.MouseEvent,
-    id: Project['id']
+    id: Project['id'],
   ) => {
     e.preventDefault();
     e.stopPropagation();

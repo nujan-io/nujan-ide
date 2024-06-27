@@ -49,7 +49,7 @@ const ContractInteraction: FC<Props> = ({
 
     const contractCellContent = await getFileByPath(
       'message.cell.ts',
-      projectId
+      projectId,
     );
     if (contractCellContent && !contractCellContent.content && !cell) {
       throw 'Cell data is missing in file message.cell.ts';
@@ -60,7 +60,7 @@ const ContractInteraction: FC<Props> = ({
         {
           cellABI: { setter: cell },
         },
-        projectId
+        projectId,
       );
     } else {
       cellCode = contractCellContent?.content || '';
@@ -71,7 +71,7 @@ const ContractInteraction: FC<Props> = ({
           'message.cell.ts': cellCode,
           'cell.ts': 'import cell from "./message.cell.ts"; cell;',
         },
-        'cell.ts'
+        'cell.ts',
       );
       const finalJsoutput = jsOutout[0].code
         .replace(/^import\s+{/, 'const {')
@@ -83,7 +83,7 @@ const ContractInteraction: FC<Props> = ({
           type: 'abi-data',
           code: finalJsoutput,
         },
-        '*'
+        '*',
       );
     } catch (error: any) {
       setIsLoading('');
@@ -92,7 +92,7 @@ const ContractInteraction: FC<Props> = ({
       }
       createLog(
         'Something went wrong. Check browser console for details.',
-        'error'
+        'error',
       );
       throw error;
     }
@@ -136,7 +136,7 @@ const ContractInteraction: FC<Props> = ({
 
   useEffect(() => {
     const handler = async (
-      event: MessageEvent<{ name: string; type: string; data: any }>
+      event: MessageEvent<{ name: string; type: string; data: any }>,
     ) => {
       if (
         !event.data ||

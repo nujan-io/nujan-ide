@@ -12,7 +12,7 @@ let onigasmLoaded = false;
 
 export async function highlightCodeSnippets(
   loader: any,
-  _language: ContractLanguage
+  _language: ContractLanguage,
 ): Promise<any> {
   let ftmLanguage = {
     func: funcTMLanguage,
@@ -23,7 +23,7 @@ export async function highlightCodeSnippets(
   if (!onigasmLoaded) {
     try {
       await loadWASM(
-        'https://cdn.jsdelivr.net/npm/onigasm@2.2.5/lib/onigasm.wasm'
+        'https://cdn.jsdelivr.net/npm/onigasm@2.2.5/lib/onigasm.wasm',
       );
       onigasmLoaded = true;
     } catch {}
@@ -91,7 +91,7 @@ export async function highlightCodeSnippets(
 
       monaco.languages.setLanguageConfiguration(
         language,
-        languageConfiguration
+        languageConfiguration,
       );
       wireTmGrammars(monaco, registry, grammars);
     }

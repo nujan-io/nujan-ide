@@ -71,7 +71,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
       (window as any).MonacoEnvironment.getWorkerUrl = (
         _: string,
-        label: string
+        label: string,
       ) => {
         if (label === 'typescript') {
           return '/_next/static/ts.worker.js';
@@ -82,7 +82,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       // await loader.init();
       await highlightCodeSnippets(
         loader,
-        fileTypeFromFileName(file.name) as ContractLanguage
+        fileTypeFromFileName(file.name) as ContractLanguage,
       );
     }
 

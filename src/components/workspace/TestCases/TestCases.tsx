@@ -63,7 +63,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
     if (contractPath && !contractFile) {
       createLog(
         `Contract file not found - ${contractPath}. Define correct absolute path. Ex. contracts/main.fc`,
-        'error'
+        'error',
       );
       return;
     }
@@ -74,12 +74,12 @@ const TestCases: FC<Props> = ({ projectId }) => {
       try {
         const contract = await compileFuncProgram(
           { path: contractPath },
-          projectId
+          projectId,
         );
         contractBOC = contract?.contractBOC;
         testCaseCode = testCaseCode.replace(
           contractCompileBlock?.[0],
-          `bocToCell("${contractBOC}")`
+          `bocToCell("${contractBOC}")`,
         );
         testCaseCode = `
         const {
@@ -106,7 +106,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
       .replace(/import\s*{/g, 'const {')
       .replace(
         /}\s*from\s*'@ton-community\/sandbox';/,
-        '} = require("@ton/sandbox");'
+        '} = require("@ton/sandbox");',
       )
       .replace(/}\s*from\s*'@ton\/sandbox';/, '} = require("@ton/sandbox");')
       .replace(/}\s*from\s*'@ton\/core';/, '} = require("@ton/core");')
@@ -143,7 +143,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
           if (!data) return;
           createLog(data, 'info', true, true);
         },
-      })
+      }),
     );
     Analytics.track('Execute Test Case', { platform: 'IDE', type: 'TON-func' });
   };

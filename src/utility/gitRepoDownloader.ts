@@ -28,7 +28,7 @@ function validateAndTransformPath(repoURL: string): string {
 async function convertToCustomFormat(
   data: any[],
   parent = null,
-  parentPath = ''
+  parentPath = '',
 ) {
   const result = [];
 
@@ -61,7 +61,7 @@ async function convertToCustomFormat(
       const subDirItems: any[] = await convertToCustomFormat(
         subDirContents,
         item.sha,
-        dirName
+        dirName,
       );
       result.push(...subDirItems);
     }

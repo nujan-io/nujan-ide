@@ -19,7 +19,7 @@ export const isWebAssemblySupported = () => {
         typeof WebAssembly.instantiate === 'function'
       ) {
         const assemblyModule = new WebAssembly.Module(
-          Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00)
+          Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00),
         );
         if (assemblyModule instanceof WebAssembly.Module)
           return (
@@ -65,7 +65,7 @@ export const debounce = <T extends DebounceFn>(callback: T, delay: number) => {
 
 export const getContractLINK = (
   contractAddress: string,
-  chainNetwork: NetworkEnvironment
+  chainNetwork: NetworkEnvironment,
 ) => {
   // if (chainNetwork === 'SANDBOX') {
   //   return '';
@@ -82,7 +82,7 @@ export const getContractLINK = (
 
 export const getContractURL = (
   contractAddress: string,
-  chainNetwork: NetworkEnvironment
+  chainNetwork: NetworkEnvironment,
 ) => {
   if (chainNetwork === 'SANDBOX') {
     return contractAddress;
@@ -109,7 +109,7 @@ export const htmlToAnsi = (html: string) => {
         reset: '\x1b[0m',
       };
       return `${colorMap[color]}${content}${colorMap.reset}`;
-    }
+    },
   );
 
   // Remove other HTML tags

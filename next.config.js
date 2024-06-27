@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
-const withTM = require("next-transpile-modules")(["monaco-editor", "@tact-lang/opcode"]);
+const withTM = require("next-transpile-modules")([
+  "monaco-editor",
+  "@tact-lang/opcode",
+]);
 const webpack = require("webpack");
 
 const nextConfig = withTM({
@@ -11,7 +14,7 @@ const nextConfig = withTM({
     config.resolve.alias = {
       ...config.resolve.alias,
       vscode: require.resolve(
-        "@codingame/monaco-languageclient/lib/vscode-compatibility"
+        "@codingame/monaco-languageclient/lib/vscode-compatibility",
       ),
     };
 
@@ -20,7 +23,7 @@ const nextConfig = withTM({
     config.plugins.push(
       new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
         resource.request = resource.request.replace(/^node:/, "");
-      })
+      }),
     );
 
     if (!options.isServer) {
@@ -28,7 +31,7 @@ const nextConfig = withTM({
         new MonacoWebpackPlugin({
           languages: ["typescript"],
           filename: "static/[name].worker.js",
-        })
+        }),
       );
     }
     return config;

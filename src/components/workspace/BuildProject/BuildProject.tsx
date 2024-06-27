@@ -106,7 +106,7 @@ const BuildProject: FC<Props> = ({
     initParams: InitParams[];
   }>(blankABI);
   const [selectedContract, setSelectedContract] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   const { isAutoBuildAndDeployEnabled } = useSettingAction();
@@ -118,7 +118,7 @@ const BuildProject: FC<Props> = ({
   const { sandboxBlockchain } = globalWorkspace;
   const tactVersion = packageJson.dependencies['@tact-lang/compiler'].replace(
     '^',
-    ''
+    '',
   );
 
   const { Option } = Select;
@@ -260,7 +260,7 @@ const BuildProject: FC<Props> = ({
     if (initParamsData) {
       parametrsType = initParamsData.reduce(
         (acc: any, curr: any) => ((acc[curr.name] = curr.type), acc),
-        {}
+        {},
       );
     }
 
@@ -335,7 +335,7 @@ const BuildProject: FC<Props> = ({
         createLog(
           `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
           'info',
-          false
+          false,
         );
       }
       const {
@@ -347,7 +347,7 @@ const BuildProject: FC<Props> = ({
         buildOutput?.dataCell as any,
         environment.toLowerCase() as Network,
         activeProject!!,
-        contractABI.initParams
+        contractABI.initParams,
       );
 
       Analytics.track('Deploy project', {
@@ -358,9 +358,9 @@ const BuildProject: FC<Props> = ({
       createLog(
         `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}  ${getContractLINK(
           _contractAddress,
-          environment
+          environment,
         )}`,
-        'success'
+        'success',
       );
 
       for (let i = 0; i < (logs || []).length; i++) {
@@ -379,7 +379,7 @@ const BuildProject: FC<Props> = ({
         {
           contractAddress: _contractAddress,
         },
-        projectId
+        projectId,
       );
     } catch (error: any) {
       console.log(error, 'error');
@@ -411,12 +411,12 @@ const BuildProject: FC<Props> = ({
           {
             'tact.ts': contractScript?.content,
           },
-          'tact.ts'
+          'tact.ts',
         );
       } else {
         let stateInitContent = await getFileByPath(
           'stateInit.cell.ts',
-          projectId
+          projectId,
         );
         let cellCode = '';
         if (stateInitContent && !stateInitContent.content && !initParams) {
@@ -428,7 +428,7 @@ const BuildProject: FC<Props> = ({
             {
               cellABI: { deploy: initParams },
             },
-            projectId
+            projectId,
           );
         } else {
           cellCode = stateInitContent?.content || '';
@@ -439,7 +439,7 @@ const BuildProject: FC<Props> = ({
             'stateInit.cell.ts': cellCode,
             'cell.ts': 'import cell from "./stateInit.cell.ts"; cell;',
           },
-          'cell.ts'
+          'cell.ts',
         );
       }
 
@@ -468,7 +468,7 @@ const BuildProject: FC<Props> = ({
           contractName: activeProject?.contractName,
           initParams,
         },
-        '*'
+        '*',
       );
     } catch (error: any) {
       setIsLoading('');
@@ -539,7 +539,7 @@ const BuildProject: FC<Props> = ({
             return;
           }
           const singleItem = contractABI.types.find(
-            (type: any) => type.name === item.message.type
+            (type: any) => type.name === item.message.type,
           );
           const singleField = {
             name: singleItem.name,
@@ -591,7 +591,7 @@ const BuildProject: FC<Props> = ({
       {
         network,
       },
-      projectId
+      projectId,
     );
     setEnvironment(network);
   };
@@ -603,7 +603,7 @@ const BuildProject: FC<Props> = ({
       {
         selectedContract: contract,
       },
-      projectId
+      projectId,
     );
   };
 
@@ -625,7 +625,7 @@ const BuildProject: FC<Props> = ({
   const getSelectedContractJsBuild = async (
     currentContractName: String,
     language: 'tact' | 'func',
-    supressErrors = false
+    supressErrors = false,
   ) => {
     const contractScriptPath = currentContractName?.replace('.abi', '.ts');
     const contractScript = await getFileByPath(contractScriptPath, projectId);
@@ -640,7 +640,7 @@ const BuildProject: FC<Props> = ({
       {
         'tact.ts': contractScript?.content,
       },
-      'tact.ts'
+      'tact.ts',
     );
 
     const finalJsoutput = fromJSModule(jsOutout[0].code);
@@ -665,7 +665,7 @@ const BuildProject: FC<Props> = ({
     const output = await getSelectedContractJsBuild(
       selectedContract,
       'tact',
-      true
+      true,
     );
     if (!output) return;
 
@@ -714,7 +714,7 @@ const BuildProject: FC<Props> = ({
         type: string;
         data: any;
         error: string;
-      }>
+      }>,
     ) => {
       if (
         !event.data ||

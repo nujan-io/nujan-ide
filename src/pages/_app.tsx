@@ -49,14 +49,14 @@ export default function App({
         });
         const installProcess = await (window as any).webcontainerInstance.spawn(
           'npm',
-          ['install']
+          ['install'],
         );
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
               console.log('data', data);
             },
-          })
+          }),
         );
         // Wait for install command to exit
         return installProcess.exit;

@@ -42,7 +42,7 @@ export async function parseGetters(code: string): Promise<Getter[]> {
 
   await initParser(
     '/assets/ton/tree-sitter.wasm',
-    '/assets/ton//tree-sitter-func.wasm'
+    '/assets/ton//tree-sitter-func.wasm',
   );
   const p = createParser();
   const parsed = p.parse(code);
@@ -52,7 +52,7 @@ export async function parseGetters(code: string): Promise<Getter[]> {
       c.type === 'function_definition' &&
       c.children
         .find((n) => n.type === 'specifiers_list')
-        ?.text.includes('method_id')
+        ?.text.includes('method_id'),
   );
 
   const gettersParsed = getters.map((f) => {
@@ -87,7 +87,7 @@ export async function extractCompilerDiretive(code: string): Promise<any> {
 
   await initParser(
     '/assets/ton/tree-sitter.wasm',
-    '/assets/ton//tree-sitter-func.wasm'
+    '/assets/ton//tree-sitter-func.wasm',
   );
   const p = createParser();
   const parsed = p.parse(code);

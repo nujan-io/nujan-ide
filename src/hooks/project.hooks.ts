@@ -56,7 +56,7 @@ export function useProjectActions() {
     language: ContractLanguage,
     template: ProjectTemplate,
     file: RcFile | null,
-    defaultFiles?: Tree[]
+    defaultFiles?: Tree[],
   ) {
     let { files, filesWithId } =
       template === 'import' && defaultFiles?.length == 0
@@ -76,7 +76,7 @@ export function useProjectActions() {
       const commonFiles = createTemplateBasedProject(
         'import',
         language,
-        commonProjectFiles
+        commonProjectFiles,
       );
       files = [...files, ...commonFiles.files];
       filesWithId = [...filesWithId, ...commonFiles.filesWithId];
@@ -97,7 +97,7 @@ export function useProjectActions() {
 
   async function compileFuncProgram(
     file: Pick<Tree, 'path'>,
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     const fileList: any = {};
 
@@ -170,14 +170,14 @@ export function useProjectActions() {
         },
       ],
       'dist',
-      projectId
+      projectId,
     );
     return { contractBOC: (buildResult as SuccessResult).codeBoc };
   }
 
   async function compileTactProgram(
     file: Pick<Tree, 'path'>,
-    projectId: Project['id']
+    projectId: Project['id'],
   ) {
     const fileList: { [key: string]: string } = {};
 
@@ -286,7 +286,7 @@ export function useProjectActions() {
     const unresolvedPromises = Object.values(fileList).map(
       async (file: any) => {
         return await parseGetters(file.content);
-      }
+      },
     );
     const results = await Promise.all(unresolvedPromises);
     return results[0];
@@ -296,7 +296,7 @@ export function useProjectActions() {
 const createTemplateBasedProject = (
   template: 'tonBlank' | 'tonCounter' | 'import',
   language: ContractLanguage = 'tact',
-  files: Tree[] = []
+  files: Tree[] = [],
 ) => {
   let _files: Tree[] = cloneDeep(files);
   if (files.length === 0 && template !== 'import') {
@@ -321,7 +321,7 @@ const createTemplateBasedProject = (
 
 const importUserFile = async (
   file: RcFile,
-  language: ContractLanguage = 'tact'
+  language: ContractLanguage = 'tact',
 ) => {
   const sysrootArchiveReader = new ZipReader(new BlobReader(file));
   const sysrootArchiveEntries = await sysrootArchiveReader.getEntries();
@@ -387,7 +387,7 @@ const importUserFile = async (
     commonFiles = createTemplateBasedProject(
       'import',
       language,
-      commonProjectFiles
+      commonProjectFiles,
     );
   }
 
@@ -400,7 +400,7 @@ const importUserFile = async (
 const getInitParams = (
   ctx: CompilerContext,
   contractName: string,
-  abi: any
+  abi: any,
 ) => {
   const contactType = getType(ctx, contractName);
   let initParams: { name: string; type: string; optional: boolean }[] = [];
@@ -415,7 +415,7 @@ const getInitParams = (
     }) ?? [];
 
   const deployFields = abi.types.find(
-    (item: any) => item.name === 'Deploy'
+    (item: any) => item.name === 'Deploy',
   )?.fields;
 
   if (deployFields && deployFields.length > 0) {
