@@ -23,7 +23,7 @@
     "@ton/ton": "^13.11.1",
     "@tonconnect/ui-react": "1.0.0-beta.4",
     "@types/node": "18.14.0",
-    "@types/react": "18.0.28",
+    "@types/react": "18.3.3",
     "@types/react-dom": "18.0.11",
     "@webcontainer/api": "^1.1.5",
     "@xterm/addon-search": "^0.14.0-beta.1",
