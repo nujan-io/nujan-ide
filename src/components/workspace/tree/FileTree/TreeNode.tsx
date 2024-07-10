@@ -1,13 +1,12 @@
-import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Project } from '@/interfaces/workspace.interface';
+import { Project, Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
 import cn from 'clsx';
 import { useRouter } from 'next/router';
 import { FC, useState } from 'react';
 import s from './FileTree.module.scss';
-import ItemAction from './ItemActions';
+import ItemAction, { actionsTypes } from './ItemActions';
 import TreePlaceholderInput from './TreePlaceholderInput';
 
 interface Props {
@@ -23,14 +22,13 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const indent = (depth + 1) * 15;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [newItemAdd, setNewItemAdd] = useState<string>('');
+  const [newItemAdd, setNewItemAdd] = useState<Tree['type'] | ''>('');
 
   const router = useRouter();
-  const { id: projectId, tab } = router.query;
+  const { id: projectId } = router.query;
 
   const { openFile, renameItem, deleteItem, createNewItem, isProjectEditable } =
     useWorkspaceActions();
-  const { user } = useAuthAction();
 
   const disallowedFile = [
     'message.cell.ts',
@@ -59,7 +57,12 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   };
 
   const commitItemCreation = (name: string) => {
-    createNewItem(node.id as string, name, newItemAdd, projectId as string);
+    createNewItem(
+      node.id as string,
+      name,
+      newItemAdd,
+      projectId as string,
+    ).catch(() => {});
     reset();
   };
 
@@ -122,13 +125,13 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
             }`}
           >
             <span>{node.text}</span>
-            {isProjectEditable(projectId as string, user) && (
+            {isProjectEditable() && (
               <ItemAction
                 className={s.actions}
                 onRename={() => {
                   handleItemAction();
                 }}
-                allowedActions={getAllowedActions() as any}
+                allowedActions={getAllowedActions() as actionsTypes[]}
                 onNewFile={() => {
                   if (!isAllowed()) {
                     return;

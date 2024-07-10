@@ -1,16 +1,36 @@
+import { LogEntry } from '@/interfaces/log.interface';
 import EventEmitterDefault from 'eventemitter3';
 
 const eventEmitter = new EventEmitterDefault();
 
-const EventEmitter = {
-  on: (event: any, fn: (...args: any[]) => void) => eventEmitter.on(event, fn),
-  once: (event: any, fn: (...args: any[]) => void) =>
-    eventEmitter.once(event, fn),
-  off: (event: any, fn?: ((...args: any[]) => void) | undefined) =>
-    eventEmitter.off(event, fn),
-  emit: (event: any, payload: any = null) => eventEmitter.emit(event, payload),
-};
+export interface EventEmitterPayloads {
+  ONBOARDING_NEW_PROJECT: { projectName: string };
+  LOG_CLEAR: undefined;
+  LOG: LogEntry;
+  ON_SPLIT_DRAG_END: { position?: number };
+  SAVE_FILE: undefined | { fileId: string; content: string };
+  FORCE_UPDATE_FILE: string;
+  FILE_SAVED: { fileId: string };
+}
 
+const EventEmitter = {
+  on: <K extends keyof EventEmitterPayloads>(
+    event: K,
+    fn: (payload: EventEmitterPayloads[K]) => void,
+  ) => eventEmitter.on(event, fn),
+  once: <K extends keyof EventEmitterPayloads>(
+    event: K,
+    fn: (payload: EventEmitterPayloads[K]) => void,
+  ) => eventEmitter.once(event, fn),
+  off: <K extends keyof EventEmitterPayloads>(
+    event: K,
+    fn?: (payload: EventEmitterPayloads[K]) => void,
+  ) => eventEmitter.off(event, fn),
+  emit: <K extends keyof EventEmitterPayloads>(
+    event: K,
+    payload: EventEmitterPayloads[K] | null = null,
+  ) => eventEmitter.emit(event, payload),
+};
 Object.freeze(EventEmitter);
 
 export default EventEmitter;

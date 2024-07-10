@@ -6,7 +6,7 @@ interface Props {
   className?: string;
   children: React.ReactNode;
 }
-export const Layout: FC<Props> = ({ className = '', children }) => {
+export const Layout: FC<Props> = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { onboarding } = useUserOnboardingAction();
   useEffect(() => {

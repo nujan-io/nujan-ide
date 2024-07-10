@@ -17,12 +17,10 @@ export function useLogActivity() {
         const filterValue = filter[key as keyof LogEntry];
         const entryValue = entry[key as keyof LogEntry];
         return (
-          filterValue === null ||
           filterValue === undefined ||
           (filterValue === '' && entryValue === '') ||
           (Array.isArray(filterValue) && filterValue.length === 0) ||
           (filterValue !== '' &&
-            entryValue &&
             entryValue.toLowerCase().includes(filterValue.toLowerCase()))
         );
       });

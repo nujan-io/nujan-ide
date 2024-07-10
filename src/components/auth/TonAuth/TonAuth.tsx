@@ -1,5 +1,5 @@
 import { useAuthAction } from '@/hooks/auth.hooks';
-import { useTonConnectUI } from '@tonconnect/ui-react';
+import { ConnectedWallet, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button } from 'antd';
 import Image from 'next/image';
 import { FC, useEffect, useState } from 'react';
@@ -10,35 +10,29 @@ const TonAuth: FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const { updateAuth } = useAuthAction();
 
-  const handleConnectWallet = () => {
+  const handleConnectWallet = async () => {
     try {
       if (isConnected) {
-        tonConnector.disconnect();
+        await tonConnector.disconnect();
         return;
       }
-      tonConnector.connectWallet();
+      await tonConnector.connectWallet();
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    if (!tonConnector) {
-      return;
-    }
-
     setIsConnected(tonConnector.connected);
 
     return () => {};
-  }, [tonConnector]);
+  }, [tonConnector.connected]);
 
   useEffect(() => {
-    if (!tonConnector) {
-      return;
-    }
-    tonConnector.onStatusChange(async (wallet: any) => {
-      setIsConnected(!!wallet || tonConnector.connected);
-      updateAuth({ walletAddress: wallet?.account?.address });
+    tonConnector.onStatusChange((wallet: ConnectedWallet | null) => {
+      if (!wallet || !tonConnector.connected) return;
+      setIsConnected(Boolean(wallet) || tonConnector.connected);
+      updateAuth({ walletAddress: wallet.account.address });
     });
   }, []);
 
@@ -47,7 +41,9 @@ const TonAuth: FC = () => {
       <Button
         className={s.btnAction}
         type="primary"
-        onClick={handleConnectWallet}
+        onClick={() => {
+          handleConnectWallet().catch(() => {});
+        }}
       >
         <Image
           src={`/images/icon/ton-protocol-logo-white.svg`}

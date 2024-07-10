@@ -17,11 +17,11 @@ export function useSettingAction() {
     toggleAutoBuildAndDeploy,
   };
 
-  function updateStateByKey(dataByKey: any) {
+  function updateStateByKey(dataByKey: Partial<SettingInterface>) {
     updateSetting((oldState) => {
       return {
         ...oldState,
-        ...(dataByKey as any),
+        ...dataByKey,
       };
     });
   }
@@ -35,7 +35,7 @@ export function useSettingAction() {
   }
 
   function toggleContractDebug(active: boolean = !setting.contractDebug) {
-    return updateStateByKey({
+    updateStateByKey({
       contractDebug: active,
     });
   }
@@ -45,31 +45,29 @@ export function useSettingAction() {
   }
 
   function toggleFormatOnSave(active: boolean = !setting.formatOnSave) {
-    return updateStateByKey({
+    updateStateByKey({
       formatOnSave: active,
     });
   }
 
   function getTonAmountForInteraction() {
-    return setting.tonAmountForInteraction || '0.05';
+    return setting.tonAmountForInteraction ?? '0.05';
   }
 
   function updateTonAmountForInteraction(value: string, reset = false) {
-    return updateStateByKey({
+    updateStateByKey({
       tonAmountForInteraction: reset ? '0.05' : value,
     });
   }
 
   function isAutoBuildAndDeployEnabled() {
-    return setting.autoBuildAndDeploy === undefined
-      ? true
-      : setting.autoBuildAndDeploy;
+    return setting.autoBuildAndDeploy ?? true;
   }
 
   function toggleAutoBuildAndDeploy(
     active: boolean = !setting.autoBuildAndDeploy,
   ) {
-    return updateStateByKey({
+    updateStateByKey({
       autoBuildAndDeploy: active,
     });
   }

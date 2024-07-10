@@ -2,12 +2,11 @@ import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Project } from '@/interfaces/workspace.interface';
+import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
 import * as TonCore from '@ton/core';
 import { Blockchain } from '@ton/sandbox';
-import { Spin } from 'antd';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useMemo, useState } from 'react';
 import Split from 'react-split';
@@ -33,7 +32,7 @@ const WorkSpace: FC = () => {
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsloading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [contract, setContract] = useState<any>('');
 
   const { id: projectId, tab } = router.query;
@@ -45,7 +44,9 @@ const WorkSpace: FC = () => {
   }, [projectId]);
 
   const commitItemCreation = (type: string, name: string) => {
-    workspaceAction.createNewItem('', name, type, projectId as string);
+    workspaceAction
+      .createNewItem('', name, type, projectId as string)
+      .catch(() => {});
   };
 
   const createSandbox = async (force: boolean = false) => {
@@ -58,8 +59,8 @@ const WorkSpace: FC = () => {
     globalWorkspace.sandboxWallet = wallet;
   };
 
-  const interceptConsoleError = (e: any) => {
-    if (e?.detail?.data?.length === 0) return;
+  const interceptConsoleError = (e: CustomEvent<{ data?: string[] }>) => {
+    if (!e.detail.data || e.detail.data.length === 0) return;
     const _log = e.detail.data.join(', ');
     // Some of the error aren't getting thrown by Tact compiler instead then are logged.
     // console.error is not getting intercepted by the workspace because they stores reference to the original console.error method. So I have created global script(public/assets/js/log.js) which is getting loaded before any other script and it listens to the console.error and dispatches an event with the error message.
@@ -70,7 +71,7 @@ const WorkSpace: FC = () => {
   const onKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
-      EventEmitter.emit('SAVE_FILE', () => {});
+      EventEmitter.emit('SAVE_FILE');
     }
   };
 
@@ -78,8 +79,8 @@ const WorkSpace: FC = () => {
     if (!activeProject) {
       return;
     }
-    createLog(`Project '${activeProject?.name}' is opened`);
-    createSandbox(true);
+    createLog(`Project '${activeProject.name}' is opened`);
+    createSandbox(true).catch(() => {});
 
     if (activeFile) return;
     const projectFiles = workspaceAction.projectFiles(activeProject.id);
@@ -87,7 +88,7 @@ const WorkSpace: FC = () => {
       ['main.tact', 'main.fc'].includes(file.name),
     );
     if (!mainFile) return;
-    workspaceAction.openFile(mainFile?.id, activeProject.id);
+    workspaceAction.openFile(mainFile.id, activeProject.id);
   }, [activeProject]);
 
   useEffect(() => {
@@ -102,8 +103,9 @@ const WorkSpace: FC = () => {
         return;
       }
       const splittedLog = _log.split('\n');
-      for (let i = 0; i < splittedLog.length; i++) {
-        createLog(splittedLog[i], 'info', true, true);
+
+      for (const log of splittedLog) {
+        createLog(log, 'info', true, true);
       }
     };
 
@@ -112,16 +114,24 @@ const WorkSpace: FC = () => {
       type: 'TON-func',
     });
 
-    document.addEventListener('consoleError', interceptConsoleError);
+    document.addEventListener(
+      'consoleError',
+      interceptConsoleError as unknown as EventListener,
+    );
 
     return () => {
       console.log = originalConsoleLog;
       try {
         document.removeEventListener('keydown', onKeydown);
-        document.removeEventListener('consoleError', interceptConsoleError);
+        document.removeEventListener(
+          'consoleError',
+          interceptConsoleError as unknown as EventListener,
+        );
 
         clearLog();
-      } catch (error) {}
+      } catch (error) {
+        /* empty */
+      }
     };
   }, []);
 
@@ -133,7 +143,7 @@ const WorkSpace: FC = () => {
 
   useEffectOnce(() => {
     setIsLoaded(true);
-    (window as any).TonCore = TonCore;
+    window.TonCore = TonCore;
   });
 
   return (
@@ -144,9 +154,11 @@ const WorkSpace: FC = () => {
           projectId={projectId as string}
           onMenuClicked={(name) => {
             setActiveMenu(name);
-            router.replace({
-              query: { ...router.query, tab: name },
-            });
+            router
+              .replace({
+                query: { ...router.query, tab: name },
+              })
+              .catch(() => {});
           }}
         />
       </div>
@@ -156,7 +168,7 @@ const WorkSpace: FC = () => {
         gutterSize={4}
         sizes={[5, 95]}
         onDragEnd={() => {
-          EventEmitter.emit('ON_SPLIT_DRAG_END', () => {});
+          EventEmitter.emit('ON_SPLIT_DRAG_END');
         }}
       >
         <div className={s.tree}>
@@ -171,21 +183,18 @@ const WorkSpace: FC = () => {
                 <div className={s.globalAction}>
                   <span>{AppConfig.name} IDE</span>
                   <ItemAction
-                    className={`${s.visible}`}
+                    className={s.visible}
                     allowedActions={['NewFile', 'NewFolder']}
-                    onNewFile={() => commitItemCreation('file', 'new file')}
-                    onNewDirectory={() =>
-                      commitItemCreation('directory', 'new folder')
-                    }
+                    onNewFile={() => {
+                      commitItemCreation('file', 'new file');
+                    }}
+                    onNewDirectory={() => {
+                      commitItemCreation('directory', 'new folder');
+                    }}
                   />
                 </div>
               )}
 
-              {isLoading && (
-                <Spin tip="Loading" size="default" className={s.loader}>
-                  <div className="content" />
-                </Spin>
-              )}
               <FileTree projectId={projectId as string} />
             </div>
           )}
@@ -215,7 +224,7 @@ const WorkSpace: FC = () => {
                 sizes={[80, 20]}
                 direction="vertical"
                 onDragEnd={() => {
-                  EventEmitter.emit('ON_SPLIT_DRAG_END', () => {});
+                  EventEmitter.emit('ON_SPLIT_DRAG_END');
                 }}
               >
                 <div>
@@ -224,12 +233,10 @@ const WorkSpace: FC = () => {
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>
-                    {isLoaded && !projectId && !activeFile && (
-                      <ProjectTemplate />
-                    )}
+                    {!projectId && !activeFile && <ProjectTemplate />}
                     {activeFile && (
                       <Editor
-                        file={activeFile as any}
+                        file={activeFile as Tree}
                         projectId={projectId as string}
                       />
                     )}

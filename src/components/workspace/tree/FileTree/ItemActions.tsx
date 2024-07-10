@@ -1,11 +1,11 @@
-import AppIcon from '@/components/ui/icon';
+import AppIcon, { AppIconType } from '@/components/ui/icon';
 import cn from 'clsx';
 import React, { FC } from 'react';
 
 import { Tooltip } from 'antd';
 import s from './FileTree.module.scss';
 
-type actionsTypes = 'Edit' | 'NewFile' | 'NewFolder' | 'Close';
+export type actionsTypes = 'Edit' | 'NewFile' | 'NewFolder' | 'Close';
 
 interface Props {
   className?: string;
@@ -25,9 +25,13 @@ const ItemAction: FC<Props> = ({
   onDelete,
 }) => {
   const rootClassName = cn(s.actionRoot, className, 'actions');
-  const handleOnClick = (e: React.MouseEvent, action: any) => {
+  const handleOnClick = (
+    e: React.MouseEvent,
+    action: (() => void) | undefined,
+  ) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!action) return;
     action();
   };
 
@@ -57,13 +61,17 @@ const ItemAction: FC<Props> = ({
   return (
     <div className={rootClassName}>
       {actionList.map((item, i) => {
-        if (!allowedActions.includes(item.title as any)) {
+        if (!allowedActions.includes(item.title as actionsTypes)) {
           return <React.Fragment key={i} />;
         }
         return (
           <Tooltip title={item.label} key={i}>
-            <span onClick={(e) => handleOnClick(e, item.action)}>
-              <AppIcon name={item.title as any} />
+            <span
+              onClick={(e) => {
+                handleOnClick(e, item.action);
+              }}
+            >
+              <AppIcon name={item.title as AppIconType} />
             </span>
           </Tooltip>
         );

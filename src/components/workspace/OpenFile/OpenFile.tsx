@@ -12,7 +12,12 @@ const OpenFile: FC<Props> = ({ path, name, projectId }) => {
   const { openFileByPath } = useWorkspaceActions();
 
   return (
-    <span className={s.root} onClick={() => openFileByPath(path, projectId)}>
+    <span
+      className={s.root}
+      onClick={() => {
+        openFileByPath(path, projectId);
+      }}
+    >
       {name}
     </span>
   );

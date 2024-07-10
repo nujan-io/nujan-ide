@@ -57,7 +57,6 @@ export type AppIconType =
   | 'Document'
   | 'Feedback'
   | 'Telegram'
-  | 'Setting'
   | 'Info'
   | 'Build'
   | 'Rocket'

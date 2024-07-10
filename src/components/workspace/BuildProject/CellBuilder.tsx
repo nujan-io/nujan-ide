@@ -44,14 +44,15 @@ export const CellBuilderDataTypes = {
   },
 };
 
-interface CellValues {
+export interface CellValues {
   type: string;
   value: string;
 }
 
 export const generateCellCode = (cellValues: CellValues[]) => {
   const cellCode = cellValues.reduce((code: string, cellValue: CellValues) => {
-    const cellType = (CellBuilderDataTypes as any)[cellValue.type];
+    const cellType =
+      CellBuilderDataTypes[cellValue.type as keyof typeof CellBuilderDataTypes];
     const cellValueCode = cellType.cellValue.replace('__', cellValue.value);
     return code + '.' + cellValueCode;
   }, '');
@@ -73,8 +74,10 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
 
   const getPlaceHolder = (key: number) => {
     return (
-      (CellBuilderDataTypes as any)[form.getFieldValue('cell')[key]?.type]
-        ?.value || 'value'
+      CellBuilderDataTypes[
+        form.getFieldValue('cell')[key]
+          ?.type as keyof typeof CellBuilderDataTypes
+      ].value || 'value'
     );
   };
 
@@ -138,7 +141,7 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                     </Form.Item>
                     <Form.Item
                       noStyle
-                      shouldUpdate={(prev, next) => {
+                      shouldUpdate={() => {
                         return true;
                       }}
                     >
@@ -164,13 +167,17 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                     <div className={s.cellActions}>
                       <Button
                         type="text"
-                        onClick={() => move(index, index - 1)}
+                        onClick={() => {
+                          move(index, index - 1);
+                        }}
                         disabled={index === 0}
                         icon={<AppIcon name="AngleUp" />}
                       />
                       <Button
                         type="text"
-                        onClick={() => move(index, index + 1)}
+                        onClick={() => {
+                          move(index, index + 1);
+                        }}
                         disabled={index === fields.length - 1}
                         icon={<AppIcon name="AngleDown" />}
                       />
@@ -180,7 +187,9 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                         icon={
                           <MinusCircleOutlined className="dynamic-delete-button" />
                         }
-                        onClick={() => remove(name)}
+                        onClick={() => {
+                          remove(name);
+                        }}
                       />
                     </div>
                   </Form.Item>
@@ -189,7 +198,9 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
                   <Button
                     className={s.addMoreField}
                     type="dashed"
-                    onClick={() => add()}
+                    onClick={() => {
+                      add();
+                    }}
                     icon={<AppIcon name="Plus" />}
                   >
                     Add field

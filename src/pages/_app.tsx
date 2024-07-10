@@ -19,7 +19,7 @@ mixpanel.init(AppConfig.analytics.MIXPANEL_TOKEN, {
 
 export default function App({
   Component,
-  pageProps: { session, ...pageProps },
+  pageProps: { ...pageProps },
 }: AppProps) {
   const { darkAlgorithm } = theme;
 
@@ -27,10 +27,10 @@ export default function App({
     if (process.env.NEXT_PUBLIC_DISABLE_WEBCONTAINER) return;
     (async () => {
       try {
-        (window as any).webcontainerInstance = await WebContainer.boot({
+        window.webcontainerInstance = await WebContainer.boot({
           coep: 'credentialless',
         });
-        await (window as any).webcontainerInstance.mount({
+        await window.webcontainerInstance.mount({
           'package.json': {
             file: {
               contents: `
@@ -47,10 +47,9 @@ export default function App({
             },
           },
         });
-        const installProcess = await (window as any).webcontainerInstance.spawn(
-          'npm',
-          ['install'],
-        );
+        const installProcess = await window.webcontainerInstance.spawn('npm', [
+          'install',
+        ]);
         installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
@@ -63,13 +62,15 @@ export default function App({
       } catch (error) {
         console.log('error', error);
       }
-    })();
+    })().catch(() => {});
 
     return () => {
       try {
-        (window as any).webcontainerInstance?.teardown();
-        (window as any).webcontainerInstance = null;
-      } catch (error) {}
+        window.webcontainerInstance?.teardown();
+        window.webcontainerInstance = null;
+      } catch (error) {
+        /* empty */
+      }
     };
   }, []);
 

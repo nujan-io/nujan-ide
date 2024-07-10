@@ -1,7 +1,6 @@
 import { AppLogo, Tooltip } from '@/components/ui';
-import AppIcon from '@/components/ui/icon';
+import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { AppData } from '@/constant/AppData';
-import { useAuthAction } from '@/hooks/auth.hooks';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
@@ -30,7 +29,6 @@ const WorkspaceSidebar: FC<Props> = ({
   projectId,
 }) => {
   const { isProjectEditable } = useWorkspaceActions();
-  const { user } = useAuthAction();
   const {
     isContractDebugEnabled,
     toggleContractDebug,
@@ -42,7 +40,7 @@ const WorkspaceSidebar: FC<Props> = ({
     toggleAutoBuildAndDeploy,
   } = useSettingAction();
 
-  const hasEditAccess = isProjectEditable(projectId as string, user);
+  const hasEditAccess = isProjectEditable();
 
   const menuItems: MenuItem[] = [
     {
@@ -132,7 +130,9 @@ const WorkspaceSidebar: FC<Props> = ({
               <div
                 title="Reset"
                 className={s.resetAmount}
-                onClick={() => updateTonAmountForInteraction('', true)}
+                onClick={() => {
+                  updateTonAmountForInteraction('', true);
+                }}
               >
                 <AppIcon name="Reload" />
               </div>
@@ -153,7 +153,7 @@ const WorkspaceSidebar: FC<Props> = ({
   return (
     <div className={s.container}>
       <div>
-        <AppLogo className={`${s.brandLogo}`} href="/" />
+        <AppLogo className={s.brandLogo} href="/" />
         {menuItems.map((menu, i) => {
           if (menu.private && !hasEditAccess) {
             return;
@@ -164,9 +164,12 @@ const WorkspaceSidebar: FC<Props> = ({
                 className={`${s.action} ${
                   activeMenu === menu.value ? s.isActive : ''
                 } ${!projectId ? s.disabled : ''}`}
-                onClick={() => projectId && onMenuClicked(menu.value)}
+                onClick={() => {
+                  if (!projectId) return;
+                  onMenuClicked(menu.value);
+                }}
               >
-                <AppIcon className={s.icon} name={menu.icon as any} />
+                <AppIcon className={s.icon} name={menu.icon as AppIconType} />
               </div>
             </Tooltip>
           );
@@ -175,13 +178,13 @@ const WorkspaceSidebar: FC<Props> = ({
       <div>
         {AppData.socials.map((menu, i) => (
           <Tooltip key={i} title={menu.label} placement="right">
-            <Link href={menu.url} className={`${s.action}`} target="_blank">
-              <AppIcon className={s.icon} name={menu.icon as any} />
+            <Link href={menu.url} className={s.action} target="_blank">
+              <AppIcon className={s.icon} name={menu.icon as AppIconType} />
             </Link>
           </Tooltip>
         ))}
         <Popover placement="rightTop" title="Setting" content={settingContent}>
-          <div className={`${s.action}`}>
+          <div className={s.action}>
             <AppIcon className={s.icon} name="Setting" />
           </div>
         </Popover>

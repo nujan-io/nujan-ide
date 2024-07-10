@@ -3,17 +3,23 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import {
   ABI,
+  CellABI,
   ContractLanguage,
   NetworkEnvironment,
+  Project,
 } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
+import { Cell } from '@ton/core';
 import { SandboxContract } from '@ton/sandbox';
 import { useTonConnectUI } from '@tonconnect/ui-react';
-import { Button, Form, message } from 'antd';
+import { Button, Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useRef, useState } from 'react';
 import ABIUi from '../ABIUi';
-import CellBuilder, { generateCellCode } from '../BuildProject/CellBuilder';
+import CellBuilder, {
+  CellValues,
+  generateCellCode,
+} from '../BuildProject/CellBuilder';
 import { globalWorkspace } from '../globalWorkspace';
 import s from './ContractInteraction.module.scss';
 
@@ -43,7 +49,7 @@ const ContractInteraction: FC<Props> = ({
 
   const cellBuilderRef = useRef<HTMLIFrameElement>(null);
 
-  const createCell = async (cell: any) => {
+  const createCell = async (cell: Cell | undefined) => {
     if (!cellBuilderRef.current?.contentWindow) return;
     let cellCode = '';
 
@@ -52,18 +58,18 @@ const ContractInteraction: FC<Props> = ({
       projectId,
     );
     if (contractCellContent && !contractCellContent.content && !cell) {
-      throw 'Cell data is missing in file message.cell.ts';
+      throw new Error('Cell data is missing in file message.cell.ts');
     }
     if (cell) {
-      cellCode = generateCellCode(cell as any);
+      cellCode = generateCellCode(cell as unknown as CellValues[]);
       updateProjectById(
         {
-          cellABI: { setter: cell },
-        },
+          cellABI: { setter: cell as CellABI },
+        } as Project,
         projectId,
       );
     } else {
-      cellCode = contractCellContent?.content || '';
+      cellCode = contractCellContent?.content ?? '';
     }
     try {
       const jsOutout = await buildTs(
@@ -85,10 +91,10 @@ const ContractInteraction: FC<Props> = ({
         },
         '*',
       );
-    } catch (error: any) {
+    } catch (error) {
       setIsLoading('');
-      if (error.message.includes("'default' is not exported by ")) {
-        throw "'default' is not exported by message.cell.ts";
+      if ((error as Error).message.includes("'default' is not exported by ")) {
+        throw new Error("'default' is not exported by message.cell.ts");
       }
       createLog(
         'Something went wrong. Check browser console for details.',
@@ -98,23 +104,20 @@ const ContractInteraction: FC<Props> = ({
     }
   };
 
-  const onSubmit = async (formValues: any) => {
-    if (!tonConnector) {
-      message.warning('Wallet not connected');
-      return;
-    }
+  type FormValues = Record<string, Cell> | undefined;
 
+  const onSubmit = async (formValues: FormValues) => {
     try {
       setIsLoading('setter');
       await createCell(formValues?.cell);
-    } catch (error: any) {
+    } catch (error) {
       setIsLoading('');
       console.log(error);
       if (typeof error === 'string') {
         createLog(error, 'error');
         return;
       }
-      if (error.message.includes('Wrong AccessKey used for')) {
+      if ((error as Error).message.includes('Wrong AccessKey used for')) {
         createLog('Contract address changed. Relogin required.', 'error');
       }
     } finally {
@@ -123,7 +126,7 @@ const ContractInteraction: FC<Props> = ({
   };
 
   const cellBuilder = (info: string) => {
-    if (!language || language !== 'func') return <></>;
+    if (language !== 'func') return <></>;
     return (
       <CellBuilder
         form={messageForm}
@@ -136,24 +139,19 @@ const ContractInteraction: FC<Props> = ({
 
   useEffect(() => {
     const handler = async (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       event: MessageEvent<{ name: string; type: string; data: any }>,
     ) => {
       if (
-        !event.data ||
         typeof event.data !== 'object' ||
-        event.data?.type !== 'abi-data' ||
-        event.data?.name !== 'nujan-ton-ide'
+        event.data.type !== 'abi-data' ||
+        event.data.name !== 'nujan-ton-ide'
       ) {
         setIsLoading('');
         return;
       }
 
       try {
-        if (!tonConnector && network !== 'SANDBOX') {
-          message.warning('Wallet not connected');
-          return;
-        }
-
         await send(event.data.data);
         createLog('Message sent successfully', 'success');
       } catch (error) {
@@ -163,12 +161,17 @@ const ContractInteraction: FC<Props> = ({
       }
     };
 
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+    window.addEventListener('message', handler as unknown as EventListener);
+    return () => {
+      window.removeEventListener(
+        'message',
+        handler as unknown as EventListener,
+      );
+    };
   }, [isLoading, tonConnector, network, contractAddress, contract]);
 
   const send = async (data: string) => {
-    sendMessage(data, contractAddress, contract, network, wallet!!);
+    await sendMessage(data, contractAddress, contract, network, wallet!);
   };
 
   if (!contractAddress) {
@@ -210,8 +213,8 @@ const ContractInteraction: FC<Props> = ({
 
       <h3 className={s.label}>
         {language === 'tact' ? 'Receivers' : 'Send internal message'}
-        {abi?.setters?.length && abi?.setters?.length > 0
-          ? `(${abi?.setters?.length})`
+        {abi?.setters.length && abi.setters.length > 0
+          ? `(${abi.setters.length})`
           : ''}
       </h3>
       {language !== 'tact' && (
@@ -219,7 +222,9 @@ const ContractInteraction: FC<Props> = ({
           <Form
             className={`${s.form} app-form`}
             form={messageForm}
-            onFinish={onSubmit}
+            onFinish={(values) => {
+              onSubmit(values as FormValues).catch(() => {});
+            }}
           >
             {cellBuilder('Update cell in ')}
             <Button

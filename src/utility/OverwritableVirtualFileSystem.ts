@@ -17,7 +17,7 @@ export class OverwritableVirtualFileSystem implements VirtualFileSystem {
   }
 
   private resolvePath(...pathSegments: string[]): string {
-    let pathParts = this.root.split('/');
+    const pathParts = this.root.split('/');
     for (const segment of pathSegments) {
       const normalizedSegment = this.normalizePath(segment);
       const parts = normalizedSegment.split('/');

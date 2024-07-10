@@ -42,7 +42,7 @@ export const createLanguageClient = (
 export const startLSP = async (
   editor: editor.IStandaloneCodeEditor,
   monaco: Monaco,
-  lspWebSocket: WebSocket,
+  lspWebSocket: ReconnectingWebSocket | null,
 ) => {
   console.log('AppConfig.lspServer', AppConfig.lspServer);
   if (!AppConfig.lspServer) {
@@ -52,9 +52,9 @@ export const startLSP = async (
 
   lspWebSocket = createWebSocket(AppConfig.lspServer);
   listen({
-    webSocket: lspWebSocket,
+    webSocket: lspWebSocket as WebSocket,
     onConnection: (connection) => {
-      const languageClient = createLanguageClient(connection as any);
+      const languageClient = createLanguageClient(connection);
       const disposable = languageClient.start();
       connection.onClose(() => disposable.dispose());
     },
@@ -62,14 +62,22 @@ export const startLSP = async (
   MonacoServices.install(monaco);
   monaco.editor.registerCommand(
     'func.copyToClipboard',
-    async (_, ...args: any[]) => {
-      await navigator.clipboard.writeText(args.join(''));
-      message.info(`Copied ${args.join(',')} to clipboard`);
+    (_, ...args: string[]) => {
+      (async () => {
+        try {
+          await navigator.clipboard.writeText(args.join(', '));
+          await message.info(`Copied ${args.join(', ')} to clipboard`);
+        } catch (error) {
+          await message.error(
+            `Failed to copy to clipboard: ${(error as Error).message}`,
+          );
+        }
+      })().catch(() => {});
     },
   );
 };
 
-export function createWebSocket(url: string): any {
+export function createWebSocket(url: string): ReconnectingWebSocket {
   const socketOptions = {
     maxReconnectionDelay: 10000,
     minReconnectionDelay: 1000,

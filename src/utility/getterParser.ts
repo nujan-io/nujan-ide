@@ -1,7 +1,7 @@
 import Parser from 'web-tree-sitter';
 import { isWebAssemblySupported } from './utils';
 
-let language: Parser.Language;
+let language: Parser.Language | null = null;
 
 export const initParser = async (treeSitterUri: string, langUri: string) => {
   if (language) {
@@ -19,7 +19,7 @@ export const initParser = async (treeSitterUri: string, langUri: string) => {
 
 export const createParser = (parserLanguage: Parser.Language | null = null) => {
   const parser = new Parser();
-  parser.setLanguage(parserLanguage || language);
+  parser.setLanguage(parserLanguage ?? language);
   parser.setTimeoutMicros(1000 * 1000);
   return parser;
 };
@@ -80,7 +80,7 @@ export async function parseGetters(code: string): Promise<Getter[]> {
   return gettersParsed;
 }
 
-export async function extractCompilerDiretive(code: string): Promise<any> {
+export async function extractCompilerDiretive(code: string): Promise<string[]> {
   if (!isWebAssemblySupported()) {
     return [];
   }

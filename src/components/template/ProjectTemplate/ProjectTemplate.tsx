@@ -12,10 +12,16 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark as darkTheme } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import s from './ProjectTemplate.module.scss';
 
-function LinkRenderer(props: any) {
+function LinkRenderer({
+  href,
+  children,
+}: React.DetailedHTMLProps<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  HTMLAnchorElement
+>) {
   return (
-    <a href={props.href} target="_blank" rel="noreferrer">
-      {props.children}
+    <a href={href} target="_blank" rel="noreferrer">
+      {children}
     </a>
   );
 }
@@ -57,7 +63,7 @@ const ProjectTemplate: FC = () => {
         content: content,
       });
     } catch (error) {
-      message.error('Unable to get content');
+      await message.error('Unable to get content');
     } finally {
       setLoading('');
     }
@@ -85,7 +91,7 @@ const ProjectTemplate: FC = () => {
     if (!isExists(currentExample)) {
       return;
     }
-    getContent();
+    getContent().catch(() => {});
   }, [currentExample]);
 
   return (
@@ -152,11 +158,11 @@ const ProjectTemplate: FC = () => {
           children={contractDetails.content}
           components={{
             code(props) {
-              const { children, className, node, ...rest } = props;
-              const match = /language-(\w+)/.exec(className || '');
+              const { children, className, ...rest } = props;
+              const match = /language-(\w+)/.exec(className ?? '');
               return match ? (
                 <SyntaxHighlighter
-                  {...(rest as any)}
+                  {...(rest as SyntaxHighlighter)}
                   PreTag="div"
                   children={String(children).replace(/\n$/, '')}
                   language={match[1]}

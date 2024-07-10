@@ -1,5 +1,4 @@
 import AppIcon from '@/components/ui/icon';
-import { useAuthAction } from '@/hooks/auth.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import Image from 'next/image';
@@ -10,7 +9,6 @@ import s from './ProjectListing.module.scss';
 
 const ProjectListing: FC = () => {
   const { projects, deleteProject } = useWorkspaceActions();
-  const { user } = useAuthAction();
   const [projectToDelete, setProjectToDelete] = useState<Project['id'] | null>(
     null,
   );
@@ -26,6 +24,7 @@ const ProjectListing: FC = () => {
     try {
       await deleteProject(id);
     } catch (error) {
+      /* empty */
     } finally {
       setProjectToDelete(null);
     }
@@ -53,13 +52,15 @@ const ProjectListing: FC = () => {
 
             <div
               className={s.deleteProject}
-              onClick={(e) => deleteSelectedProject(e, item.id)}
+              onClick={(e) => {
+                deleteSelectedProject(e, item.id).catch(() => {});
+              }}
             >
               <AppIcon name="Delete" />
             </div>
 
             <span className={s.name}>{item.name}</span>
-            <span className={s.language}>{item.language || 'func'}</span>
+            <span className={s.language}>{item.language ?? 'func'}</span>
           </Link>
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { userOnboardingSteps } from '@/constant/UserOnboardingSteps';
 import { useUserOnboardingAction } from '@/hooks/userOnboarding.hooks';
-import EventEmitter from '@/utility/eventEmitter';
+import EventEmitter, { EventEmitterPayloads } from '@/utility/eventEmitter';
 import { delay } from '@/utility/utils';
 import { useRouter } from 'next/router';
 import { FC, useEffect } from 'react';
@@ -29,7 +29,12 @@ const UserOnboardingWizard: FC = () => {
       data.action === ACTIONS.NEXT &&
       userOnboardingSteps.steps[data.index].afterEvent
     ) {
-      EventEmitter.emit(userOnboardingSteps.steps[data.index].afterEvent);
+      const afterEvent =
+        userOnboardingSteps.steps[data.index].afterEvent ?? null;
+
+      if (afterEvent && afterEvent in EventEmitter) {
+        EventEmitter.emit(afterEvent as keyof EventEmitterPayloads);
+      }
       // Adding delay so that onboarding wizard should render after popup is opened
       await delay(500);
     }
@@ -37,9 +42,13 @@ const UserOnboardingWizard: FC = () => {
       data.action === ACTIONS.NEXT &&
       userOnboardingSteps.steps[data.index].name === 'codeEditor'
     ) {
-      router.replace(`/project/${router.query.id}?tab=build`, undefined, {
-        shallow: true,
-      });
+      await router.replace(
+        `/project/${router.query.id as string}?tab=build`,
+        undefined,
+        {
+          shallow: true,
+        },
+      );
     }
     if (data.action === ACTIONS.NEXT && data.type === EVENTS.STEP_AFTER) {
       updateStepIndex(data.index + 1);
@@ -48,13 +57,13 @@ const UserOnboardingWizard: FC = () => {
 
   useEffect(() => {
     if (
-      router.query?.tab !== 'build' &&
+      router.query.tab !== 'build' &&
       router.pathname === '/project/[id]' &&
       onboarding().tourActive
     ) {
       startOnboarding(2);
     }
-  }, [router]);
+  }, [router, onboarding, startOnboarding]);
 
   useEffect(() => {
     // updateStepIndex(0);
@@ -80,7 +89,9 @@ const UserOnboardingWizard: FC = () => {
         },
       }}
       locale={{ last: 'Done', skip: 'Quit the wizard' }}
-      callback={callBack}
+      callback={(data) => {
+        callBack(data).catch(() => {});
+      }}
     />
   );
 };

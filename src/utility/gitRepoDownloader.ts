@@ -25,15 +25,34 @@ function validateAndTransformPath(repoURL: string): string {
 }
 
 // Function to convert GitHub API response to custom format
+interface DataItem {
+  type: 'file' | 'dir';
+  name: string;
+  sha: string;
+  download_url?: string;
+  url: string;
+}
+
+interface ResultItem {
+  id: string;
+  name: string;
+  parent: string | null;
+  type: 'file' | 'directory';
+  path: string;
+  content?: string;
+  isOpen?: boolean;
+}
+
 async function convertToCustomFormat(
-  data: any[],
-  parent = null,
-  parentPath = '',
-) {
-  const result = [];
+  data: DataItem[],
+  parent: string | null = null,
+  parentPath: string = '',
+): Promise<ResultItem[]> {
+  const result: ResultItem[] = [];
 
   for (const item of data) {
     if (item.type === 'file') {
+      if (!item.download_url) continue;
       const response = await fetch(item.download_url);
       const content = await response.text();
       const fileName = parentPath ? parentPath + '/' + item.name : item.name;
@@ -45,7 +64,7 @@ async function convertToCustomFormat(
         path: fileName,
         content: content,
       });
-    } else if (item.type === 'dir') {
+    } else {
       const dirName = parentPath ? parentPath + '/' + item.name : item.name;
       result.push({
         id: item.sha,
@@ -58,7 +77,7 @@ async function convertToCustomFormat(
 
       // Fetch subdirectory contents and add them as siblings to the current directory
       const subDirContents = await getDirContents(item.url);
-      const subDirItems: any[] = await convertToCustomFormat(
+      const subDirItems = await convertToCustomFormat(
         subDirContents,
         item.sha,
         dirName,
@@ -82,12 +101,16 @@ export async function downloadRepo(repoURL: string): Promise<Tree[]> {
   try {
     const jsonData = await convertToCustomFormat(data);
     return jsonData as Tree[];
-  } catch (error: any) {
-    switch (error.message) {
-      case 'data is not iterable':
-        throw new Error('Repository not found.');
-      default:
-        throw new Error(error.message);
+  } catch (error) {
+    if (error instanceof Error) {
+      switch (error.message) {
+        case 'data is not iterable':
+          throw new Error('Repository not found.');
+        default:
+          throw new Error(error.message);
+      }
+    } else {
+      throw new Error('An unexpected error occurred.');
     }
   }
 }

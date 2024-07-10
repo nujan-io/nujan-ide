@@ -31,16 +31,14 @@ export const editorOnMount = async (
     'method_id',
   ];
 
-  let globalMethods = ['get_data', 'set_data', 'begin_cell', 'throw'];
-
-  const types = ['int', 'var'];
+  const globalMethods = ['get_data', 'set_data', 'begin_cell', 'throw'];
 
   const messageMethods = ['recv_internal', 'recv_external'];
 
   monaco.languages.registerCompletionItemProvider('tact', {
     provideCompletionItems: (model, position) => {
-      var word = model.getWordUntilPosition(position);
-      var range = {
+      const word = model.getWordUntilPosition(position);
+      const range = {
         startLineNumber: position.lineNumber,
         endLineNumber: position.lineNumber,
         startColumn: word.startColumn,
@@ -69,8 +67,8 @@ export const editorOnMount = async (
 
   monaco.languages.registerCompletionItemProvider('func', {
     provideCompletionItems: (model, position) => {
-      var word = model.getWordUntilPosition(position);
-      var range = {
+      const word = model.getWordUntilPosition(position);
+      const range = {
         startLineNumber: position.lineNumber,
         endLineNumber: position.lineNumber,
         startColumn: word.startColumn,

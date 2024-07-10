@@ -17,9 +17,7 @@ export type NetworkEnvironment = 'TESTNET' | 'MAINNET' | 'SANDBOX';
 
 export type ContractLanguage = 'func' | 'tact';
 
-interface ProjectFiles {
-  [id: string]: Tree[];
-}
+type ProjectFiles = Record<string, Tree[]>;
 
 export interface InitParams {
   name: string;
@@ -27,7 +25,7 @@ export interface InitParams {
   optional: boolean;
 }
 
-interface CellABI {
+export interface CellABI {
   deploy?: InitParams;
   setter?: InitParams;
 }
@@ -62,22 +60,35 @@ export interface ABIParameter {
   type: string;
   name: string;
   optional?: boolean;
+  format?: number;
+}
+
+export interface TactSetters {
+  name: string;
+  parameters: ABIParameter[];
+  returnTypes?: ABIParameter;
+  kind?: string;
+}
+
+export interface ABIFieldMessage {
+  type: string;
+  kind: string;
+  text: string;
+  name: string;
 }
 
 export interface ABIField {
   name: string;
-  kind: string;
-  parameters: ABIParameter[];
-  arguments: ABIParameter[];
-  returnTypes: ABIParameter;
+  kind?: string;
+  message?: ABIFieldMessage;
+  parameters?: ABIParameter[];
+  arguments?: ABIParameter[];
+  returnTypes?: ABIParameter;
 }
 
 export interface ABI {
   getters: ABIField[];
   setters: ABIField[];
-  // returnTypes: string[];
-  // name: string;
-  // parameters: ABIParameter[];
 }
 
 export type ParameterType = 'address' | 'cell' | 'slice' | 'int' | 'bool';

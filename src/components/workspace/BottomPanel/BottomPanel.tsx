@@ -6,7 +6,6 @@ import { LogOptions, LogType } from '@/interfaces/log.interface';
 import { debounce } from '@/utility/utils';
 import { Input, Select } from 'antd';
 import { FC, useState } from 'react';
-import { useEffectOnce } from 'react-use';
 import s from './BottomPanel.module.scss';
 
 type logType = LogType | 'all';
@@ -18,7 +17,6 @@ export interface Filter {
 
 const BottomPanel: FC = () => {
   const { clearLog } = useLogActivity();
-  const [isLoaded, setIsLoaded] = useState(false);
 
   const [filter, setFilter] = useState<Filter>({
     counter: 0,
@@ -44,13 +42,9 @@ const BottomPanel: FC = () => {
   const filterLogs = debounce((searchTerm) => {
     updateFilter({
       counter: filter.counter + 1,
-      text: searchTerm,
+      text: searchTerm as string,
     });
   }, 200);
-
-  useEffectOnce(() => {
-    setIsLoaded(true);
-  });
 
   return (
     <div className={s.root}>
@@ -59,7 +53,9 @@ const BottomPanel: FC = () => {
         <div className={s.actions}>
           <Input
             className={s.filterText}
-            onChange={(e) => filterLogs(e.target.value)}
+            onChange={(e) => {
+              filterLogs(e.target.value);
+            }}
             placeholder="Filter logs by text"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -70,7 +66,9 @@ const BottomPanel: FC = () => {
           <Select
             style={{ width: 150 }}
             defaultValue="all"
-            onChange={(value: logType) => updateFilter({ type: value })}
+            onChange={(value: logType) => {
+              updateFilter({ type: value });
+            }}
             options={logList}
           />
           <Tooltip title="Clear log" placement="left">

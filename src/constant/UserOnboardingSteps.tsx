@@ -19,7 +19,7 @@ export const userOnboardingSteps = {
       title: 'Welcome to Nujan',
       offset: -10,
       disableBeacon: true,
-      afterEvent: 'ONBOARDOING_NEW_PROJECT',
+      afterEvent: 'ONBOARDING_NEW_PROJECT',
     },
     {
       target: '.onboarding-new-project-form',

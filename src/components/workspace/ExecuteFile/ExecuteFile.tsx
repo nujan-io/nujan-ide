@@ -44,9 +44,9 @@ const ExecuteFile: FC<Props> = ({
 
   const isAutoBuildAndDeployEnabledRef = useRef(false);
 
-  const fileList = projectFiles(projectId).filter((f) => {
-    const _fileExtension = getFileExtension(f?.name || '');
-    if (f.name === 'stdlib.fc') return false;
+  const fileList = projectFiles(projectId).filter((f: Tree | null) => {
+    const _fileExtension = getFileExtension(f?.name ?? '');
+    if (f?.name === 'stdlib.fc') return false;
     return allowedFile.includes(_fileExtension as string);
   });
 
@@ -56,20 +56,19 @@ const ExecuteFile: FC<Props> = ({
       createLog('Please select a file', 'error');
       return;
     }
-    const _fileExtension = getFileExtension(selectedFile?.name);
+    const _fileExtension = getFileExtension(selectedFile.name) ?? '';
 
-    if (!selectedFile) return;
     try {
       switch (_fileExtension) {
         case 'ts':
-          const code = await compileTsFile(selectedFile, projectId);
+          await compileTsFile(selectedFile, projectId);
           break;
         case 'spec.ts':
           if (!onClick || !selectedFile.path) return;
           onClick(e, selectedFile.path);
           break;
         case 'fc':
-          const response = await compileFuncProgram(selectedFile, projectId);
+          await compileFuncProgram(selectedFile, projectId);
           if (onCompile) {
             onCompile();
           }
@@ -78,19 +77,19 @@ const ExecuteFile: FC<Props> = ({
 
         case 'tact':
           try {
-            const buildResponse = (await compileTactProgram(
-              selectedFile,
-              projectId,
-            )) as Map<string, Buffer>;
+            (await compileTactProgram(selectedFile, projectId)) as Map<
+              string,
+              Buffer
+            >;
 
             if (onCompile) {
               onCompile();
             }
             createLog('Built Successfully', 'success');
-          } catch (error: any) {
-            const errroMessage = error?.message?.split('\n');
-            for (let i = 0; i < errroMessage.length; i++) {
-              createLog(errroMessage[i], 'error', true, true);
+          } catch (error) {
+            const errorMessage = (error as Error).message.split('\n');
+            for (const message of errorMessage) {
+              createLog(message, 'error', true, true);
             }
           }
           break;
@@ -100,17 +99,22 @@ const ExecuteFile: FC<Props> = ({
         createLog(error, 'error');
         return;
       }
-      message.error(
+      await message.error(
         'Something went wrong. Check browser console for more details',
       );
       console.log('error', error);
     }
   };
 
-  const selectFile = (e: any) => {
+  const selectFile = (
+    e: number | string | React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     const selectedFile = fileList.find((f) => {
-      if (typeof e === 'string') return f?.id === e;
-      return f?.id === e?.target?.value;
+      if (typeof e === 'string') return f.id === e;
+      return (
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        f.id === (e as React.ChangeEvent<HTMLSelectElement>)?.target?.value
+      );
     });
     setSelectedFile(selectedFile);
   };
@@ -118,7 +122,7 @@ const ExecuteFile: FC<Props> = ({
   const onFileSaved = () => {
     if (!isAutoBuildAndDeployEnabledRef.current) return;
     if (!selectedFileRef.current) return;
-    buildFile({} as ButtonClick);
+    buildFile({} as ButtonClick).catch(() => {});
   };
 
   useEffect(() => {
@@ -168,7 +172,9 @@ const ExecuteFile: FC<Props> = ({
         type="primary"
         className={`${s.action} ant-btn-primary-gradient w-100`}
         disabled={!selectedFile}
-        onClick={buildFile}
+        onClick={(e) => {
+          buildFile(e).catch(() => {});
+        }}
       >
         {icon && <AppIcon name={icon as AppIconType} />}
         {label}

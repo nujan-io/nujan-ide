@@ -1,5 +1,8 @@
-import { AuthInterface } from '@/interfaces/auth.interface';
-import { Project, Tree } from '@/interfaces/workspace.interface';
+import {
+  Project,
+  Tree,
+  WorkspaceState,
+} from '@/interfaces/workspace.interface';
 import { workspaceState } from '@/state/workspace.state';
 import { FileInterface, fileSystem } from '@/utility/fileSystem';
 import { buildTs } from '@/utility/typescriptHelper';
@@ -43,18 +46,18 @@ function useWorkspaceActions() {
     clearWorkSpace,
   };
 
-  function updateStateByKey(dataByKey: any) {
+  function updateStateByKey(dataByKey: Partial<WorkspaceState>) {
     updateWorkspace((oldState) => {
       return {
         ...oldState,
-        ...(dataByKey as any),
+        ...dataByKey,
       };
     });
   }
 
   function createNewProject(project: Project, template: Tree[]) {
     if (projects().findIndex((p) => p.name == project.name) >= 0) {
-      throw 'Project with the same already exists';
+      throw new Error('Project with the same name already exists');
     }
     updateStateByKey({
       projects: [...workspace.projects, project],
@@ -67,12 +70,15 @@ function useWorkspaceActions() {
     if (projectIndex < 0) {
       return;
     }
-    const _projectFiles = cloneDeep(workspace.projectFiles);
+    let _projectFiles = cloneDeep(workspace.projectFiles);
 
-    if (_projectFiles && _projectFiles[projectId]) {
+    if (_projectFiles?.[projectId]) {
       const fileIds = _projectFiles[projectId].map((item) => item.id);
       await fileSystem.files.bulkDelete(fileIds);
-      delete _projectFiles[projectId];
+
+      // delete project files
+      const { [projectId]: _, ...rest } = _projectFiles;
+      _projectFiles = rest;
     }
     const projectList = [...workspace.projects];
     projectList.splice(projectIndex, 1);
@@ -88,10 +94,7 @@ function useWorkspaceActions() {
     });
   }
 
-  function updateProjectList(
-    projectId: string,
-    projectListItem: Project | any,
-  ) {
+  function updateProjectList(projectId: string, projectListItem: Project) {
     const projectIndex = projects().findIndex((item) => item.id === projectId);
     if (projectIndex < 0) {
       return;
@@ -107,7 +110,7 @@ function useWorkspaceActions() {
   }
 
   function projects() {
-    return workspace.projects || [];
+    return workspace.projects;
   }
 
   function project(projectId: string) {
@@ -115,7 +118,7 @@ function useWorkspaceActions() {
   }
 
   function projectFiles(projectId: string) {
-    return workspace?.projectFiles?.[projectId] || [];
+    return workspace.projectFiles?.[projectId] ?? [];
   }
 
   function updateProjectFiles(project: Tree[], projectId: string) {
@@ -125,11 +128,11 @@ function useWorkspaceActions() {
   }
 
   function addFilesToDatabase(files: FileInterface[]) {
-    fileSystem.files.bulkAdd(files);
+    fileSystem.files.bulkAdd(files).catch(() => {});
   }
 
   function getFile(id: Tree['id'], projectId: string) {
-    return projectFiles(projectId)?.find((item) => item.id == id);
+    return projectFiles(projectId).find((item) => item.id == id);
   }
 
   function openFile(id: Tree['id'], projectId: string) {
@@ -150,11 +153,11 @@ function useWorkspaceActions() {
       isAlreadyOpend.isOpen = true;
     } else {
       const fileData = {
-        id: currentFile?.id,
-        name: currentFile?.name,
-        path: currentFile?.path,
+        id: currentFile.id,
+        name: currentFile.name,
+        path: currentFile.path,
       };
-      openFiles.push({ ...((fileData as any) || {}), isOpen: true });
+      openFiles.push({ ...(fileData as Tree), isOpen: true });
     }
 
     updateStateByKey({
@@ -194,8 +197,7 @@ function useWorkspaceActions() {
     name: string,
     projectId: Project['id'],
   ) {
-    let files = cloneDeep(openedFiles(projectId));
-    if (!files) return;
+    const files = cloneDeep(openedFiles(projectId));
     const fileToChange = files.find((item) => item.id === fileId);
     if (!fileToChange) return;
     fileToChange.name = name;
@@ -205,7 +207,7 @@ function useWorkspaceActions() {
   }
 
   function openedFiles(projectId: Project['id']) {
-    return workspace.openFiles[projectId] || [];
+    return workspace.openFiles[projectId] ?? [];
   }
 
   function activeFile(projectId: string) {
@@ -228,7 +230,7 @@ function useWorkspaceActions() {
   async function getFileContent(id: Tree['id']) {
     if (!id) return '';
     const fileContent = await fileSystem.files.get(id);
-    return fileContent?.content || '';
+    return fileContent?.content ?? '';
   }
 
   async function getFileByPath(
@@ -252,7 +254,7 @@ function useWorkspaceActions() {
     updateOpenFile(id, { isDirty: false }, projectId);
   }
 
-  async function updateProjectById(updateObject: any, projectId: string) {
+  function updateProjectById(updateObject: Project, projectId: string) {
     updateProjectList(projectId, {
       ...project(projectId),
       ...updateObject,
@@ -279,21 +281,21 @@ function useWorkspaceActions() {
     // updateStateByKey({ openFiles: [] });
   }
 
-  async function renameItem(id: string, name: string, projectId: string) {
+  function renameItem(id: string, name: string, projectId: string) {
     const item = searchNode(id, projectId);
     if (!item.node) {
       return;
     }
 
-    if (isFileExists(name, projectId, item.node.parent || '')) {
+    if (isFileExists(name, projectId, item.node.parent ?? '')) {
       return;
     }
     item.node.name = name;
     let newPath = name;
-    let pathArray: any = item.node.path?.split('/');
-    if (pathArray && pathArray?.length > 1) {
-      pathArray = pathArray?.pop() || [];
-      newPath = pathArray.toString() + '/' + name;
+    const pathArray = item.node.path?.split('/') ?? [];
+    if (pathArray.length > 1) {
+      const currentPath = pathArray.pop() ?? [];
+      newPath = currentPath.toString() + '/' + name;
     }
     item.node.path = newPath;
     updateProjectFiles(item.project, projectId);
@@ -307,14 +309,14 @@ function useWorkspaceActions() {
     }
 
     item.project = item.project.filter(
-      (file: any) => file.id !== id && file.parent !== id,
+      (file: Tree) => file.id !== id && file.parent !== id,
     );
 
     closeFile(id, projectId);
     updateProjectFiles(item.project, projectId);
   }
 
-  async function moveFile(
+  function moveFile(
     sourceId: Tree['id'],
     destinationId: Tree['id'],
     projectId: Project['id'],
@@ -330,7 +332,7 @@ function useWorkspaceActions() {
     if (!destinationId) {
       parent = null;
     } else {
-      sourcePath = destinationItem.node?.path + '/' + sourceItem.node?.name;
+      sourcePath = destinationItem.node?.path + '/' + sourceItem.node.name;
     }
 
     if (isFileExists(sourceItem.node.name, projectId, destinationId)) {
@@ -343,7 +345,7 @@ function useWorkspaceActions() {
   }
 
   async function createNewItem(
-    id: Tree['parent'] | '',
+    id: Tree['parent'] | null,
     name: string,
     type: string,
     projectId: string,
@@ -355,7 +357,7 @@ function useWorkspaceActions() {
     const item = searchNode(id as string, projectId, 'parent');
     const currentItem = searchNode(id as string, projectId);
     let filePath = currentItem.node?.path;
-    if (isFileExists(name, projectId, item.node?.parent || '')) {
+    if (isFileExists(name, projectId, item.node?.parent ?? '')) {
       return;
     }
 
@@ -363,7 +365,7 @@ function useWorkspaceActions() {
     if (name.includes('/')) {
       const pathArray = name.split('/');
       const fileName = [...pathArray].pop();
-      itemName = fileName || name;
+      itemName = fileName ?? name;
       newDirectory = pathArray[0] || '';
       filePath = newDirectory;
     }
@@ -377,7 +379,7 @@ function useWorkspaceActions() {
       type,
       itemName,
       parentId as string,
-      filePath || '',
+      filePath ?? '',
     );
     if (type === 'file') {
       await fileSystem.files.add({ id: newItem.id, content: content });
@@ -393,7 +395,7 @@ function useWorkspaceActions() {
     directoryPath: string,
     projectId: string,
   ) {
-    let _projectFiles = cloneDeep(projectFiles(projectId));
+    const _projectFiles = cloneDeep(projectFiles(projectId));
     // check if file name contains directory. Then create a directory first and then create a file
     let directoryItem = await getFileByPath(directoryPath, projectId);
     if (!directoryItem) {
@@ -403,14 +405,14 @@ function useWorkspaceActions() {
 
     await Promise.all(
       files.map(async (file) => {
-        const fileName = file.path!!.split('/').pop();
+        const fileName = file.path!.split('/').pop();
         let currentFile = _projectFiles.find((item) => item.name === fileName);
         let isNewFile = false;
         if (!currentFile) {
           currentFile = _createItem(
             'file',
-            fileName!!,
-            directoryItem?.id || '',
+            fileName!,
+            directoryItem?.id ?? '',
             directoryPath || '',
           );
           isNewFile = true;
@@ -418,11 +420,11 @@ function useWorkspaceActions() {
         if (isNewFile) {
           await fileSystem.files.add({
             id: currentFile.id,
-            content: file.content || '',
+            content: file.content ?? '',
           });
         } else {
           await fileSystem.files.update(currentFile.id, {
-            content: file.content || '',
+            content: file.content ?? '',
           });
         }
         if (isNewFile) {
@@ -466,10 +468,10 @@ function useWorkspaceActions() {
     projectId: string,
     key: 'id' | 'parent' = 'id',
   ): { node: Tree | null; project: Tree[] } {
-    let projectTemp = cloneDeep(projectFiles(projectId));
+    const projectTemp = cloneDeep(projectFiles(projectId));
     const node = projectTemp.find((file) => file[key] === id);
 
-    return { node: node || null, project: projectTemp };
+    return { node: node ?? null, project: projectTemp };
   }
 
   function _createItem(
@@ -482,7 +484,7 @@ function useWorkspaceActions() {
       id: v4(),
       name,
       parent: parent || null,
-      type: type as any,
+      type: type as Tree['type'],
       content: '',
       path: `${parentPath ? parentPath + '/' : ''}${name}`,
     };
@@ -496,21 +498,19 @@ function useWorkspaceActions() {
     const tsFiles = projectFiles(projectId).filter((f) =>
       f.name.endsWith('.ts'),
     );
-    const filesWithContent: any = {};
+    const filesWithContent: Record<string, string> = {};
 
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let index = 0; index < tsFiles.length; index++) {
       const currentFile = tsFiles[index];
-      // if (currentFile.id !== file.id) continue;
-      filesWithContent[currentFile.path!!] = (
-        await getFileById(currentFile.id, projectId)
-      )?.content;
+      if (!currentFile.path) continue;
+      filesWithContent[currentFile.path] =
+        (await getFileById(currentFile.id, projectId))?.content ?? '';
     }
-    return buildTs(filesWithContent, rootFile.path!!);
+    return buildTs(filesWithContent, rootFile.path);
   }
 
-  function isProjectEditable(projectId: Project['id'], user: AuthInterface) {
-    // const _project = project(projectId);
-    // return !!(user.token && user?.id == _project?.userId);
+  function isProjectEditable() {
     return true;
   }
 

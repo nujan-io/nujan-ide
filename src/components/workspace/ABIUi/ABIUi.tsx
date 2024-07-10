@@ -1,17 +1,20 @@
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
+import { LogType } from '@/interfaces/log.interface';
 import {
   ABIField,
   ABIParameter,
   ContractLanguage,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
+import { TupleItem } from '@ton/core';
 import { SandboxContract } from '@ton/sandbox';
 import { Button, Form, Input, Select } from 'antd';
 import { FC, useState } from 'react';
 import s from './ABIUi.module.scss';
 
 const { Option } = Select;
+
 interface Props {
   abi: ABIField;
   contractAddress: string;
@@ -20,6 +23,18 @@ interface Props {
   language?: ContractLanguage;
   type: 'Getter' | 'Setter';
 }
+
+type FormValues = Record<
+  number,
+  Record<
+    string,
+    {
+      type: string;
+      value: string;
+    }
+  >
+>;
+
 const ABIUi: FC<Props> = ({
   abi,
   contractAddress,
@@ -28,32 +43,32 @@ const ABIUi: FC<Props> = ({
   language = 'func',
   type,
 }) => {
-  const possiblesTypes = abi.parameters.map((item) => {
+  const possiblesTypes = (abi.parameters ?? []).map((item) => {
     if (['cell', 'slice'].includes(item.type)) {
       return [item.type, 'address'];
     }
     if (typeof item.type === 'string') {
       return [item.type];
     }
-    return [(item.type as any).type];
+    return [(item.type as TupleItem).type];
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const { createLog } = useLogActivity();
-
   const { callGetter, callSetter } = useContractAction();
 
-  const onSubmit = async (formValues: any) => {
-    let stack = Object.values(formValues).map((param: any) => {
-      const formField: any = Object.entries(param);
+  const onSubmit = async (formValues: FormValues) => {
+    const stack = Object.values(formValues).map((param) => {
+      const formField = Object.entries(param);
       const { type, value } = formField[0][1];
       if (language === 'tact') {
         return { type, value, name: formField[0][0] };
       } else {
-        const { type, value } = Object.values(param)[0] as any;
+        const { type, value } = Object.values(param)[0];
         return { type: type, value: value };
       }
     });
+
     try {
       setIsLoading(true);
 
@@ -62,34 +77,36 @@ const ABIUi: FC<Props> = ({
       const response = await callableFunction(
         contractAddress,
         abi.name,
-        contract as any,
+        contract as SandboxContract<UserContract>,
         language,
-        abi?.kind,
-        stack as any,
+        abi.kind,
+        stack as TupleItem[],
         network,
       );
 
-      if (response?.logs) {
-        for (const log of response?.logs) {
-          createLog(log, response?.status || 'info');
+      if (Array.isArray(response)) {
+        createLog(JSON.stringify(response));
+      } else if (response?.logs) {
+        for (const log of response.logs) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+          createLog(log, (response?.status as LogType) ?? 'info');
         }
       } else {
         createLog(JSON.stringify(response));
       }
-    } catch (error: any) {
-      console.log('error', error);
-      if (error.message.includes('no healthy nodes for')) {
+    } catch (error) {
+      if ((error as Error).message.includes('no healthy nodes for')) {
         createLog(
           'No healthy nodes for this network. Redeploy your contract.',
           'error',
         );
         return;
       }
-      if (error.message.includes('Invalid magic')) {
+      if ((error as Error).message.includes('Invalid magic')) {
         createLog('Invalid magic(type)', 'error');
         return;
       }
-      createLog(error.message, 'error');
+      createLog((error as Error).message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +114,13 @@ const ABIUi: FC<Props> = ({
 
   return (
     <div className={`${s.root} ${s[type]}`}>
-      <Form className={`${s.form} app-form`} onFinish={onSubmit}>
-        {abi.parameters.map((item: ABIParameter, i: number) => {
+      <Form
+        className={`${s.form} app-form`}
+        onFinish={(values) => {
+          onSubmit(values as FormValues).catch(() => {});
+        }}
+      >
+        {(abi.parameters ?? []).map((item: ABIParameter, i: number) => {
           if (item.name === 'queryId') {
             return (
               <Form.Item
@@ -136,7 +158,7 @@ const ABIUi: FC<Props> = ({
                   placeholder={`${item.name}: ${
                     typeof item.type === 'string'
                       ? item.type
-                      : (item.type as any).type
+                      : (item.type as TupleItem).type
                   }`}
                 />
               </Form.Item>
