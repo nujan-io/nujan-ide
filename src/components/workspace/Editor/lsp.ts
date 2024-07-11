@@ -44,7 +44,6 @@ export const startLSP = async (
   monaco: Monaco,
   lspWebSocket: ReconnectingWebSocket | null,
 ) => {
-  console.log('AppConfig.lspServer', AppConfig.lspServer);
   if (!AppConfig.lspServer) {
     return;
   }
