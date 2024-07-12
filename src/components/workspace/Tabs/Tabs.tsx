@@ -31,7 +31,9 @@ const Tabs: FC<Props> = ({ projectId }) => {
       <div className={s.tabList}>
         {openedFilesList.map((item) => (
           <div
-            onClick={() => updateActiveTab(item)}
+            onClick={() => {
+              updateActiveTab(item);
+            }}
             className={`${s.item} 
             file-icon
             ${item.name.split('.').pop()}-lang-file-icon
@@ -43,7 +45,9 @@ const Tabs: FC<Props> = ({ projectId }) => {
             {item.name}
             <span
               className={`${s.close} ${item.isDirty ? s.isDirty : ''}`}
-              onClick={(e) => closeTab(e, item.id!)}
+              onClick={(e) => {
+                closeTab(e, item.id);
+              }}
             >
               <span className={s.fileDirtyIcon}></span>
               <AppIcon name="Close" className={s.closeIcon} />

@@ -23,6 +23,7 @@ export enum FileType {
   Unknown = 'unknown',
 }
 
+/* eslint-disable @typescript-eslint/prefer-literal-enum-member */
 export enum FileExtensionToFileType {
   js = FileType.JavaScript,
   ts = FileType.TypeScript,
@@ -32,3 +33,4 @@ export enum FileExtensionToFileType {
   fc = FileType.FC,
   tact = FileType.TACT,
 }
+/* eslint-enable @typescript-eslint/prefer-literal-enum-member */

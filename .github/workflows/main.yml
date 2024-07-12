@@ -25,8 +25,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Prettier check
+      - name: "Prettier: Validate code formatting"
         run: npm run format:check
+      - name: "ESLint: Validate code for errors"
+        run: npm run lint
 
   deploy:
     runs-on: ubuntu-latest

@@ -4,11 +4,16 @@ import { Config } from '@orbs-network/ton-access';
 import { Address, Cell, Dictionary, Slice } from '@ton/core';
 
 export function fileTypeFromFileName(name: string): FileType {
-  return fileTypeForExtension(name.split('.').pop() || '');
+  return fileTypeForExtension(name.split('.').pop() ?? '');
 }
 
-export function fileTypeForExtension(extension: string): any {
-  return FileExtensionToFileType[extension as any] || FileType.Unknown;
+export function fileTypeForExtension(extension: string): FileType {
+  if (extension in FileExtensionToFileType) {
+    return FileExtensionToFileType[
+      extension as keyof typeof FileExtensionToFileType
+    ] as unknown as FileType;
+  }
+  return FileType.Unknown;
 }
 
 export const isWebAssemblySupported = () => {
@@ -27,7 +32,9 @@ export const isWebAssemblySupported = () => {
             WebAssembly.Instance
           );
       }
-    } catch (e) {}
+    } catch (e) {
+      /* empty */
+    }
     return false;
   })();
 };
@@ -39,8 +46,8 @@ export const decodeBase64 = (data: string) => {
   return Buffer.from(data, 'base64').toString('ascii');
 };
 
-export const objectToJSON = (obj: Object) => {
-  let input: any = {};
+export const objectToJSON = (obj: object) => {
+  const input: Record<string, string> = {};
   for (const [p, val] of Object.entries(obj)) {
     // convert all values to string. This would need to parse the json to string. Otherwise would fail for big number.
     input[p] = val.toString();
@@ -54,30 +61,19 @@ export const delay = (timeout: number) => {
   });
 };
 
-type DebounceFn = (...args: any[]) => void;
-export const debounce = <T extends DebounceFn>(callback: T, delay: number) => {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => callback(...args), delay);
-  };
-};
+type DebounceFn<T extends unknown[]> = (...args: T) => void;
 
-export const getContractLINK = (
-  contractAddress: string,
-  chainNetwork: NetworkEnvironment,
+export const debounce = <T extends unknown[]>(
+  callback: DebounceFn<T>,
+  delay: number,
 ) => {
-  // if (chainNetwork === 'SANDBOX') {
-  //   return '';
-  // }
-  // return `
-  // <a
-  //   href="${getContractURL(contractAddress, chainNetwork)}"
-  //   target="_blank"
-  // >
-  //   View Deployed Contract
-  // </a>`
-  return '';
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: T) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
 };
 
 export const getContractURL = (
@@ -100,8 +96,8 @@ export const htmlToAnsi = (html: string) => {
   // Replace <span> elements with ANSI escape codes for color
   html = html.replace(
     /<span style="color:(.*?)">(.*?)<\/span>/g,
-    (match, color, content) => {
-      const colorMap: any = {
+    (_, color, content) => {
+      const colorMap: Record<string, string> = {
         red: '\x1b[31m',
         green: '\x1b[32m',
         yellow: '\x1b[33m',
@@ -146,9 +142,10 @@ export const capitalizeFirstLetter = (inputString: string) => {
   return firstLetter + restOfTheString;
 };
 
+// eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
 export const convertToText = (obj: any): string => {
   //create an array that will later be joined into a string.
-  var string = [];
+  const string = [];
 
   //is object
   //    Both arrays and objects seem to return "object"
@@ -171,7 +168,7 @@ export const convertToText = (obj: any): string => {
     }
 
     for (const prop in obj) {
-      if (obj.hasOwnProperty(prop))
+      if (Object.prototype.hasOwnProperty.call(obj, prop))
         string.push(prop + ': ' + convertToText(obj[prop]));
     }
     return '{' + string.join(', ') + '}';

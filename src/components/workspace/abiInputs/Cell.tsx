@@ -20,7 +20,7 @@ const CellInput = ({
         if (!value) return Promise.resolve();
         // first try to parse as hex. if fails, try to parse as base64
         try {
-          Cell.fromBoc(Buffer.from(value, 'hex'))[0];
+          Cell.fromBoc(Buffer.from(value, 'hex'));
         } catch {
           try {
             Cell.fromBase64(value);

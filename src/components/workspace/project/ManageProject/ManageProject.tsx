@@ -42,7 +42,10 @@ const ManageProject: FC = () => {
             className={`${s.deleteProject} ${
               !currentProject ? s.disabled : ''
             }`}
-            onClick={(e) => currentProject && setIsDeleteConfirmOpen(true)}
+            onClick={() => {
+              if (!currentProject) return;
+              setIsDeleteConfirmOpen(true);
+            }}
           >
             <AppIcon name="Delete" />
           </div>
@@ -58,7 +61,9 @@ const ManageProject: FC = () => {
         showSearch
         className="w-100 select-search-input-dark"
         value={currentProject?.id}
-        onChange={(_project) => openProject(_project)}
+        onChange={(_project) => {
+          openProject(_project).catch(() => {});
+        }}
         notFoundContent="No project found"
         filterOption={(inputValue, option) => {
           return option?.title.toLowerCase().includes(inputValue.toLowerCase());
@@ -70,7 +75,7 @@ const ManageProject: FC = () => {
             value={project.id}
             title={project.name}
           >
-            {project.name} - <span>{project?.language || 'func'}</span>
+            {project.name} - <span>{project.language ?? 'func'}</span>
           </Select.Option>
         ))}
       </Select>
@@ -79,7 +84,7 @@ const ManageProject: FC = () => {
 
   const noProjectExistsUI = () => (
     <div className={s.startNew}>
-      <span className={`${s.title}`}>Begin by initiating a new project</span>
+      <span className={s.title}>Begin by initiating a new project</span>
       <NewProject ui="button" className={s.newProject} icon="Plus" />
     </div>
   );
@@ -88,38 +93,31 @@ const ManageProject: FC = () => {
     return projects().length > 0;
   };
 
-  const getLanguageInitial = (language: string | undefined) => {
-    const languageInitial = language?.split('')?.[0]?.toUpperCase();
-    if (!languageInitial) return 'F - ';
-    return languageInitial + ' - ';
-  };
-
   const deleteSelectedProject = async (id: Project['id']) => {
     try {
       await deleteProject(id);
       setCurrentProject(null);
       setIsDeleteConfirmOpen(false);
-      router.push('/');
+      await router.push('/');
     } catch (error) {
-      message.error('Failed to delete project');
-    } finally {
+      await message.error('Failed to delete project');
     }
   };
 
-  const openProject = (id: Project['id']) => {
+  const openProject = async (id: Project['id']) => {
     if (!id) return;
     const selectedProject = project(id as string);
     if (!selectedProject) {
-      message.error('Project not found');
+      await message.error('Project not found');
       return;
     }
     setCurrentProject(selectedProject);
-    router.push(`/project/${selectedProject?.id}`);
+    await router.push(`/project/${selectedProject.id}`);
   };
 
   useEffect(() => {
     if (!projectId || currentProject?.id == projectId) return;
-    openProject(projectId as string);
+    openProject(projectId as string).catch(() => {});
   }, [projectId]);
 
   return (
@@ -153,7 +151,9 @@ const ManageProject: FC = () => {
           <Button
             className={`${s.btnAction} ${s.cancel}`}
             type="primary"
-            onClick={() => setIsDeleteConfirmOpen(false)}
+            onClick={() => {
+              setIsDeleteConfirmOpen(false);
+            }}
           >
             <AppIcon name="Close" className={s.icon} />
             Cancel
@@ -162,7 +162,11 @@ const ManageProject: FC = () => {
             className={s.btnAction}
             type="primary"
             danger
-            onClick={() => deleteSelectedProject(currentProject?.id!!)}
+            onClick={() => {
+              if (currentProject) {
+                deleteSelectedProject(currentProject.id).catch(() => {});
+              }
+            }}
           >
             <AppIcon name="Delete" />
             Delete

@@ -22,13 +22,13 @@ const FileTree: FC<Props> = ({ projectId }) => {
     return workspaceAction.projectFiles(projectId).map((item) => {
       return {
         id: item.id,
-        parent: item.parent || 0,
-        droppable: (item.type as any) === 'directory',
+        parent: item.parent ?? 0,
+        droppable: item.type === 'directory',
         text: item.name,
       };
     });
   };
-  const handleDrop = (newTreeData: any, options: DropOptions) => {
+  const handleDrop = (_: unknown, options: DropOptions) => {
     workspaceAction.moveFile(
       options.dragSourceId as string,
       options.dropTargetId as string,

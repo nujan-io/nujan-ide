@@ -1,6 +1,5 @@
 import { AppLogo } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import { useUserOnboardingAction } from '@/hooks/userOnboarding.hooks';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './DashboardSidebar.module.scss';
@@ -10,11 +9,9 @@ interface Props {
 }
 
 const DashboardSidebar: FC<Props> = ({ className }) => {
-  const { startOnboarding } = useUserOnboardingAction();
-
   return (
     <div className={`${s.root} ${className}`}>
-      <AppLogo className={`${s.brandLogo}`} />
+      <AppLogo className={s.brandLogo} />
 
       <div className={s.menuItems}>
         <div>

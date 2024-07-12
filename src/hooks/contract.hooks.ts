@@ -21,6 +21,7 @@ import {
   Sender,
   SenderArguments,
   TupleItem,
+  TupleItemCell,
   beginCell,
   contractAddress,
   fromNano,
@@ -50,6 +51,7 @@ export function useContractAction() {
     callSetter,
     callGetter,
   };
+
   async function deployContract(
     codeBOC: string,
     dataCell: string,
@@ -62,17 +64,19 @@ export function useContractAction() {
     logs?: string[];
   }> {
     const { sandboxBlockchain, sandboxWallet } = globalWorkspace;
-    let codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
+    const codeCell = Cell.fromBoc(Buffer.from(codeBOC, 'base64'))[0];
 
     let sender: Sender | null = null;
 
-    let stateInit: StateInit = {};
+    let stateInit: StateInit = { code: Cell.EMPTY, data: Cell.EMPTY };
     if (project.language === 'tact') {
-      const _contractInit = (window as any).contractInit;
-      stateInit = {
-        code: _contractInit.init.code,
-        data: _contractInit.init.data,
-      };
+      const _contractInit = window.contractInit;
+      if (_contractInit) {
+        stateInit = {
+          code: _contractInit.init?.code,
+          data: _contractInit.init?.data,
+        };
+      }
     } else {
       stateInit = {
         code: codeCell,
@@ -80,13 +84,13 @@ export function useContractAction() {
       };
     }
 
-    let messageParams = {};
-    const _contractInit = (window as any).contractInit;
-    let _userContract: any = null;
+    let messageParams: Record<string, unknown> = {};
+    const _contractInit = window.contractInit;
+    let _userContract: Contract | null = null;
 
-    if (initParams && initParams?.length > 0) {
-      const hasQueryId = initParams?.findIndex(
-        (item) => item.name == 'queryId',
+    if (initParams.length > 0) {
+      const hasQueryId = initParams.findIndex(
+        (item) => item.name === 'queryId',
       );
       const queryId = BigInt(0);
       if (hasQueryId > -1) {
@@ -103,25 +107,29 @@ export function useContractAction() {
 
     if (project.language === 'tact' && network.toUpperCase() !== 'SANDBOX') {
       sender = new TonConnectSender(tonConnector.connector);
-      const endpoint = await getHttpEndpoint({
-        network: network?.toLocaleLowerCase() as Network,
+      const endpoint = getHttpEndpoint({
+        network: network.toLocaleLowerCase() as Network,
       });
 
       const client = new TonClient({ endpoint });
-      _userContract = client.open(_contractInit);
-      client;
+      if (_contractInit) {
+        _userContract = client.open(_contractInit);
+      }
     } else if (
       network.toUpperCase() === 'SANDBOX' &&
       sandboxBlockchain &&
       project.language === 'tact'
     ) {
-      _userContract = sandboxBlockchain.openContract(_contractInit);
-      sender = sandboxWallet!!.getSender();
+      if (_contractInit) {
+        _userContract = sandboxBlockchain.openContract(_contractInit);
+      }
+      sender = sandboxWallet!.getSender();
     }
 
-    if (project.language === 'tact') {
-      const response = await _userContract.send(
-        sender,
+    if (project.language === 'tact' && _userContract) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await (_userContract as any).send(
+        sender as Sender,
         {
           value: tonAmountForInteraction,
         },
@@ -132,16 +140,15 @@ export function useContractAction() {
         logMessages = terminalLogMessages(
           [response],
           [_userContract as Contract],
-        );
+        ) ?? ['Transaction executed successfully'];
       }
 
       // create a code loop through array and check has error string
-      for (let index = 0; index < logMessages.length; index++) {
-        const element = logMessages[index];
+      for (const element of logMessages) {
         if (element.includes('Error')) {
           return {
             address: '',
-            contract: _userContract,
+            contract: _userContract as SandboxContract<UserContract>,
             logs: logMessages,
           };
         }
@@ -149,7 +156,7 @@ export function useContractAction() {
 
       return {
         address: _userContract.address.toString(),
-        contract: _userContract,
+        contract: _userContract as SandboxContract<UserContract>,
         logs: logMessages,
       };
     }
@@ -160,13 +167,14 @@ export function useContractAction() {
         stateInit.data as Cell,
       );
       const userContract = sandboxBlockchain.openContract(_userContract);
-      const response = await userContract.sendData(
-        sandboxWallet!!.getSender(),
+      await userContract.sendData(
+        sandboxWallet!.getSender(),
         Cell.EMPTY,
         tonAmountForInteraction,
       );
+
       if (network.toUpperCase() !== 'SANDBOX') {
-        message.success('Contract Deployed');
+        await message.success('Contract Deployed');
       }
       return {
         address: _userContract.address.toString(),
@@ -182,13 +190,13 @@ export function useContractAction() {
     const client = new TonClient({ endpoint });
 
     if (await client.isContractDeployed(_contractAddress)) {
-      message.error(
+      await message.error(
         'Contract is already deployed for same codebase and initial state. Update code or initial state.',
       );
       return { address: _contractAddress.toString() };
     }
 
-    let initCell = beginCell().store(storeStateInit(stateInit)).endCell();
+    const initCell = beginCell().store(storeStateInit(stateInit)).endCell();
 
     const params: SendTransactionRequest = {
       validUntil: Date.now() + 1000000,
@@ -201,14 +209,13 @@ export function useContractAction() {
       ],
     };
     try {
-      const deployResponse = await tonConnector.sendTransaction(params);
-      message.success('Contract Deployed');
+      await tonConnector.sendTransaction(params);
+      await message.success('Contract Deployed');
 
       return { address: _contractAddress.toString() };
     } catch (error) {
       console.log('error', error);
-      message.error('Not client');
-    } finally {
+      await message.error('Not client');
     }
     return { address: _contractAddress.toString() };
   }
@@ -220,13 +227,13 @@ export function useContractAction() {
     network: Network | Partial<NetworkEnvironment>,
     wallet: SandboxContract<TreasuryContract>,
   ) {
-    const _dataCell = Cell.fromBoc(Buffer.from(dataCell as any, 'base64'))[0];
+    const _dataCell = Cell.fromBoc(Buffer.from(dataCell, 'base64'))[0];
     if (network.toUpperCase() === 'SANDBOX') {
       if (!contract) {
-        message.error('The contract has not been deployed yet.');
+        await message.error('The contract has not been deployed yet.');
         return;
       }
-      const call = await contract.sendData(
+      await contract.sendData(
         wallet.getSender(),
         _dataCell,
         tonAmountForInteraction,
@@ -245,11 +252,9 @@ export function useContractAction() {
         ],
       };
 
-      const response = await tonConnector.sendTransaction(params);
+      await tonConnector.sendTransaction(params);
     } catch (error) {
       console.log(error, 'error');
-    } finally {
-      return '';
     }
   }
 
@@ -261,23 +266,26 @@ export function useContractAction() {
     kind?: string,
     stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>,
-  ): Promise<{ message: string; logs?: string[] } | undefined> {
+  ): Promise<
+    { message: string; logs?: string[]; status?: string } | undefined
+  > {
     if (language === 'tact' && contract) {
       let sender: Sender | null = null;
 
       if (network === 'SANDBOX') {
         const { sandboxWallet } = globalWorkspace;
-        sender = sandboxWallet!!.getSender();
+        sender = sandboxWallet!.getSender();
       } else {
         sender = new TonConnectSender(tonConnector.connector);
       }
 
-      let messageParams: any = {
+      let messageParams: Record<string, string> | string | null = {
         $$type: methodName,
       };
       if (kind === 'text') {
         messageParams = methodName || '';
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       stack?.forEach((item: any) => {
         switch (item.type) {
           case 'address':
@@ -288,7 +296,7 @@ export function useContractAction() {
             break;
         }
         messageParams = {
-          ...messageParams,
+          ...(typeof messageParams === 'object' ? messageParams : {}),
           [item.name]: item.value,
         };
       });
@@ -296,15 +304,23 @@ export function useContractAction() {
       if (kind === 'empty') {
         messageParams = null;
       }
-      if (kind === 'text' && Object.keys(messageParams).length === 0) {
+      if (
+        kind === 'text' &&
+        typeof messageParams == 'object' &&
+        Object.keys(messageParams as object).length === 0
+      ) {
         messageParams = '';
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await (contract as any).send(
         sender,
-        { value: tonAmountForInteraction },
+        {
+          value: tonAmountForInteraction,
+        },
         messageParams,
       );
+
       return {
         message: 'Message sent successfully',
         logs: terminalLogMessages([response], [contract as Contract]),
@@ -312,12 +328,17 @@ export function useContractAction() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function parseInt(item: any, language: ContractLanguage) {
     if (language === 'tact') {
       return new BN(item.value.toString());
     }
-    return BigInt((item as any).value);
+    return BigInt(item.value);
   }
+
+  type RESPONSE_VALUES =
+    | { method: string; value: string }
+    | { type: string; value: string };
 
   async function callGetter(
     contractAddress: string,
@@ -325,9 +346,13 @@ export function useContractAction() {
     contract: SandboxContract<UserContract> | null = null,
     language: ContractLanguage,
     kind?: string,
-    stack?: TupleItem[] | any,
+    stack?: TupleItem[],
     network?: Network | Partial<NetworkEnvironment>,
-  ): Promise<{ message: string; logs?: string[] } | undefined | any> {
+  ): Promise<
+    { message?: string; logs?: string[]; status?: string } | RESPONSE_VALUES[]
+  > {
+    // type could be TupleItem
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parsedStack = stack?.map((item: any) => {
       switch (item.type as ParameterType) {
         case 'int':
@@ -339,7 +364,7 @@ export function useContractAction() {
           return {
             type: 'slice',
             cell: beginCell()
-              .storeAddress(Address.parse((item as any).value))
+              .storeAddress(Address.parse(item.value as string))
               .endCell(),
           };
         case 'bool':
@@ -351,7 +376,7 @@ export function useContractAction() {
           return {
             type: item.type,
             value: Cell.fromBoc(
-              Buffer.from((item as any).value.toString(), 'base64'),
+              Buffer.from(item.value.toString(), 'base64'),
             )[0],
           };
       }
@@ -363,33 +388,42 @@ export function useContractAction() {
       };
     }
     if (network === 'SANDBOX' && contract) {
-      let responseValues = [];
+      const responseValues = [];
       if (language === 'tact') {
-        // convert getter function name as per script function name. Ex. counter will become getCounter
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const params = parsedStack?.map((item: any) => {
           switch (item.type) {
             case 'int':
-              return item.value as any;
+              return item.value;
             default:
               return item.value;
           }
         });
-        const _method = ('get' + capitalizeFirstLetter(methodName)) as any;
+        // convert getter function name as per script function name. Ex. counter will become getCounter
+        const _method = ('get' +
+          capitalizeFirstLetter(methodName)) as keyof Contract;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const response = await (contract as any)[_method](...(params as any));
         responseValues.push({
           method: methodName,
           value: convertToText(response),
         });
       } else {
-        const call = await contract.getData(methodName, parsedStack as any);
+        const call = await contract.getData(
+          methodName,
+          parsedStack as TupleItem[],
+        );
         while (call.stack.remaining) {
-          responseValues.push(parseReponse(call.stack.pop()));
+          const parsedData = parseReponse(call.stack.pop());
+          if (parsedData) {
+            responseValues.push(parsedData);
+          }
         }
       }
       return responseValues;
     }
 
-    const endpoint = await getHttpEndpoint({
+    const endpoint = getHttpEndpoint({
       network: network?.toLocaleLowerCase() as Network,
     });
     const client = new TonClient({ endpoint });
@@ -401,7 +435,10 @@ export function useContractAction() {
 
     const responseValues = [];
     while (call.stack.remaining) {
-      responseValues.push(parseReponse(call.stack.pop()));
+      const parsedData = parseReponse(call.stack.pop());
+      if (parsedData) {
+        responseValues.push(parsedData);
+      }
     }
     return responseValues;
   }
@@ -445,7 +482,7 @@ function parseReponse(tupleItem: TupleItem) {
   if (tupleItem.type === 'null') return;
 
   if (['cell', 'slice', 'builder'].includes(tupleItem.type)) {
-    const cell = (tupleItem as any).cell as Cell;
+    const cell = (tupleItem as TupleItemCell).cell;
     try {
       if (cell.bits.length === 267) {
         return {
@@ -459,11 +496,11 @@ function parseReponse(tupleItem: TupleItem) {
       };
     } catch (e) {
       console.log(e);
-      // Ignore
     }
   } else if (tupleItem.type === 'int') {
-    return { type: 'int', value: (tupleItem as any).value.toString() };
+    return { type: 'int', value: tupleItem.value.toString() };
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return { type: 'raw', value: String((tupleItem as any).value) };
   }
 }
@@ -475,7 +512,7 @@ class TonConnectSender implements Sender {
   constructor(provider: ITonConnect) {
     this.provider = provider;
     if (provider.wallet)
-      this.address = Address.parse(provider.wallet?.account.address);
+      this.address = Address.parse(provider.wallet.account.address);
     else this.address = undefined;
   }
 
@@ -483,7 +520,7 @@ class TonConnectSender implements Sender {
     if (
       !(
         args.sendMode === undefined ||
-        args.sendMode == SendMode.PAY_GAS_SEPARATELY
+        args.sendMode === SendMode.PAY_GAS_SEPARATELY
       )
     ) {
       throw new Error(
@@ -517,24 +554,25 @@ function terminalLogMessages(
   contractInstances: Contract[],
 ) {
   const messages = [];
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!results[0]?.transactions) return;
   for (const result of results) {
     for (const transaction of result.transactions) {
       if (
-        transaction.inMessage?.info.type == 'internal' ||
-        transaction.inMessage?.info.type == 'external-in'
+        transaction.inMessage?.info.type === 'internal' ||
+        transaction.inMessage?.info.type === 'external-in'
       ) {
-        if (transaction.inMessage?.info.type == 'internal') {
+        if (transaction.inMessage.info.type === 'internal') {
           if (transaction.debugLogs) {
             const splittedLog = transaction.debugLogs.split('\n');
-            for (let i = 0; i < splittedLog.length; i++) {
-              messages.push(splittedLog[i]);
+            for (const log of splittedLog) {
+              messages.push(log);
             }
           }
-          if (transaction.description.type == 'generic') {
-            if (transaction.description.computePhase.type == 'vm') {
-              // get the computational result of the transaction
+          if (transaction.description.type === 'generic') {
+            if (transaction.description.computePhase.type === 'vm') {
               const compute = transaction.description.computePhase;
-              if (compute.exitCode == 4294967282) compute.exitCode = -14;
+              if (compute.exitCode === 4294967282) compute.exitCode = -14;
               messages.push(
                 `Transaction Executed: ${
                   compute.success ? 'success' : 'error'
@@ -547,13 +585,13 @@ function terminalLogMessages(
               let foundError = false;
               for (const contractInstance of contractInstances) {
                 if (
-                  transaction.inMessage?.info.dest.equals(
+                  transaction.inMessage.info.dest.equals(
                     contractInstance.address,
                   )
                 ) {
-                  if (compute.exitCode == -14) compute.exitCode = 13;
+                  if (compute.exitCode === -14) compute.exitCode = 13;
                   const message =
-                    contractInstance?.abi?.errors?.[compute.exitCode]?.message;
+                    contractInstance.abi?.errors?.[compute.exitCode]?.message;
                   if (message) {
                     messages.push(`🔴 Error message: ${message}\n`);
                     foundError = true;
@@ -561,7 +599,7 @@ function terminalLogMessages(
                 }
               }
               if (!foundError) {
-                const knownErrors: { [code: number]: { message: string } } = {
+                const knownErrors: Record<number, { message: string }> = {
                   [-14]: { message: `Out of gas error` },
                   2: { message: `Stack undeflow` },
                   3: { message: `Stack overflow` },
@@ -590,6 +628,7 @@ function terminalLogMessages(
                     message: `Masterchain support is not enabled for this contract`,
                   },
                 };
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 const message = knownErrors[compute.exitCode]?.message;
                 if (message) {
                   messages.push(`Error message: ${message}`);
@@ -601,7 +640,7 @@ function terminalLogMessages(
         }
         for (let i = 0; i < transaction.outMessagesCount; i++) {
           const outMessage = transaction.outMessages.get(i);
-          if (outMessage?.info.type == 'external-out') {
+          if (outMessage?.info.type === 'external-out') {
             if (outMessage.info.dest == null) {
               const name = messageName(outMessage.body, contractInstances);
               messages.push(
@@ -611,7 +650,7 @@ function terminalLogMessages(
           }
         }
         for (const event of transaction.events) {
-          if (event.type == 'message_sent') {
+          if (event.type === 'message_sent') {
             const name = messageName(event.body, contractInstances);
             messages.push(
               `Message sent: ${name}, from ${shorten(event.from)}, to ${shorten(
@@ -633,20 +672,22 @@ function messageName(body: Cell, contractInstances: Contract[]): string {
   try {
     const slice = body.beginParse();
     let op = slice.loadInt(32);
-    if (op == 0) {
+    if (op === 0) {
       return `"${slice.loadStringTail()}"`;
     }
     if (op < 0) op += 4294967296;
     for (const contractInstance of contractInstances) {
-      for (const type of contractInstance?.abi?.types ?? []) {
-        if (op == type.header) return type.name;
+      for (const type of contractInstance.abi?.types ?? []) {
+        if (op === type.header) return type.name;
       }
     }
-    if (op == 0xffffffff) {
+    if (op === 0xffffffff) {
       return 'error';
     }
     return `unknown (0x${op.toString(16)})`;
-  } catch (e) {}
+  } catch (e) {
+    /* empty */
+  }
   return 'empty';
 }
 
@@ -657,8 +698,10 @@ function shorten(
   if (long instanceof Address) {
     return `${long.toString().slice(0, 4)}..${long.toString().slice(-4)}`;
   }
-  if (typeof long == 'bigint') {
-    if (format == 'default') return long.toString();
-    if (format == 'coins') return fromNano(long);
+  if (typeof long === 'bigint') {
+    if (format === 'default') return long.toString();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (format === 'coins') return fromNano(long);
   }
+  return '';
 }

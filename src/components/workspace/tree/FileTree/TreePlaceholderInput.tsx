@@ -3,12 +3,13 @@ import { FC, useEffect, useRef, useState } from 'react';
 import s from './FileTree.module.scss';
 
 interface Props {
-  type: any;
-  onSubmit?: any;
-  onCancel?: any;
-  defaultValue?: any;
-  style?: any;
+  type: 'directory' | 'file';
+  onSubmit?: (value: string) => void;
+  onCancel?: () => void;
+  defaultValue?: string;
+  style?: React.CSSProperties;
 }
+
 const TreePlaceholderInput: FC<Props> = ({
   type,
   onSubmit,
@@ -17,42 +18,56 @@ const TreePlaceholderInput: FC<Props> = ({
   style,
 }) => {
   const [ext, setExt] = useState('');
-  const inputRef = useRef<any>();
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inputRef.current) return;
-    inputRef.current.focus();
-    inputRef.current.addEventListener('keyup', (e: any) => {
+
+    const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
-        if (e.target.value) {
-          onSubmit(e.target.value);
+        if (inputRef.current?.value) {
+          if (onSubmit) {
+            onSubmit(inputRef.current.value);
+          }
           return;
         }
-        onCancel && onCancel();
+        if (onCancel) {
+          onCancel();
+        }
       }
       if (e.key === 'Escape') {
-        onCancel && onCancel();
+        if (onCancel) {
+          onCancel();
+        }
       }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputRef]);
+    };
 
-  const updateExt = (e: any) => {
-    let splitted = e.target.value.split('.');
-    let ext = splitted && splitted[splitted.length - 1];
+    const currentInputRef = inputRef.current;
+    currentInputRef.focus();
+    currentInputRef.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      currentInputRef.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [inputRef, onSubmit, onCancel]);
+
+  const updateExt = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const splitted = e.target.value.split('.');
+    const ext = splitted[splitted.length - 1];
     setExt(ext);
   };
+
   const rootClassName = cn(s.treeInputContainer, {
     'folder-name monaco-icon-label': !defaultValue,
     'file-icon': type !== 'directory' && !defaultValue,
     'folder-icon': type === 'directory' && !defaultValue,
   });
+
   return (
     <div className={rootClassName} style={style}>
       {type === 'directory' ? (
         <FolderEdit
           style={style}
-          name={name}
           inputRef={inputRef}
           defaultValue={defaultValue}
         />
@@ -69,15 +84,44 @@ const TreePlaceholderInput: FC<Props> = ({
   );
 };
 
-const FolderEdit = ({ inputRef, defaultValue }: any) => {
+interface FolderEditProps {
+  inputRef: React.RefObject<HTMLInputElement>;
+  defaultValue?: string;
+  style?: React.CSSProperties;
+}
+
+const FolderEdit: FC<FolderEditProps> = ({ inputRef, defaultValue, style }) => {
   return (
-    <input ref={inputRef} className={s.treeInput} defaultValue={defaultValue} />
+    <input
+      ref={inputRef}
+      className={s.treeInput}
+      defaultValue={defaultValue}
+      style={style}
+    />
   );
 };
 
-const FileEdit = ({ ext, inputRef, updateExt, defaultValue }: any) => {
+interface FileEditProps {
+  ext: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+  updateExt: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  defaultValue?: string;
+  style?: React.CSSProperties;
+}
+
+const FileEdit: FC<FileEditProps> = ({
+  inputRef,
+  updateExt,
+  defaultValue,
+  style,
+}) => {
   return (
-    <input ref={inputRef} onChange={updateExt} defaultValue={defaultValue} />
+    <input
+      ref={inputRef}
+      onChange={updateExt}
+      defaultValue={defaultValue}
+      style={style}
+    />
   );
 };
 

@@ -1,23 +1,22 @@
 import TonAuth from '@/components/auth/TonAuth/TonAuth';
-import { useContractAction } from '@/hooks/contract.hooks';
+import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import {
   ABIField,
+  ABIFieldMessage,
+  ABIParameter,
+  CellABI,
   InitParams,
   NetworkEnvironment,
+  Project,
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
-import {
-  delay,
-  getContractLINK,
-  getFileExtension,
-  tonHttpEndpoint,
-} from '@/utility/utils';
+import { delay, getFileExtension, tonHttpEndpoint } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { Cell } from '@ton/core';
-import { Blockchain } from '@ton/sandbox';
+import { Blockchain, SandboxContract } from '@ton/sandbox';
 import { CHAIN, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
@@ -41,7 +40,7 @@ import {
   StringInput,
 } from '../abiInputs';
 import { globalWorkspace } from '../globalWorkspace';
-import CellBuilder, { generateCellCode } from './CellBuilder';
+import CellBuilder, { CellValues, generateCellCode } from './CellBuilder';
 
 const blankABI = {
   getters: [],
@@ -49,7 +48,7 @@ const blankABI = {
   initParams: [],
 };
 
-const fields = (type: String) => {
+const fields = (type: string) => {
   if (
     type.includes('int') ||
     type == 'Int' ||
@@ -83,15 +82,10 @@ const fields = (type: String) => {
 interface Props {
   projectId: string;
   onCodeCompile: (codeBOC: string) => void;
-  contract: any;
-  updateContract: (contractInstance: any) => void;
+  contract: unknown;
+  updateContract: (contractInstance: unknown) => void;
 }
-const BuildProject: FC<Props> = ({
-  projectId,
-  onCodeCompile,
-  contract,
-  updateContract,
-}) => {
+const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   const [isLoading, setIsLoading] = useState('');
   const { createLog } = useLogActivity();
   const [environment, setEnvironment] = useState<NetworkEnvironment>('SANDBOX');
@@ -121,7 +115,6 @@ const BuildProject: FC<Props> = ({
     '',
   );
 
-  const { Option } = Select;
   const [deployForm] = useForm();
 
   const {
@@ -141,7 +134,7 @@ const BuildProject: FC<Props> = ({
   const contractsToDeploy = () => {
     return projectFiles(projectId)
       .filter((f) => {
-        const _fileExtension = getFileExtension(f?.name || '');
+        const _fileExtension = getFileExtension(f.name || '');
         return (
           f.path?.startsWith('dist') &&
           ['abi'].includes(_fileExtension as string)
@@ -160,7 +153,7 @@ const BuildProject: FC<Props> = ({
   };
 
   const cellBuilder = (info: string) => {
-    if (!activeProject?.language || activeProject?.language !== 'func')
+    if (!activeProject?.language || activeProject.language !== 'func')
       return <></>;
     return (
       <CellBuilder
@@ -185,7 +178,9 @@ const BuildProject: FC<Props> = ({
         <Form
           className={`${s.form} app-form`}
           form={deployForm}
-          onFinish={initDeploy}
+          onFinish={(values) => {
+            initDeploy(values as FormValues).catch(() => {});
+          }}
           onValuesChange={(changedValues) => {
             if (Object.hasOwn(changedValues, 'contract')) {
               updateSelectedContract(changedValues.contract);
@@ -210,26 +205,24 @@ const BuildProject: FC<Props> = ({
             </Select>
           </Form.Item>
           {cellBuilder('Update initial contract state in ')}
-          {contractABI?.initParams && (
-            <div>
-              {contractABI?.initParams?.map((item, index) => {
-                if (item.name === 'queryId')
-                  return <React.Fragment key={index} />;
-                const Field = fields(item.type);
-                return (
-                  <Field
-                    key={index}
-                    className={s.formItem}
-                    name={item.name}
-                    placeholder={`${item.name}: ${item.type}${
-                      item.optional ? '?' : ''
-                    }`}
-                    rules={[{ required: !item.optional }]}
-                  />
-                );
-              })}
-            </div>
-          )}
+          <div>
+            {contractABI.initParams.map((item, index) => {
+              if (item.name === 'queryId')
+                return <React.Fragment key={index} />;
+              const Field = fields(item.type);
+              return (
+                <Field
+                  key={index}
+                  className={s.formItem}
+                  name={item.name}
+                  placeholder={`${item.name}: ${item.type}${
+                    item.optional ? '?' : ''
+                  }`}
+                  rules={[{ required: !item.optional }]}
+                />
+              );
+            })}
+          </div>
           <Button
             type="primary"
             htmlType="submit"
@@ -245,8 +238,15 @@ const BuildProject: FC<Props> = ({
     );
   };
 
-  const initDeploy = async (formValues: any) => {
-    const _temp: any = { ...formValues };
+  interface FormValues {
+    [key: string]: string | number | boolean | bigint | undefined;
+    queryId?: string;
+    cell?: string;
+    contract?: string;
+  }
+
+  const initDeploy = async (formValues: FormValues) => {
+    const _temp = { ...formValues };
 
     let initParams = '';
     if (_temp.queryId) {
@@ -255,14 +255,12 @@ const BuildProject: FC<Props> = ({
     if (_temp.cell) {
       delete _temp.cell;
     }
-    const initParamsData = contractABI?.initParams;
-    let parametrsType: any = {};
-    if (initParamsData) {
-      parametrsType = initParamsData.reduce(
-        (acc: any, curr: any) => ((acc[curr.name] = curr.type), acc),
-        {},
-      );
-    }
+    const initParamsData = contractABI.initParams;
+    let parametrsType: Record<string, string> = {};
+    parametrsType = initParamsData.reduce(
+      (acc, curr) => ((acc[curr.name] = curr.type), acc),
+      {} as Record<string, string>,
+    );
 
     for (const [key, value] of Object.entries(_temp)) {
       const type = parametrsType[key];
@@ -270,7 +268,7 @@ const BuildProject: FC<Props> = ({
         continue;
       }
       if (
-        type?.includes('int') ||
+        type.includes('int') ||
         type == 'Int' ||
         type == 'bigint | number' ||
         type == 'number | bigint'
@@ -278,7 +276,6 @@ const BuildProject: FC<Props> = ({
         initParams += `BigInt(${value}),`;
         continue;
       }
-      // if (value) {
       switch (type) {
         case 'Address':
           initParams += `window.TonCore.Address.parse('${value}'),`;
@@ -289,32 +286,31 @@ const BuildProject: FC<Props> = ({
         default:
           initParams += `${value},`;
       }
-      if (parametrsType[key] == 'Address') {
-      }
-      // }
     }
-    initParams = initParams?.slice(0, -1);
+    initParams = initParams.slice(0, -1);
     if (formValues.cell) {
       initParams = formValues.cell;
     }
 
     try {
       if (!tonConnector.connected && environment !== 'SANDBOX') {
-        throw 'Please connect wallet';
+        throw new Error('Please connect wallet');
       }
       if (chain && environment !== 'SANDBOX' && CHAIN[environment] !== chain) {
-        throw `Please connect wallet to ${environment}`;
+        throw new Error(`Please connect wallet to ${environment}`);
       }
       setIsLoading('deploy');
       await createStateInitCell(initParams);
-    } catch (error: any) {
+    } catch (error) {
       setIsLoading('');
-      console.log(error, 'error');
       if (typeof error === 'string') {
         createLog(error, 'error');
         return;
       }
-    } finally {
+      if (error instanceof Error) {
+        createLog(error.message, 'error');
+        return;
+      }
     }
   };
 
@@ -323,7 +319,7 @@ const BuildProject: FC<Props> = ({
     const contractBOCPath = selectedContract?.replace('.abi', '.code.boc');
     const contractBOC = await getFileByPath(contractBOCPath, projectId);
     if (!contractBOC?.content) {
-      throw 'Contract BOC is missing. Rebuild the contract.';
+      throw new Error('Contract BOC is missing. Rebuild the contract.');
     }
     try {
       if (sandboxBlockchain && environment === 'SANDBOX') {
@@ -344,9 +340,9 @@ const BuildProject: FC<Props> = ({
         logs,
       } = await deployContract(
         contractBOC.content,
-        buildOutput?.dataCell as any,
+        buildOutput?.dataCell as unknown as string,
         environment.toLowerCase() as Network,
-        activeProject!!,
+        activeProject!,
         contractABI.initParams,
       );
 
@@ -356,14 +352,11 @@ const BuildProject: FC<Props> = ({
         environment: environment.toLowerCase(),
       });
       createLog(
-        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}  ${getContractLINK(
-          _contractAddress,
-          environment,
-        )}`,
+        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}}`,
         'success',
       );
 
-      for (let i = 0; i < (logs || []).length; i++) {
+      for (let i = 0; i < (logs ?? []).length; i++) {
         if (!logs?.[i]) continue;
         createLog(logs[i], 'info', false);
       }
@@ -378,14 +371,14 @@ const BuildProject: FC<Props> = ({
       updateProjectById(
         {
           contractAddress: _contractAddress,
-        },
+        } as Project,
         projectId,
       );
-    } catch (error: any) {
+    } catch (error) {
       console.log(error, 'error');
-      const errroMessage = error?.message?.split('\n');
-      for (let i = 0; i < errroMessage.length; i++) {
-        createLog(errroMessage[i], 'error', true, true);
+      const errorMessage = (error as Error).message.split('\n');
+      for (const message of errorMessage) {
+        createLog(message, 'error', true, true);
       }
     } finally {
       setIsLoading('');
@@ -394,13 +387,13 @@ const BuildProject: FC<Props> = ({
 
   const createStateInitCell = async (initParams = '') => {
     if (!selectedContract) {
-      throw 'Please select contract';
+      throw new Error('Please select contract');
     }
-    const contractScriptPath = selectedContract?.replace('.abi', '.ts');
+    const contractScriptPath = selectedContract.replace('.abi', '.ts');
     if (!cellBuilderRef.current?.contentWindow) return;
     const contractScript = await getFileByPath(contractScriptPath, projectId);
     if (activeProject?.language === 'tact' && !contractScript?.content) {
-      throw 'Contract script is missing. Rebuild the contract.';
+      throw new Error('Contract script is missing. Rebuild the contract.');
     }
 
     try {
@@ -409,29 +402,31 @@ const BuildProject: FC<Props> = ({
       if (activeProject?.language == 'tact') {
         jsOutout = await buildTs(
           {
-            'tact.ts': contractScript?.content,
+            'tact.ts': contractScript?.content ?? '',
           },
           'tact.ts',
         );
       } else {
-        let stateInitContent = await getFileByPath(
+        const stateInitContent = await getFileByPath(
           'stateInit.cell.ts',
           projectId,
         );
         let cellCode = '';
         if (stateInitContent && !stateInitContent.content && !initParams) {
-          throw 'State init data is missing in file stateInit.cell.ts';
+          throw new Error(
+            'State init data is missing in file stateInit.cell.ts',
+          );
         }
         if (initParams) {
-          cellCode = generateCellCode(initParams as any);
+          cellCode = generateCellCode(initParams as unknown as CellValues[]);
           updateProjectById(
             {
-              cellABI: { deploy: initParams },
-            },
+              cellABI: { deploy: initParams as CellABI },
+            } as Project,
             projectId,
           );
         } else {
-          cellCode = stateInitContent?.content || '';
+          cellCode = stateInitContent?.content ?? '';
         }
 
         jsOutout = await buildTs(
@@ -453,9 +448,11 @@ const BuildProject: FC<Props> = ({
           const contractInit  = await ${contractName}.fromInit(${initParams});
           return contractInit;
         } return main()`;
+        //  TODO: Find a better solution may be worker or js sandbox
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
         const contractInit = await new Function(_code)();
-        (window as any).contractInit = contractInit;
-        deploy();
+        window.contractInit = contractInit;
+        deploy().catch(() => {});
         return;
       }
 
@@ -470,16 +467,17 @@ const BuildProject: FC<Props> = ({
         },
         '*',
       );
-    } catch (error: any) {
+    } catch (error) {
       setIsLoading('');
-      if (error?.message?.includes('object is not defined')) {
-        throw 'Rebuild contract first';
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('object is not defined')) {
+        throw new Error('Rebuild contract first');
       }
-      if (error?.message?.includes("'default' is not exported by ")) {
-        throw "'default' is not exported by stateInit.cell.ts";
+      if (errorMessage.includes("'default' is not exported by ")) {
+        throw new Error("'default' is not exported by stateInit.cell.ts");
       }
-      if (error?.message) {
-        createLog(error?.message, 'error');
+      if (errorMessage) {
+        createLog(errorMessage, 'error');
         return;
       }
       throw error;
@@ -488,10 +486,7 @@ const BuildProject: FC<Props> = ({
 
   const isContractInteraction = () => {
     let isValid =
-      activeProject?.id && tonConnector && activeProject?.contractAddress
-        ? true
-        : false;
-
+      activeProject?.id && activeProject.contractAddress ? true : false;
     if (environment === 'SANDBOX') {
       isValid = isValid && globalWorkspace.sandboxBlockchain ? true : false;
     }
@@ -509,24 +504,30 @@ const BuildProject: FC<Props> = ({
       createLog('Contract ABI is missing. Rebuild the contract.', 'error');
       return;
     }
-    const contractABI = JSON.parse(contractABIFile?.content || '{}');
-    if (activeProject?.language === 'tact') {
-      contractABI.getters = contractABI?.getters?.map((item: any) => {
+    const contractABI = JSON.parse(contractABIFile.content || '{}');
+    if (
+      activeProject?.language === 'tact' &&
+      Array.isArray(contractABI?.getters)
+    ) {
+      contractABI.getters = (contractABI?.getters as ABIField[]).map((item) => {
         return {
           name: item.name,
-          parameters: item.arguments.map((parameter: any) => {
-            return {
-              name: parameter.name,
-              type: parameter.type,
-              format: parameter.format,
-              optional: parameter.optional,
-            };
-          }),
+          parameters:
+            item.arguments ??
+            [].map((parameter: ABIParameter) => {
+              return {
+                name: parameter.name,
+                type: parameter.type,
+                format: parameter.format,
+                optional: parameter.optional,
+              };
+            }),
         };
       });
-      let setters: any = [];
-      contractABI?.receivers?.forEach((item: any) => {
-        if (item.message.type === 'Deploy') {
+      const setters: ABIField[] = [];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      (contractABI?.receivers as ABIField[])?.forEach((item) => {
+        if (!item.message || item.message.type === 'Deploy') {
           return;
         }
         if (item.message.kind) {
@@ -539,19 +540,23 @@ const BuildProject: FC<Props> = ({
             return;
           }
           const singleItem = contractABI.types.find(
-            (type: any) => type.name === item.message.type,
+            (type: ABIFieldMessage) =>
+              item.message && type.name === item.message.type,
           );
-          const singleField = {
+
+          const singleField: ABIField = {
             name: singleItem.name,
-            parameters: singleItem.fields.map((parameter: any) => {
-              return {
-                name: parameter.name,
-                type: parameter.type.type,
-                format: parameter.type.format,
-                optional: parameter.type.optional,
-                kind: item.message.kind,
-              };
-            }),
+            parameters: singleItem.fields.map(
+              (parameter: { type: ABIParameter; name: string }) => {
+                return {
+                  name: parameter.name,
+                  type: parameter.type.type,
+                  format: parameter.type.format,
+                  optional: parameter.type.optional,
+                  kind: item.message ? item.message.kind : undefined,
+                };
+              },
+            ),
           };
           setters.push(singleField);
         }
@@ -590,7 +595,7 @@ const BuildProject: FC<Props> = ({
     updateProjectById(
       {
         network,
-      },
+      } as Project,
       projectId,
     );
     setEnvironment(network);
@@ -602,7 +607,7 @@ const BuildProject: FC<Props> = ({
     updateProjectById(
       {
         selectedContract: contract,
-      },
+      } as Project,
       projectId,
     );
   };
@@ -623,22 +628,22 @@ const BuildProject: FC<Props> = ({
   };
 
   const getSelectedContractJsBuild = async (
-    currentContractName: String,
+    currentContractName: string,
     language: 'tact' | 'func',
     supressErrors = false,
   ) => {
-    const contractScriptPath = currentContractName?.replace('.abi', '.ts');
+    const contractScriptPath = currentContractName.replace('.abi', '.ts');
     const contractScript = await getFileByPath(contractScriptPath, projectId);
     if (language === 'tact' && !contractScript?.content) {
       if (supressErrors) {
         return;
       }
-      throw 'Contract script is missing. Rebuild the contract.';
+      throw new Error('Contract script is missing. Rebuild the contract.');
     }
 
-    let jsOutout = await buildTs(
+    const jsOutout = await buildTs(
       {
-        'tact.ts': contractScript?.content,
+        'tact.ts': contractScript?.content ?? '',
       },
       'tact.ts',
     );
@@ -652,13 +657,13 @@ const BuildProject: FC<Props> = ({
     if (
       !selectedContract ||
       !activeProject?.contractAddress ||
-      activeProject?.language !== 'tact' ||
-      (window as any).contractInit
+      activeProject.language !== 'tact' ||
+      window.contractInit
     ) {
       return;
     }
 
-    if (activeProject?.contractAddress && environment == 'SANDBOX') {
+    if (activeProject.contractAddress && environment == 'SANDBOX') {
       return;
     }
 
@@ -673,14 +678,16 @@ const BuildProject: FC<Props> = ({
 
     const _code = `async function main() {
       ${output.finalJsoutput}
-      const contractInit  = await ${contractName}.fromAddress(window.TonCore.Address.parse('${activeProject?.contractAddress}'));
+      const contractInit  = await ${contractName}.fromAddress(window.TonCore.Address.parse('${activeProject.contractAddress}'));
       return contractInit;
     } return main()`;
+    //  TODO: Find a better solution may be worker or js sandbox
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const contractInit = await new Function(_code)();
-    (window as any).contractInit = contractInit;
+    window.contractInit = contractInit;
 
     const endpoint = tonHttpEndpoint({
-      network: environment?.toLocaleLowerCase() as Network,
+      network: environment.toLocaleLowerCase() as Network,
     });
 
     const client = new TonClient({ endpoint });
@@ -689,63 +696,68 @@ const BuildProject: FC<Props> = ({
   };
 
   useEffect(() => {
-    updateABI();
+    updateABI().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContract, contract]);
 
   useEffect(() => {
     try {
-      updateContractInstance();
-    } catch (e) {}
+      updateContractInstance().catch(() => {});
+    } catch (e) {
+      /* empty */
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedContract]);
 
   useEffect(() => {
     if (activeProject?.network) {
-      setEnvironment(activeProject?.network);
+      setEnvironment(activeProject.network);
     }
     if (activeProject?.selectedContract) {
-      setSelectedContract(activeProject?.selectedContract);
-      deployForm.setFieldsValue({ contract: activeProject?.selectedContract });
+      setSelectedContract(activeProject.selectedContract);
+      deployForm.setFieldsValue({ contract: activeProject.selectedContract });
     }
     const handler = (
       event: MessageEvent<{
         name: string;
         type: string;
-        data: any;
+        data: { data: Cell } | null;
         error: string;
       }>,
     ) => {
       if (
-        !event.data ||
         typeof event.data !== 'object' ||
-        event.data?.type !== 'state-init-data' ||
-        event.data?.name !== 'nujan-ton-ide'
+        event.data.type !== 'state-init-data' ||
+        event.data.name !== 'nujan-ton-ide'
       ) {
         return;
       }
-      if (event.data?.error) {
+      if (event.data.error) {
         setIsLoading('');
         createLog(event.data.error, 'error');
         return;
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setBuildoutput((t: any) => {
+        const oldState = typeof t === 'object' ? t : {};
         return {
-          ...t,
-          dataCell: event.data.data || '//',
+          ...oldState,
+          dataCell: event.data.data ?? '//',
         };
       });
     };
 
     window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+    return () => {
+      window.removeEventListener('message', handler);
+    };
   }, []);
 
   useEffect(() => {
     if (!buildOutput?.dataCell || !isLoading) {
       return;
     }
-    deploy();
+    deploy().catch(() => {});
   }, [buildOutput?.dataCell]);
 
   return (
@@ -763,9 +775,9 @@ const BuildProject: FC<Props> = ({
       >
         <Select
           value={environment}
-          onChange={(value) =>
-            updatNetworkEnvironment(value as NetworkEnvironment)
-          }
+          onChange={(value) => {
+            updatNetworkEnvironment(value as NetworkEnvironment);
+          }}
           options={[
             { value: 'SANDBOX', label: 'Sandbox' },
             { value: 'TESTNET', label: 'Testnet' },
@@ -799,26 +811,29 @@ const BuildProject: FC<Props> = ({
             }
             `}
           allowedFile={['fc', 'tact']}
-          onCompile={async () => {
+          onCompile={() => {
             if (
               environment == 'SANDBOX' &&
               activeProject?.language === 'tact'
             ) {
               if (!isAutoBuildAndDeployEnabled()) return;
-              await delay(100);
-              deployForm.submit();
+              delay(100)
+                .then(() => {
+                  deployForm.submit();
+                })
+                .catch(() => {});
             }
           }}
         />
         {deployView()}
       </div>
 
-      {activeProject?.contractAddress!! && environment !== 'SANDBOX' && (
+      {activeProject?.contractAddress && environment !== 'SANDBOX' && (
         <div className={`${s.contractAddress} wrap`}>
           <Link
             href={`https://${
               chain === CHAIN.TESTNET ? 'testnet.' : ''
-            }tonscan.org/address/${activeProject?.contractAddress}`}
+            }tonscan.org/address/${activeProject.contractAddress}`}
             target="_blank"
           >
             <AppIcon name="Eye" /> View Deployed Contract
@@ -829,11 +844,11 @@ const BuildProject: FC<Props> = ({
       {isContractInteraction() && (
         <div className={s.contractInteraction}>
           <ContractInteraction
-            contractAddress={activeProject?.contractAddress!!}
+            contractAddress={activeProject?.contractAddress ?? ''}
             projectId={projectId}
-            abi={contractABI || null}
+            abi={contractABI}
             network={environment}
-            contract={contract}
+            contract={contract as SandboxContract<UserContract> | null}
             language={activeProject?.language}
           />
         </div>

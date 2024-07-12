@@ -1,9 +1,10 @@
+/* eslint-disable no-useless-escape */
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Analytics } from '@/utility/analytics';
 import { getFileNameFromPath } from '@/utility/utils';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC } from 'react';
 import ExecuteFile from '../ExecuteFile';
 import s from './TestCases.module.scss';
 
@@ -12,14 +13,10 @@ interface Props {
 }
 
 const TestCases: FC<Props> = ({ projectId }) => {
-  const [executionCount, setExecutionCount] = useState(0);
   const { createLog } = useLogActivity();
 
-  const cellBuilderRef = useRef<HTMLIFrameElement>(null);
-  const { getFileByPath, compileTsFile, activeFile } = useWorkspaceActions();
+  const { getFileByPath, compileTsFile } = useWorkspaceActions();
   const { compileFuncProgram } = useProjectActions();
-
-  const [selectedFilePath, setSelectedFilePath] = useState('');
 
   const executeTestCases = async (filePath: string) => {
     const file = await getFileByPath(filePath, projectId);
@@ -28,9 +25,9 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     try {
       testCaseCode = (await compileTsFile(file, projectId))[0].code;
-    } catch (error: any) {
-      if (error.message) {
-        createLog(error.message, 'error');
+    } catch (error) {
+      if ((error as Error).message) {
+        createLog((error as Error).message, 'error');
         return;
       }
       console.log(error);
@@ -39,11 +36,9 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
     // if (!cellBuilderRef.current?.contentWindow) return;
 
-    // TODO: Handle toHaveTransaction
     const linesToRemove = [
       /import\s+['"]@ton-community\/test-utils['"];/g,
       /import\s+\{[^}]+\}\s+from\s+['"]@ton-community\/blueprint['"];/g,
-      // /expect\(.*\)\.toHaveTransaction\(\s*{[^}]+}\s*\);/g,
     ];
 
     linesToRemove.forEach((pattern) => {
@@ -76,9 +71,9 @@ const TestCases: FC<Props> = ({ projectId }) => {
           { path: contractPath },
           projectId,
         );
-        contractBOC = contract?.contractBOC;
+        contractBOC = contract.contractBOC;
         testCaseCode = testCaseCode.replace(
-          contractCompileBlock?.[0],
+          contractCompileBlock[0],
           `bocToCell("${contractBOC}")`,
         );
         testCaseCode = `
@@ -87,15 +82,15 @@ const TestCases: FC<Props> = ({ projectId }) => {
       } = require("@ton/core");
         ${testCaseCode}
         `;
-      } catch (error: any) {
+      } catch (error) {
         let _error = '';
         if (typeof error === 'string') {
           _error = error;
-        } else if (error?.message) {
-          _error = error.message;
+        } else if ((error as Error).message) {
+          _error = (error as Error).message;
         }
-        if (error) {
-          createLog(error, 'error');
+        if (_error) {
+          createLog(_error, 'error');
         }
       }
     }
@@ -112,6 +107,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
       .replace(/}\s*from\s*'@ton\/core';/, '} = require("@ton/core");')
       .replace(/}\s*from\s*'ton-core';/, '} = require("@ton/core");');
 
+    // eslint-disable-next-line no-useless-escape
     testCaseCode = `
     require("@ton\/test-utils");
     function bocToCell(codeBoc) {
@@ -121,11 +117,11 @@ const TestCases: FC<Props> = ({ projectId }) => {
     ${testCaseCode}
     `;
 
-    runIt(filePath, testCaseCode);
+    await runIt(filePath, testCaseCode);
   };
 
   const runIt = async (filePath: string, codeBase: string) => {
-    const _webcontainerInstance = (window as any).webcontainerInstance;
+    const _webcontainerInstance = window.webcontainerInstance;
     filePath = getFileNameFromPath(filePath).replace('.spec.ts', '.spec.js');
 
     if (!_webcontainerInstance) {
@@ -148,25 +144,6 @@ const TestCases: FC<Props> = ({ projectId }) => {
     Analytics.track('Execute Test Case', { platform: 'IDE', type: 'TON-func' });
   };
 
-  useEffect(() => {
-    if (!cellBuilderRef.current) return;
-
-    const handler = () => {
-      setExecutionCount((prev) => prev + 1);
-    };
-
-    const currentRef = cellBuilderRef.current;
-    currentRef.addEventListener('load', handler);
-    return () => {
-      currentRef.removeEventListener('load', handler);
-    };
-  }, [cellBuilderRef.current]);
-
-  useEffect(() => {
-    if (!executionCount) return;
-    executeTestCases(selectedFilePath);
-  }, [executionCount]);
-
   return (
     <div className={s.root}>
       <ExecuteFile
@@ -175,7 +152,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
         label={`Run`}
         description="Select .spec.ts file to run test cases"
         onClick={(e, data) => {
-          executeTestCases(data);
+          executeTestCases(data).catch(() => {});
         }}
       />
     </div>

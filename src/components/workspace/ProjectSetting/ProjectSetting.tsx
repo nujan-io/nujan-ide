@@ -16,15 +16,17 @@ const ProjectSetting: FC<Props> = ({ projectId }) => {
 
   const toggleProjectStatus = (status: boolean) => {
     setIsChecked(status);
-    workspaceAction.updateProjectById({ isPublic: status }, projectId);
+    workspaceAction.updateProjectById(
+      { isPublic: status } as Project,
+      projectId,
+    );
   };
 
-  const copyURL = () => {
-    const _location = window.location;
-    const url =
-      _location.protocol + '//' + _location.host + '/' + _location.pathname;
-    navigator.clipboard.writeText(url);
-    message.info('Copied to clipboard');
+  const copyURL = async () => {
+    const { protocol, host, pathname } = window.location;
+    const url = protocol + '//' + host + '/' + pathname;
+    await navigator.clipboard.writeText(url);
+    await message.info('Copied to clipboard');
   };
 
   return (
@@ -37,7 +39,12 @@ const ProjectSetting: FC<Props> = ({ projectId }) => {
           You can make your project public if want to make it shareable anywhere
         </small>
       </p>
-      <Button onClick={copyURL} className={s.copy}>
+      <Button
+        onClick={() => {
+          copyURL().catch(() => {});
+        }}
+        className={s.copy}
+      >
         <AppIcon name="Clone" className={s.icon} />
         Copy URL
       </Button>

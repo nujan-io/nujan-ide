@@ -37,10 +37,7 @@ export function useProjectActions() {
     createNewProject,
     getFileByPath,
     addFilesToDatabase,
-    updateProjectById,
     createFiles,
-    updateFileContent,
-    deleteItem,
     projectFiles,
   } = useWorkspaceActions();
   const { isContractDebugEnabled } = useSettingAction();
@@ -63,10 +60,13 @@ export function useProjectActions() {
         ? await importUserFile(file as RcFile, language)
         : createTemplateBasedProject(template, language, defaultFiles);
 
-    const convertedFileObject = files.reduce((acc: any, current) => {
-      acc[current.name] = current;
-      return acc;
-    }, {});
+    const convertedFileObject: Record<string, Tree | undefined> = files.reduce(
+      (acc, current) => {
+        acc[current.name] = current;
+        return acc;
+      },
+      {} as Record<string, Tree>,
+    );
 
     if (
       (!convertedFileObject['stateInit.cell.ts'] ||
@@ -99,9 +99,9 @@ export function useProjectActions() {
     file: Pick<Tree, 'path'>,
     projectId: Project['id'],
   ) {
-    const fileList: any = {};
+    const fileList: Record<string, Tree> = {};
 
-    let filesToProcess = [file?.path];
+    const filesToProcess = [file.path];
 
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
@@ -115,14 +115,14 @@ export function useProjectActions() {
       let compileDirectives = await extractCompilerDiretive(file.content);
 
       compileDirectives = compileDirectives.map((d: string) => {
-        const pathParts = file?.path?.split('/');
+        const pathParts = file.path?.split('/');
         if (!pathParts) {
           return d;
         }
 
         // Convert relative path to absolute path by prepending the current file directory
         if (pathParts.length > 1) {
-          let fileDirectory = pathParts
+          const fileDirectory = pathParts
             .slice(0, pathParts.length - 1)
             .join('/');
           return `${fileDirectory}/${d}`;
@@ -136,25 +136,25 @@ export function useProjectActions() {
       filesToProcess.push(...compileDirectives);
     }
     const filesCollection: Tree[] = Object.values(fileList);
-    let buildResult: CompileResult = await compileFunc({
-      targets: [file?.path!!],
+    const buildResult: CompileResult = await compileFunc({
+      targets: [file.path!],
       sources: (path) => {
         const file = filesCollection.find((f: Tree) => f.path === path);
         if (file?.content) {
           fileList[file.id] = file;
         }
-        return file?.content || '';
+        return file?.content ?? '';
       },
     });
 
     if (buildResult.status === 'error') {
-      throw buildResult.message;
+      throw new Error(buildResult.message);
     }
 
     const abi = await generateABI(fileList);
 
     const contractName = file.path?.replace('.fc', '');
-    createFiles(
+    await createFiles(
       [
         {
           path: `dist/func_${contractName}.abi`,
@@ -179,9 +179,7 @@ export function useProjectActions() {
     file: Pick<Tree, 'path'>,
     projectId: Project['id'],
   ) {
-    const fileList: { [key: string]: string } = {};
-
-    let filesToProcess = [file?.path];
+    const filesToProcess = [file.path];
 
     projectFiles(projectId).forEach((f) => {
       if (
@@ -199,21 +197,17 @@ export function useProjectActions() {
       const fileToProcess = filesToProcess.pop();
       const file = await getFileByPath(fileToProcess, projectId);
       if (file?.path) {
-        fs.writeContractFile(file.path!!, file?.content || '');
+        fs.writeContractFile(file.path!, file.content ?? '');
       }
     }
 
     let ctx = new CompilerContext({ shared: {} });
-    let stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
-    try {
-      ctx = precompile(ctx, fs, stdlib, file.path!!);
-    } catch (error: any) {
-      throw error;
-    }
+    const stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
+    ctx = precompile(ctx, fs, stdlib, file.path!);
 
     const response = await buildTact({
       config: {
-        path: file.path!!,
+        path: file.path!,
         output: 'dist',
         name: 'tact',
         options: {
@@ -227,7 +221,7 @@ export function useProjectActions() {
       throw new Error('Error while building');
     }
 
-    let output = {
+    const output = {
       abi: '',
       boc: '',
       contractScript: {
@@ -249,7 +243,7 @@ export function useProjectActions() {
       }
     });
 
-    let buildFiles: Pick<Tree, 'path' | 'content'>[] = [];
+    const buildFiles: Pick<Tree, 'path' | 'content'>[] = [];
     fs.overwrites.forEach((value, key) => {
       const filePath = key.slice(1);
 
@@ -261,7 +255,7 @@ export function useProjectActions() {
           .replace('tact_', '');
         fileContent = JSON.parse(fileContent);
         const parsedFileContent = {
-          ...(fileContent as Object),
+          ...(fileContent as Partial<Tree>),
           initParams: getInitParams(ctx, contractName, fileContent),
         };
         fileContent = JSON.stringify(parsedFileContent);
@@ -277,17 +271,18 @@ export function useProjectActions() {
       // EventEmitter.emit('FORCE_UPDATE_FILE', filePath);
     });
 
-    createFiles(buildFiles, 'dist', projectId);
+    await createFiles(buildFiles, 'dist', projectId);
 
     return fs.overwrites;
   }
 
-  async function generateABI(fileList: any) {
-    const unresolvedPromises = Object.values(fileList).map(
-      async (file: any) => {
-        return await parseGetters(file.content);
-      },
-    );
+  async function generateABI(fileList: Record<string, Tree>) {
+    const unresolvedPromises = Object.values(fileList).map(async (file) => {
+      if (!file.content) {
+        return;
+      }
+      return await parseGetters(file.content);
+    });
     const results = await Promise.all(unresolvedPromises);
     return results[0];
   }
@@ -309,7 +304,7 @@ const createTemplateBasedProject = (
       return file;
     }
     const fileId = uuidv4();
-    filesWithId.push({ id: fileId, content: file.content || '' });
+    filesWithId.push({ id: fileId, content: file.content ?? '' });
     return {
       ...file,
       id: fileId,
@@ -336,7 +331,7 @@ const importUserFile = async (
   ];
   const files: Tree[] = [];
 
-  const fileDirectoryMap: { [key: string]: string } = {};
+  const fileDirectoryMap: Record<string, string> = {};
 
   // for storing file in indexed DB
   const filesWithId: FileInterface[] = [];
@@ -347,7 +342,7 @@ const importUserFile = async (
     const filePath = entry.filename;
     const pathParts = filePath.split('/');
     const fileName = pathParts[pathParts.length - 1];
-    let fileDirectory = pathParts.slice(0, pathParts.length - 1).join('/');
+    const fileDirectory = pathParts.slice(0, pathParts.length - 1).join('/');
     const currentDirectory = fileDirectory.split('/').slice(-1)[0];
     let parentDirectory = '';
     let fileContent = '';
@@ -381,7 +376,10 @@ const importUserFile = async (
     files.push(currentFile);
   }
 
-  let commonFiles: any = { files: [], filesWithId: [] };
+  let commonFiles: { files: Tree[]; filesWithId: FileInterface[] } = {
+    files: [],
+    filesWithId: [],
+  };
 
   if (language !== 'tact') {
     commonFiles = createTemplateBasedProject(
@@ -400,13 +398,15 @@ const importUserFile = async (
 const getInitParams = (
   ctx: CompilerContext,
   contractName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abi: any,
 ) => {
   const contactType = getType(ctx, contractName);
   let initParams: { name: string; type: string; optional: boolean }[] = [];
 
   initParams =
-    contactType.init?.args?.map((item: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contactType.init?.args.map((item: any) => {
       return {
         name: item.name,
         type: item.type.name,
@@ -415,12 +415,14 @@ const getInitParams = (
     }) ?? [];
 
   const deployFields = abi.types.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (item: any) => item.name === 'Deploy',
   )?.fields;
 
   if (deployFields && deployFields.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     deployFields.forEach((item: any) => {
-      initParams?.push({
+      initParams.push({
         name: item.name,
         type: item.type.type,
         optional: item.type.optional,

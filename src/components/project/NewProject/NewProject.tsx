@@ -1,16 +1,20 @@
-import AppIcon, { AppIconType } from '@/components/ui/icon';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
-import { FC, useEffect, useState } from 'react';
-
 import { Tooltip } from '@/components/ui';
+import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { useProjectActions } from '@/hooks/project.hooks';
-import { Tree } from '@/interfaces/workspace.interface';
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import {
+  ContractLanguage,
+  ProjectTemplate,
+  Tree,
+} from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
 import { downloadRepo } from '@/utility/gitRepoDownloader';
+import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
+import { useForm } from 'antd/lib/form/Form';
+import type { RcFile } from 'antd/lib/upload';
 import { useRouter } from 'next/router';
+import { FC, useEffect, useState } from 'react';
 import s from './NewProject.module.scss';
 
 interface Props {
@@ -22,7 +26,7 @@ interface Props {
   heading?: string;
   active?: boolean;
   defaultFiles?: Tree[];
-  projectLanguage?: string;
+  projectLanguage?: ContractLanguage;
   name?: string;
 }
 
@@ -58,8 +62,17 @@ const NewProject: FC<Props> = ({
     { label: 'Counter Contract', value: 'tonCounter' },
   ];
 
-  const onFormFinish = async (values: any) => {
-    let { name: projectName, githubUrl, language } = values;
+  interface FormValues {
+    name: string;
+    githubUrl?: string;
+    language: ContractLanguage;
+    template?: ProjectTemplate | 'import';
+    file?: { file: RcFile } | null;
+  }
+
+  const onFormFinish = async (values: FormValues) => {
+    const { githubUrl, language } = values;
+    let { name: projectName } = values;
     let files: Tree[] = defaultFiles;
 
     try {
@@ -69,14 +82,14 @@ const NewProject: FC<Props> = ({
       }
 
       if (projectType === 'git') {
-        files = await downloadRepo(githubUrl);
+        files = await downloadRepo(githubUrl as string);
       }
 
       const projectId = await createProject(
         projectName,
         language,
-        values.template || 'import',
-        values?.file?.file,
+        values.template ?? 'import',
+        values.file?.file ?? null,
         files,
       );
 
@@ -88,16 +101,16 @@ const NewProject: FC<Props> = ({
         sourceType: projectType,
         template: values.template,
       });
-      message.success(`Project '${projectName}' created`);
-      router.push(`/project/${projectId}`);
-    } catch (error: any) {
-      let messageText = 'Error in creating project';
+      await message.success(`Project '${projectName}' created`);
+      await router.push(`/project/${projectId}`);
+    } catch (error) {
+      let errorMessage = 'Error in creating project';
       if (typeof error === 'string') {
-        messageText = error;
+        errorMessage = error;
       } else {
-        messageText = error?.message || messageText;
+        errorMessage = (error as Error).message || errorMessage;
       }
-      message.error(messageText);
+      await message.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -111,14 +124,14 @@ const NewProject: FC<Props> = ({
     form.setFieldsValue({
       template: 'import',
       githubUrl: importURL || '',
-      name: projectName || '',
-      language: importLanguage || 'func',
+      name: projectName ?? '',
+      language: importLanguage ?? 'func',
     });
     setIsActive(true);
     const finalQueryParam = router.query;
     delete finalQueryParam.importURL;
     delete finalQueryParam.name;
-    router.replace({ query: finalQueryParam });
+    router.replace({ query: finalQueryParam }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [importURL, projectName, form]);
 
@@ -127,11 +140,11 @@ const NewProject: FC<Props> = ({
   };
 
   useEffect(() => {
-    EventEmitter.on('ONBOARDOING_NEW_PROJECT', () => {
+    EventEmitter.on('ONBOARDING_NEW_PROJECT', () => {
       setIsActive(true);
     });
     return () => {
-      EventEmitter.off('ONBOARDOING_NEW_PROJECT');
+      EventEmitter.off('ONBOARDING_NEW_PROJECT');
     };
   }, []);
 
@@ -147,9 +160,9 @@ const NewProject: FC<Props> = ({
             }
             onFormFinish({
               template: 'import',
-              name: name,
+              name: name ?? '',
               language: projectLanguage,
-            });
+            }).catch(() => {});
           }}
         >
           {ui === 'icon' && <AppIcon name={icon} className={s.newIcon} />}
@@ -176,7 +189,9 @@ const NewProject: FC<Props> = ({
           form={form}
           className={`${s.form} app-form`}
           layout="vertical"
-          onFinish={onFormFinish}
+          onFinish={(formValues: FormValues) => {
+            onFormFinish(formValues).catch(() => {});
+          }}
           autoComplete="off"
           initialValues={{ template: 'tonCounter', language: 'tact' }}
           requiredMark="optional"
@@ -223,7 +238,7 @@ const NewProject: FC<Props> = ({
                 accept=".zip"
                 multiple={false}
                 maxCount={1}
-                beforeUpload={(file) => {
+                beforeUpload={() => {
                   return false;
                 }}
               >
