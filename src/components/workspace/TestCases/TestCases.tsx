@@ -131,8 +131,9 @@ const TestCases: FC<Props> = ({ projectId }) => {
     createLog('Running test cases...', 'info', true);
     await _webcontainerInstance.fs.writeFile(filePath, codeBase);
 
-    const response = await _webcontainerInstance.spawn('npx', [
-      'jest',
+    const response = await _webcontainerInstance.spawn('node', [
+      '--expose-gc',
+      './node_modules/.bin/jest',
       filePath,
     ]);
     await response.output.pipeTo(
