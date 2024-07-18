@@ -83,6 +83,15 @@ const LogView: FC<Props> = ({ filter }) => {
   useEffectOnce(() => {
     let _terminal: TerminalType | null = null;
 
+    const onGenericLog = (data: LogEntry) => {
+      printLog(data);
+    };
+
+    const onTestCaseLog = (data: string) => {
+      if (!terminal.current) return;
+      terminal.current.write(data);
+    };
+
     const initTerminal = async () => {
       if (!logViewerRef.current) return;
       const appTerminal = document.getElementById('app-terminal');
@@ -127,9 +136,8 @@ const LogView: FC<Props> = ({ filter }) => {
         _terminal?.clear();
       });
 
-      EventEmitter.on('LOG', (data: LogEntry) => {
-        printLog(data);
-      });
+      EventEmitter.on('LOG', onGenericLog);
+      EventEmitter.on('TEST_CASE_LOG', onTestCaseLog);
     };
     if (typeof window === 'undefined') {
       return;
@@ -171,7 +179,8 @@ const LogView: FC<Props> = ({ filter }) => {
 
     return () => {
       isTerminalLoaded.current = false;
-      EventEmitter.off('LOG');
+      EventEmitter.off('LOG', onGenericLog);
+      EventEmitter.off('TEST_CASE_LOG', onTestCaseLog);
       EventEmitter.off('LOG_CLEAR');
       EventEmitter.off('ON_SPLIT_DRAG_END');
       terminal.current?.dispose();

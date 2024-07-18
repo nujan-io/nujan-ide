@@ -11,6 +11,7 @@ export interface EventEmitterPayloads {
   SAVE_FILE: undefined | { fileId: string; content: string };
   FORCE_UPDATE_FILE: string;
   FILE_SAVED: { fileId: string };
+  TEST_CASE_LOG: string;
 }
 
 const EventEmitter = {
