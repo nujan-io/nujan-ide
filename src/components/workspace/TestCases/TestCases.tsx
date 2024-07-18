@@ -3,6 +3,7 @@ import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Analytics } from '@/utility/analytics';
+import EventEmitter from '@/utility/eventEmitter';
 import { getFileNameFromPath } from '@/utility/utils';
 import { FC } from 'react';
 import ExecuteFile from '../ExecuteFile';
@@ -124,20 +125,21 @@ const TestCases: FC<Props> = ({ projectId }) => {
     const _webcontainerInstance = window.webcontainerInstance;
     filePath = getFileNameFromPath(filePath).replace('.spec.ts', '.spec.js');
 
-    if (!_webcontainerInstance) {
+    if (!_webcontainerInstance?.path) {
       return;
     }
+    createLog('Running test cases...', 'info', true);
     await _webcontainerInstance.fs.writeFile(filePath, codeBase);
 
     const response = await _webcontainerInstance.spawn('npx', [
       'jest',
       filePath,
     ]);
-    response.output.pipeTo(
+
+    await response.output.pipeTo(
       new WritableStream({
         write(data) {
-          if (!data) return;
-          createLog(data, 'info', true, true);
+          EventEmitter.emit('TEST_CASE_LOG', data);
         },
       }),
     );
