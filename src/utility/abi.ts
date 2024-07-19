@@ -1,4 +1,6 @@
 import { ContractLanguage } from '@/interfaces/workspace.interface';
+import { CompilerContext } from '@tact-lang/compiler/dist/context';
+import { getType } from '@tact-lang/compiler/dist/types/resolveDescriptors';
 import {
   ABIArgument,
   ABIField,
@@ -151,4 +153,56 @@ export class ABIParser {
       };
     });
   }
+}
+
+export function getContractInitParams(
+  ctx: CompilerContext,
+  contractName: string,
+) {
+  const contactType = getType(ctx, contractName);
+
+  if (!contactType.init?.args) return [];
+  return contactType.init.args.map((item) => {
+    let additionalProps = {};
+    switch (item.type.kind) {
+      case 'ref':
+        additionalProps = {
+          type: item.type.name,
+          optinal: item.type.optional,
+        };
+        break;
+      case 'map':
+        additionalProps = {
+          key: item.type.value,
+          type: undefined,
+          value: item.type.value,
+        };
+        break;
+      case 'void':
+        additionalProps = {
+          name: item.name,
+          type: 'void',
+        };
+        break;
+      case 'null':
+        additionalProps = {
+          name: item.name,
+          type: 'null',
+        };
+        break;
+      default:
+        additionalProps = {
+          name: 'unknown',
+          type: 'null',
+        };
+        break;
+    }
+    return {
+      name: item.name,
+      type: {
+        ...additionalProps,
+        kind: item.type.kind === 'map' ? 'dict' : 'simple',
+      },
+    };
+  });
 }
