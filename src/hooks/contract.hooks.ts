@@ -89,22 +89,11 @@ export function useContractAction() {
     const _contractInit = window.contractInit;
     let _userContract: Contract | null = null;
 
-    if (initParams && initParams.length > 0 && project.language === 'tact') {
-      const hasQueryId = initParams.findIndex(
-        (item) => item.name === 'queryId',
-      );
-      const queryId = BigInt(0);
-      if (hasQueryId > -1) {
-        messageParams = {
-          $$type: 'Deploy',
-          queryId,
-        };
-      } else {
-        messageParams = {
-          $$type: 'Deploy',
-          queryId,
-        };
-      }
+    if (project.language === 'tact') {
+      messageParams = {
+        $$type: 'Deploy',
+        queryId: BigInt(0),
+      };
     }
 
     if (project.language === 'tact' && network.toUpperCase() !== 'SANDBOX') {
