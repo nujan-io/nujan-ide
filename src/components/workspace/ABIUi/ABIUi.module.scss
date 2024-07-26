@@ -14,11 +14,12 @@
     background-color: #373636;
   }
   &.tact {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
     .form {
       position: relative;
-      &:not(:last-child):not(:first-child) {
-        margin: 1.6rem 0px;
-      }
+      margin: 0;
     }
     &::before {
       display: none;
