@@ -102,6 +102,7 @@ export interface TactABIField {
 
 export interface TactType {
   name: string;
+  type?: ABITypeRef;
   params: TactABIField[];
   returnType: Maybe<ABITypeRef>;
 }

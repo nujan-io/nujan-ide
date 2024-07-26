@@ -164,6 +164,15 @@ const TactABIUi: FC<TactABI> = ({
   const { callGetter, callSetter } = useContractAction();
   const { createLog } = useLogActivity();
 
+  const getItemHeading = (item: TactType) => {
+    if (item.type?.kind === 'simple') {
+      if (item.type.type === 'text') {
+        return `"${item.name}"`;
+      }
+    }
+    return item.name;
+  };
+
   const onSubmit = async (formValues: TactInputFields, fieldName: string) => {
     try {
       const parsedInputsValues = Object.values(await parseInputs(formValues));
@@ -209,25 +218,18 @@ const TactABIUi: FC<TactABI> = ({
     }
   };
 
-  const isDisplayFormBoundingBox = (field: TactABIField[]) => {
-    // We need to check different because setter can have default value where input field is hidden
-    return (
-      (field.length > 0 && type === 'Getter') ||
-      (type === 'Setter' && !field[0].type.defaultValue)
-    );
-  };
-
   return (
     <div className={`${s.root} ${s.tact} ${s[type]}`}>
       {abi.map((item, i) => (
         <Form
           key={`${item.name}-${i}`}
-          className={`${s.form} ${isDisplayFormBoundingBox(item.params) ? s.nestedForm : ''} app-form`}
+          className={`${s.form} ${s.nestedForm} app-form`}
           layout="vertical"
           onFinish={(values) => {
             onSubmit(values, item.name).catch(() => {});
           }}
         >
+          <h4 className={s.abiHeading}>{getItemHeading(item)}:</h4>
           {item.params.map((field) =>
             renderField(field as TactABIField, [], type === 'Setter' ? -1 : 0),
           )}
@@ -237,7 +239,7 @@ const TactABIUi: FC<TactABI> = ({
             htmlType="submit"
             loading={loading === item.name}
           >
-            {item.name}
+            {type === 'Getter' ? 'Call' : 'Send'}
           </Button>
         </Form>
       ))}
