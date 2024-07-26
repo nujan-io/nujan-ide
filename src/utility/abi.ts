@@ -1,11 +1,15 @@
-import { ContractLanguage } from '@/interfaces/workspace.interface';
+import {
+  ContractLanguage,
+  TactABIField,
+  TactInputFields,
+} from '@/interfaces/workspace.interface';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import { getType } from '@tact-lang/compiler/dist/types/resolveDescriptors';
 import {
   ABIArgument,
   ABIField,
   ABIType,
-  ABITypeRef,
+  Address,
   ContractABI,
 } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
@@ -14,12 +18,6 @@ export type ABITypeObject = Record<string, ABIType>;
 
 interface TactContractABI extends ContractABI {
   init: Maybe<ABIArgument[]>;
-}
-
-export interface TactABIField {
-  name: string;
-  type: ABITypeRef;
-  fields: ABIField[] | null;
 }
 
 export class ABIParser {
@@ -38,6 +36,14 @@ export class ABIParser {
       return undefined;
     }
     return this.abi.init.map((item) => {
+      const dataType = item.type.kind === 'simple' ? item.type.type : 'dict';
+      if (
+        this.abiTypes &&
+        !Object.prototype.hasOwnProperty.call(this.abiTypes, dataType) &&
+        item.type.kind === 'simple'
+      ) {
+        item.type.type = item.type.type.toLowerCase();
+      }
       return {
         name: item.name,
         type: item.type,
@@ -81,43 +87,71 @@ export class ABIParser {
       return undefined;
     }
 
-    return this.abi.receivers.map((receiver) => {
-      let argumentName: string;
+    return (
+      this.abi.receivers
+        // TODO: handle fallback. i.e. kind === 'any'
+        .filter(
+          (item) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (item.message as any).type !== 'Deploy' &&
+            item.message.kind !== 'any',
+        )
+        .map((receiver) => {
+          let argumentName: string;
 
-      switch (receiver.message.kind) {
-        case 'typed':
-          argumentName = receiver.message.type;
-          break;
-        case 'text':
-          argumentName = receiver.message.text ?? '';
-          break;
-        case 'any':
-          argumentName = 'null';
-          break;
-        case 'empty':
-          argumentName = 'empty';
-          break;
-        default:
-          argumentName = 'unknown';
-          break;
-      }
+          switch (receiver.message.kind) {
+            case 'typed':
+              argumentName = receiver.message.type;
+              break;
+            case 'text':
+              argumentName = receiver.message.text ?? '';
+              break;
+            case 'any':
+              argumentName = 'any';
+              break;
+            case 'empty':
+              argumentName = 'empty';
+              break;
+            default:
+              argumentName = 'unknown';
+              break;
+          }
 
-      return {
-        name: receiver.receiver,
-        params: [
-          {
+          if (receiver.message.kind !== 'typed') {
+            return {
+              name: argumentName,
+              type: {
+                kind: 'simple',
+                type: receiver.message.kind,
+              },
+              params: [
+                {
+                  name: argumentName,
+                  type: {
+                    kind: 'simple',
+                    type: receiver.message.kind,
+                    defaultValue: argumentName,
+                  },
+                },
+              ],
+            };
+          }
+
+          return {
             name: argumentName,
-            type: {
-              kind: receiver.message.kind,
-            },
-            fields:
-              receiver.message.kind === 'typed'
-                ? this.resolveFields(receiver.message.type)
-                : null,
-          },
-        ],
-      };
-    });
+            params: [
+              {
+                name: argumentName,
+                type: {
+                  kind: 'simple',
+                  type: argumentName,
+                },
+                fields: this.resolveFields(receiver.message.type),
+              },
+            ],
+          };
+        })
+    );
   }
 
   getABI() {
@@ -168,7 +202,7 @@ export function getContractInitParams(
       case 'ref':
         additionalProps = {
           type: item.type.name,
-          optinal: item.type.optional,
+          optional: item.type.optional,
         };
         break;
       case 'map':
@@ -205,4 +239,64 @@ export function getContractInitParams(
       },
     };
   });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseInputs(inputFields: TactInputFields, key?: string): any {
+  if (typeof inputFields === 'object' && !Array.isArray(inputFields)) {
+    if ('value' in inputFields && 'type' in inputFields) {
+      const value = inputFields['value'] as
+        | string
+        | undefined
+        | number
+        | boolean;
+      if (value === undefined) return;
+      const valueType = inputFields['type'] as string;
+
+      switch (valueType) {
+        case 'int':
+        case 'uint':
+          try {
+            return BigInt(value);
+          } catch (error) {
+            throw new Error(`Parsing failed for ${key}: ${value}`);
+          }
+        case 'address':
+          return Address.parse(value as string);
+        case 'string':
+          return String(value);
+        case 'dict':
+          throw new Error(`Map not supported yet`);
+        case 'bool':
+          return value;
+        case 'text':
+          return value;
+        case 'empty':
+          return null;
+        default:
+          throw new Error(`Unknown type: ${valueType}`);
+      }
+    } else {
+      const parsedObj = {} as TactInputFields;
+      if (
+        typeof parsedObj === 'object' &&
+        Object.prototype.hasOwnProperty.call(inputFields, '$$type')
+      ) {
+        parsedObj['$$type'] = inputFields['$$type'];
+      }
+      for (const key in inputFields as TactInputFields) {
+        if (
+          Object.prototype.hasOwnProperty.call(inputFields, key) &&
+          !key.startsWith('$$')
+        ) {
+          parsedObj[key] = parseInputs(inputFields[key], key);
+        }
+      }
+      return parsedObj;
+    }
+  } else if (Array.isArray(inputFields)) {
+    return inputFields.map((item) => parseInputs(item));
+  } else {
+    return inputFields;
+  }
 }

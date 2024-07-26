@@ -1,3 +1,6 @@
+import { ABITypeRef } from '@ton/core';
+import { Maybe } from '@ton/core/dist/utils/maybe';
+
 export interface Tree {
   id: string;
   name: string;
@@ -89,6 +92,42 @@ export interface ABIField {
 export interface ABI {
   getters: ABIField[];
   setters: ABIField[];
+}
+
+export interface TactABIField {
+  name: string;
+  type: ABITypeRef & { defaultValue?: string | number };
+  fields: ABIField[] | null;
+}
+
+export interface TactType {
+  name: string;
+  params: TactABIField[];
+  returnType: Maybe<ABITypeRef>;
+}
+export interface TactABI {
+  receivers: TactType[];
+  getters: TactType[];
+  init: Maybe<TactType[]>;
+}
+
+type TactInputValueType =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | TactInputValueType[]
+  | { [key: string]: TactInputValueType };
+
+interface TactInputBaseField {
+  value: TactInputValueType;
+  type: string;
+  $$type?: string;
+}
+
+export interface TactInputFields extends TactInputBaseField {
+  [key: string]: TactInputValueType | TactInputBaseField | TactInputFields;
 }
 
 export type ParameterType = 'address' | 'cell' | 'slice' | 'int' | 'bool';

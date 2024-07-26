@@ -1,10 +1,11 @@
 .root {
   padding: 1rem 0px;
   position: relative;
-  &:before {
+  &:before,
+  &.tact .form:not(:last-child)::before {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: -0.8rem;
     left: 0;
     right: 0;
     width: 5rem;
@@ -12,8 +13,26 @@
     margin: 0 auto;
     background-color: #373636;
   }
-  .formItemABI {
-    margin-bottom: 3px;
+  &.tact {
+    .form {
+      position: relative;
+      &:not(:last-child):not(:first-child) {
+        margin: 1.6rem 0px;
+      }
+    }
+    &::before {
+      display: none;
+    }
+  }
+  .nestedForm {
+    margin: 0.5rem 0;
+    background: rgba(14, 14, 16, 0.9);
+    border-radius: 5px;
+    padding: 5px;
+
+    > div {
+      border-left: 0 !important;
+    }
   }
   .abiResponse {
     word-break: break-word;
@@ -69,4 +88,15 @@
       }
     }
   }
+}
+
+.structName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--primary);
+  padding: 5px;
+}
+
+.formItemABI {
+  margin-bottom: 3px;
 }

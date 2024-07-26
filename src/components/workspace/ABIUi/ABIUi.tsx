@@ -4,7 +4,6 @@ import { LogType } from '@/interfaces/log.interface';
 import {
   ABIField,
   ABIParameter,
-  ContractLanguage,
   NetworkEnvironment,
 } from '@/interfaces/workspace.interface';
 import { TupleItem } from '@ton/core';
@@ -15,12 +14,11 @@ import s from './ABIUi.module.scss';
 
 const { Option } = Select;
 
-interface Props {
+export interface ABIUiProps {
   abi: ABIField;
   contractAddress: string;
   network: NetworkEnvironment;
   contract: SandboxContract<UserContract> | null;
-  language?: ContractLanguage;
   type: 'Getter' | 'Setter';
 }
 
@@ -35,12 +33,11 @@ type FormValues = Record<
   >
 >;
 
-const ABIUi: FC<Props> = ({
+const ABIUi: FC<ABIUiProps> = ({
   abi,
   contractAddress,
   network,
   contract = null,
-  language = 'func',
   type,
 }) => {
   const possiblesTypes = (abi.parameters ?? []).map((item) => {
@@ -59,14 +56,8 @@ const ABIUi: FC<Props> = ({
 
   const onSubmit = async (formValues: FormValues) => {
     const stack = Object.values(formValues).map((param) => {
-      const formField = Object.entries(param);
-      const { type, value } = formField[0][1];
-      if (language === 'tact') {
-        return { type, value, name: formField[0][0] };
-      } else {
-        const { type, value } = Object.values(param)[0];
-        return { type: type, value: value };
-      }
+      const { type, value } = Object.values(param)[0];
+      return { type: type, value: value };
     });
 
     try {
@@ -78,7 +69,7 @@ const ABIUi: FC<Props> = ({
         contractAddress,
         abi.name,
         contract as SandboxContract<UserContract>,
-        language,
+        'func',
         abi.kind,
         stack as TupleItem[],
         network,
