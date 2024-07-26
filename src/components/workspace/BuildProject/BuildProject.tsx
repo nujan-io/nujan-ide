@@ -263,7 +263,6 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         buildOutput?.dataCell as unknown as string,
         environment.toLowerCase() as Network,
         activeProject!,
-        contractABI.initParams,
       );
 
       Analytics.track('Deploy project', {

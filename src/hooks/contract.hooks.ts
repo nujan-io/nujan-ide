@@ -13,7 +13,6 @@ import {
 } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import {
-  ABIArgument,
   Address,
   Cell,
   Contract,
@@ -29,7 +28,6 @@ import {
   storeStateInit,
   toNano,
 } from '@ton/core';
-import { Maybe } from '@ton/core/dist/utils/maybe';
 import {
   SandboxContract,
   SendMessageResult,
@@ -58,7 +56,6 @@ export function useContractAction() {
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
     project: Project,
-    initParams: Maybe<ABIArgument[]>,
   ): Promise<{
     address: string;
     contract?: SandboxContract<UserContract>;
