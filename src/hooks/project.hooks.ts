@@ -217,7 +217,7 @@ export function useProjectActions() {
       project: fs,
       stdlib: '@stdlib',
     });
-    if (!response) {
+    if (!response.ok) {
       throw new Error('Error while building');
     }
 
@@ -406,10 +406,10 @@ const getInitParams = (
 
   initParams =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contactType.init?.args.map((item: any) => {
+    contactType.init?.params.map((item: any) => {
       return {
-        name: item.name,
-        type: item.type.name,
+        name: item.name.text,
+        type: item.type.name.toLowerCase(),
         optional: item.type.optional,
       };
     }) ?? [];

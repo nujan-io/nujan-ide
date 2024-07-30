@@ -100,7 +100,7 @@
           "patterns": [
             {
               "comment": "FunC identifier",
-              "match": "((?:[a-zA-Z_\\'\\?!&]|::)(?:[a-zA-Z0-9_\\'\\?!&]|::)*)",
+              "match": "(.*?)",
               "name": "entity.name.function.func.tact"
             }
           ],
