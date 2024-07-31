@@ -171,7 +171,16 @@ const ContractInteraction: FC<Props> = ({
   }, [isLoading, tonConnector, network, contractAddress, contract]);
 
   const send = async (data: string) => {
-    await sendMessage(data, contractAddress, contract, network, wallet!);
+    const messageResponse = await sendMessage(
+      data,
+      contractAddress,
+      contract,
+      network,
+      wallet!,
+    );
+    messageResponse?.logs?.map((log) => {
+      createLog(log, 'info');
+    });
   };
 
   if (!contractAddress) {
