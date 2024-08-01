@@ -87,7 +87,7 @@ export const renderField = (
   };
 
   const formListForDict = () => (
-    <Form.List name={[...name, 'value']}>
+    <Form.List name={[...name, 'value']} initialValue={[]}>
       {(fieldCollection, { add, remove, move }) => (
         <div className={s.fieldList}>
           {fieldCollection.map(({ key, name: fieldName }, index) => {

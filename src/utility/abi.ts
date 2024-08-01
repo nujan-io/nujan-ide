@@ -250,13 +250,13 @@ export function getContractInitParams(
         break;
       case 'void':
         additionalProps = {
-          name: item.name,
+          name: item.name.text,
           type: 'void',
         };
         break;
       case 'null':
         additionalProps = {
-          name: item.name,
+          name: item.name.text,
           type: 'null',
         };
         break;
@@ -268,7 +268,7 @@ export function getContractInitParams(
         break;
     }
     return {
-      name: item.name,
+      name: item.name.text,
       type: {
         ...additionalProps,
         kind: item.type.kind === 'map' ? 'dict' : 'simple',
@@ -302,8 +302,6 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
           return Address.parse(value as string);
         case 'string':
           return String(value);
-        case 'dict':
-          throw new Error(`Map not supported yet`);
         case 'bool':
           return value;
         case 'text':
