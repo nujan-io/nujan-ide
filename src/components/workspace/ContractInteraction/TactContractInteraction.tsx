@@ -1,3 +1,4 @@
+import { TactType } from '@/interfaces/workspace.interface';
 import { FC } from 'react';
 import { TactABIUi } from '../ABIUi';
 import { ProjectInteractionProps } from './ContractInteraction';
@@ -23,25 +24,29 @@ const TactContractInteraction: FC<ProjectInteractionProps> = ({
       <h3 className={s.label}>Getters ({abi.getters.length})</h3>
       {abi.getters.length === 0 && <p>No Getters Found</p>}
 
-      <TactABIUi
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        abi={abi.getters as any}
-        contract={contract}
-        contractAddress={contractAddress}
-        network={network}
-        type="Getter"
-      />
+      {abi.getters.map((getter) => (
+        <TactABIUi
+          key={getter.name}
+          abi={getter as TactType}
+          contract={contract}
+          contractAddress={contractAddress}
+          network={network}
+          type="Getter"
+        />
+      ))}
       <br />
       <h3 className={s.label}>Receivers ({abi.setters.length})</h3>
       {abi.setters.length === 0 && <p>No Receivers Found</p>}
-      <TactABIUi
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        abi={abi.setters as any}
-        contract={contract}
-        contractAddress={contractAddress}
-        network={network}
-        type="Setter"
-      />
+      {abi.setters.map((setter) => (
+        <TactABIUi
+          key={setter.name}
+          abi={setter as TactType}
+          contract={contract}
+          contractAddress={contractAddress}
+          network={network}
+          type="Setter"
+        />
+      ))}
     </div>
   );
 };

@@ -11,6 +11,8 @@ import {
   ABIType,
   Address,
   ContractABI,
+  Dictionary,
+  DictionaryKeyTypes,
 } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
 
@@ -47,10 +49,7 @@ export class ABIParser {
       return {
         name: item.name,
         type: item.type,
-        fields:
-          item.type.kind === 'simple'
-            ? this.resolveFields(item.type.type)
-            : null,
+        fields: this.resolveFields(item),
       };
     });
   }
@@ -67,10 +66,7 @@ export class ABIParser {
           return {
             name: argument.name,
             type: argument.type,
-            fields:
-              argument.type.kind === 'simple'
-                ? this.resolveFields(argument.type.type)
-                : null,
+            fields: this.resolveFields(argument),
           };
         });
       }
@@ -146,7 +142,13 @@ export class ABIParser {
                   kind: 'simple',
                   type: argumentName,
                 },
-                fields: this.resolveFields(receiver.message.type),
+                fields: this.resolveFields({
+                  name: argumentName,
+                  type: {
+                    kind: 'simple',
+                    type: receiver.message.type,
+                  },
+                }),
               },
             ],
           };
@@ -168,24 +170,57 @@ export class ABIParser {
     }, {} as ABITypeObject);
   }
 
-  private resolveFields(field: string | null): ABIField[] | null {
-    if (!field || !this.abiTypes) {
+  private resolveFields(field: ABIField): ABIField[] | null {
+    if (!this.abiTypes) {
       return null;
     }
-    if (!Object.prototype.hasOwnProperty.call(this.abiTypes, field)) {
-      return null;
+    if (
+      field.type.kind === 'simple' &&
+      Object.prototype.hasOwnProperty.call(this.abiTypes, field.type.type)
+    ) {
+      const type = this.abiTypes[field.type.type];
+
+      return type.fields.map((item) => {
+        return {
+          name: item.name,
+          type: item.type,
+          fields: this.resolveFields(item),
+        };
+      }) as ABIField[];
+    } else if (field.type.kind === 'dict') {
+      const fields: TactABIField[] | null = [];
+      fields.push({
+        name: field.type.key,
+        type: {
+          kind: 'simple',
+          type: field.type.key,
+        },
+      } as TactABIField);
+      if (
+        Object.prototype.hasOwnProperty.call(this.abiTypes, field.type.value)
+      ) {
+        const _field = this.resolveFields({
+          ...field,
+          type: { kind: 'simple', type: field.type.value },
+        });
+        if (_field)
+          fields.push({
+            name: field.type.value,
+            type: { type: field.type.value, kind: 'simple' },
+            fields: _field,
+          });
+      } else {
+        fields.push({
+          name: field.type.value,
+          type: {
+            kind: 'simple',
+            type: field.type.value,
+          },
+        } as TactABIField);
+      }
+      return fields;
     }
-    const type = this.abiTypes[field];
-    return type.fields.map((item) => {
-      return {
-        name: item.name,
-        type: item.type,
-        fields:
-          item.type.kind === 'simple'
-            ? this.resolveFields(item.type.type)
-            : null,
-      };
-    });
+    return null;
   }
 }
 
@@ -207,9 +242,10 @@ export function getContractInitParams(
         break;
       case 'map':
         additionalProps = {
-          key: item.type.value,
+          key: item.type.key.toLowerCase(),
           type: undefined,
           value: item.type.value,
+          valueFormat: item.type.valueAs,
         };
         break;
       case 'void':
@@ -244,6 +280,7 @@ export function getContractInitParams(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parseInputs(inputFields: TactInputFields, key?: string): any {
   if (typeof inputFields === 'object' && !Array.isArray(inputFields)) {
+    // check if both `value` and `type` are present in current object. If not then it may be map or struct.
     if ('value' in inputFields && 'type' in inputFields) {
       const value = inputFields['value'] as
         | string
@@ -278,11 +315,26 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
       }
     } else {
       const parsedObj = {} as TactInputFields;
+
+      // If has `$$type` then it is a struct
       if (
         typeof parsedObj === 'object' &&
         Object.prototype.hasOwnProperty.call(inputFields, '$$type')
       ) {
         parsedObj['$$type'] = inputFields['$$type'];
+      } else {
+        // If has `value` and value is an array then it is a map
+        if ('value' in inputFields && Array.isArray(inputFields['value'])) {
+          const listItem = Dictionary.empty();
+          (inputFields['value'] as unknown[]).forEach((item) => {
+            const parsedItem = parseInputs(item as TactInputFields);
+            listItem.set(
+              Object.values(parsedItem[0])[0] as unknown as DictionaryKeyTypes,
+              Object.values(parsedItem[1])[0],
+            );
+          });
+          return listItem;
+        }
       }
       for (const key in inputFields as TactInputFields) {
         if (
@@ -294,8 +346,6 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
       }
       return parsedObj;
     }
-  } else if (Array.isArray(inputFields)) {
-    return inputFields.map((item) => parseInputs(item));
   } else {
     return inputFields;
   }

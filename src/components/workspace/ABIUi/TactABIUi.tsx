@@ -1,3 +1,4 @@
+import AppIcon from '@/components/ui/icon';
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { LogType } from '@/interfaces/log.interface';
@@ -7,11 +8,13 @@ import {
   TactType,
 } from '@/interfaces/workspace.interface';
 import { parseInputs } from '@/utility/abi';
+import { MinusCircleOutlined } from '@ant-design/icons';
 import { Address, TupleItem } from '@ton/core';
 import { SandboxContract } from '@ton/sandbox';
 import { Button, Form, Input, Switch } from 'antd';
 import { Rule, RuleObject } from 'antd/es/form';
-import { FC, useState } from 'react';
+import { useForm } from 'antd/lib/form/Form';
+import { FC, Fragment, useState } from 'react';
 import { ABIUiProps } from './ABIUi';
 import s from './ABIUi.module.scss';
 
@@ -64,7 +67,6 @@ export const renderField = (
   field: TactABIField,
   prefix: string[] = [],
   level = 0,
-  index: number = 0,
 ) => {
   const name = [...prefix, field.name];
 
@@ -83,18 +85,83 @@ export const renderField = (
     paddingLeft: '2px',
     borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
   };
-  if (fieldKind === 'simple' && field.fields) {
+
+  const formListForDict = () => (
+    <Form.List name={[...name, 'value']}>
+      {(fieldCollection, { add, remove, move }) => (
+        <div className={s.fieldList}>
+          {fieldCollection.map(({ key, name: fieldName }, index) => {
+            return (
+              <div key={key} className={s.dictItem}>
+                {field.fields?.map((subField, _i) => (
+                  <Fragment key={subField.name}>
+                    {renderField(
+                      subField as TactABIField,
+                      [fieldName.toString(), _i === 0 ? '0' : '1'],
+                      level + 1,
+                    )}
+                  </Fragment>
+                ))}
+                <div className={s.actions}>
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      move(index, index - 1);
+                    }}
+                    disabled={index === 0}
+                    icon={<AppIcon name="AngleUp" />}
+                  />
+                  <Button
+                    type="text"
+                    onClick={() => {
+                      move(index, index + 1);
+                    }}
+                    disabled={index === fieldCollection.length - 1}
+                    icon={<AppIcon name="AngleDown" />}
+                  />
+                  <Button
+                    type="text"
+                    danger
+                    icon={
+                      <MinusCircleOutlined className="dynamic-delete-button" />
+                    }
+                    onClick={() => {
+                      remove(index);
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          <Button
+            className={s.addMoreField}
+            type="dashed"
+            onClick={() => {
+              add();
+            }}
+          >
+            + {field.name}
+          </Button>
+        </div>
+      )}
+    </Form.List>
+  );
+
+  if (fieldKind === 'dict' && field.fields) {
+    return formListForDict();
+  } else if (fieldKind === 'simple' && Array.isArray(field.fields)) {
     return (
       <div key={name.join('.')} style={level > 0 ? itemStyle : {}}>
         {level >= 0 && <h3 className={s.structName}>{field.name}</h3>}
-        {field.fields.map((subField) =>
-          renderField(
-            subField as TactABIField,
-            [...prefix, field.name],
-            level + 1,
-            index,
-          ),
-        )}
+        {field.fields.map((subField) => (
+          <Fragment key={subField.name}>
+            {renderField(
+              subField as TactABIField,
+              [...prefix, field.name],
+              level + 1,
+            )}
+          </Fragment>
+        ))}
         <Form.Item
           name={[...name, '$$type']}
           initialValue={field.type.type}
@@ -118,7 +185,7 @@ export const renderField = (
     <>
       <Form.Item
         key={name.join('.')}
-        label={`${field.name} ${fieldKind === 'dict' ? ': dict not supported' : ''}`}
+        label={field.name}
         className={s.formItemABI}
         name={[...name, 'value']}
         initialValue={getInitialValue()}
@@ -150,7 +217,7 @@ export const renderField = (
 };
 
 type TactABI = Omit<ABIUiProps, 'abi'> & {
-  abi: TactType[];
+  abi: TactType;
 };
 
 const TactABIUi: FC<TactABI> = ({
@@ -163,6 +230,7 @@ const TactABIUi: FC<TactABI> = ({
   const [loading, setLoading] = useState<string | null>(null);
   const { callGetter, callSetter } = useContractAction();
   const { createLog } = useLogActivity();
+  const [form] = useForm();
 
   const getItemHeading = (item: TactType) => {
     if (item.type?.kind === 'simple') {
@@ -171,6 +239,13 @@ const TactABIUi: FC<TactABI> = ({
       }
     }
     return item.name;
+  };
+
+  const hasFormErrors = () => {
+    return (
+      !form.isFieldsTouched() ||
+      form.getFieldsError().some(({ errors }) => errors.length > 0)
+    );
   };
 
   const onSubmit = async (formValues: TactInputFields, fieldName: string) => {
@@ -220,29 +295,35 @@ const TactABIUi: FC<TactABI> = ({
 
   return (
     <div className={`${s.root} ${s.tact} ${s[type]}`}>
-      {abi.map((item, i) => (
-        <Form
-          key={`${item.name}-${i}`}
-          className={`${s.form} ${s.nestedForm} app-form`}
-          layout="vertical"
-          onFinish={(values) => {
-            onSubmit(values, item.name).catch(() => {});
-          }}
-        >
-          <h4 className={s.abiHeading}>{getItemHeading(item)}:</h4>
-          {item.params.map((field) =>
-            renderField(field as TactABIField, [], type === 'Setter' ? -1 : 0),
+      <Form
+        key={abi.name}
+        form={form}
+        className={`${s.form} ${s.nestedForm} app-form`}
+        layout="vertical"
+        onFinish={(values) => {
+          onSubmit(values, abi.name).catch(() => {});
+        }}
+      >
+        <h4 className={s.abiHeading}>{getItemHeading(abi)}:</h4>
+        {abi.params.map((field) => (
+          <Fragment key={field.name}>
+            {renderField(field as TactABIField, [], type === 'Setter' ? -1 : 0)}
+          </Fragment>
+        ))}
+        <Form.Item shouldUpdate noStyle>
+          {() => (
+            <Button
+              className={`${s.btnAction} bordered-gradient`}
+              type="default"
+              htmlType="submit"
+              disabled={abi.params.length > 0 && hasFormErrors()}
+              loading={loading === abi.name}
+            >
+              {type === 'Getter' ? 'Call' : 'Send'}
+            </Button>
           )}
-          <Button
-            className={`${s.btnAction} bordered-gradient`}
-            type="default"
-            htmlType="submit"
-            loading={loading === item.name}
-          >
-            {type === 'Getter' ? 'Call' : 'Send'}
-          </Button>
-        </Form>
-      ))}
+        </Form.Item>
+      </Form>
     </div>
   );
 };

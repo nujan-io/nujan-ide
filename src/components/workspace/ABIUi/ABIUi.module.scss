@@ -106,3 +106,33 @@
 .formItemABI {
   margin-bottom: 3px;
 }
+
+.fieldList {
+  margin: 0.8rem 0;
+  .dictItem {
+    border: 1px solid var(--grey--50);
+    margin: 0.5rem 0.1rem;
+    border-radius: 6px;
+    background: var(--grey--10);
+    padding: 0.4rem;
+    border-style: dashed;
+  }
+  .addMoreField {
+    border-color: var(--grey--50);
+    width: 100%;
+    box-shadow: none;
+    background: var(--grey--10);
+    color: var(--grey);
+  }
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+  }
+}
