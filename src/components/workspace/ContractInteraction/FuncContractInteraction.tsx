@@ -110,7 +110,17 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
   };
 
   const send = async (data: string) => {
-    await sendMessage(data, contractAddress, contract, network, wallet!);
+    const messageResponse = await sendMessage(
+      data,
+      contractAddress,
+      contract,
+      network,
+      wallet!,
+    );
+
+    messageResponse?.logs?.map((log) => {
+      createLog(log, 'info');
+    });
   };
 
   const cellBuilder = (info: string) => {

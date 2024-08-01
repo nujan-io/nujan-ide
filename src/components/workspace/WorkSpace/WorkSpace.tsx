@@ -59,15 +59,6 @@ const WorkSpace: FC = () => {
     globalWorkspace.sandboxWallet = wallet;
   };
 
-  const interceptConsoleError = (e: CustomEvent<{ data?: string[] }>) => {
-    if (!e.detail.data || e.detail.data.length === 0) return;
-    const _log = e.detail.data.join(', ');
-    // Some of the error aren't getting thrown by Tact compiler instead then are logged.
-    // console.error is not getting intercepted by the workspace because they stores reference to the original console.error method. So I have created global script(public/assets/js/log.js) which is getting loaded before any other script and it listens to the console.error and dispatches an event with the error message.
-
-    createLog(_log, 'error', true, true);
-  };
-
   const onKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
@@ -93,41 +84,15 @@ const WorkSpace: FC = () => {
 
   useEffect(() => {
     document.addEventListener('keydown', onKeydown);
-    const originalConsoleLog = console.log;
-
-    console.log = (...args) => {
-      // console.trace(args);
-      originalConsoleLog(...args); // Call the original console.log
-      const _log = args.join(' ');
-      if (!_log.includes('DEBUG') || activeProject?.language === 'tact') {
-        return;
-      }
-      const splittedLog = _log.split('\n');
-
-      for (const log of splittedLog) {
-        createLog(log, 'info', true, true);
-      }
-    };
 
     Analytics.track('Project Opened', {
       platform: 'IDE',
       type: 'TON-func',
     });
 
-    document.addEventListener(
-      'consoleError',
-      interceptConsoleError as unknown as EventListener,
-    );
-
     return () => {
-      console.log = originalConsoleLog;
       try {
         document.removeEventListener('keydown', onKeydown);
-        document.removeEventListener(
-          'consoleError',
-          interceptConsoleError as unknown as EventListener,
-        );
-
         clearLog();
       } catch (error) {
         /* empty */

@@ -6,6 +6,7 @@ import {
   Project,
   TactInputFields,
 } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import {
   capitalizeFirstLetter,
   convertToText,
@@ -222,12 +223,15 @@ export function useContractAction() {
         await message.error('The contract has not been deployed yet.');
         return;
       }
-      await contract.sendData(
+      const response = await contract.sendData(
         wallet.getSender(),
         _dataCell,
         tonAmountForInteraction,
       );
-      return;
+      return {
+        message: 'Message sent successfully',
+        logs: terminalLogMessages([response], [contract as Contract]),
+      };
     }
     try {
       const params: SendTransactionRequest = {
@@ -334,6 +338,7 @@ export function useContractAction() {
         const response = await (contract as any)[_method](
           ...(parsedStack as TactInputFields[]),
         );
+        printDebugLog();
         responseValues.push({
           method: methodName,
           value: convertToText(response),
@@ -343,6 +348,7 @@ export function useContractAction() {
           methodName,
           parsedStack as TupleItem[],
         );
+        printDebugLog();
         while (call.stack.remaining) {
           const parsedData = parseReponse(call.stack.pop());
           if (parsedData) {
@@ -495,9 +501,7 @@ function terminalLogMessages(
         if (transaction.inMessage.info.type === 'internal') {
           if (transaction.debugLogs) {
             const splittedLog = transaction.debugLogs.split('\n');
-            for (const log of splittedLog) {
-              messages.push(log);
-            }
+            messages.push(splittedLog.join('\r\n'));
           }
           if (transaction.description.type === 'generic') {
             if (transaction.description.computePhase.type === 'vm') {
@@ -666,4 +670,15 @@ function parseStackForFunc(stack: TupleItem[] | undefined) {
         };
     }
   });
+}
+
+function printDebugLog() {
+  const debugLogs = globalWorkspace.getDebugLogs();
+  if (debugLogs.length > 0) {
+    EventEmitter.emit('LOG', {
+      type: 'info',
+      text: debugLogs.join('\r\n'),
+      timestamp: new Date().toISOString(),
+    });
+  }
 }

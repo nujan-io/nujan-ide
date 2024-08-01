@@ -50,7 +50,7 @@ export default function App({
         const installProcess = await window.webcontainerInstance.spawn('npm', [
           'install',
         ]);
-        installProcess.output.pipeTo(
+        await installProcess.output.pipeTo(
           new WritableStream({
             write(data) {
               console.log('data', data);

@@ -1,5 +1,6 @@
 import type { TonCore } from '@ton/core';
 import { Contract } from '@ton/core';
+import { WebContainer } from '@webcontainer/api';
 
 export {};
 
@@ -9,7 +10,7 @@ declare global {
     MonacoEnvironment: {
       getWorkerUrl: (moduleId: string, label: string) => string;
     };
-    webcontainerInstance: WebContainer;
+    webcontainerInstance: WebContainer | null | undefined;
     TonCore: TonCore;
   }
 }

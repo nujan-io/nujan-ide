@@ -19,6 +19,7 @@ import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
 
 import { getContractInitParams } from '@/utility/abi';
+import TactLogger from '@/utility/tactLogger';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import {
   CompileResult,
@@ -216,8 +217,9 @@ export function useProjectActions() {
       },
       project: fs,
       stdlib: '@stdlib',
+      logger: new TactLogger(),
     });
-    if (!response) {
+    if (!response.ok) {
       throw new Error('Error while building');
     }
 

@@ -6,6 +6,7 @@
     "editor.tabSize": "2"
   },
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
