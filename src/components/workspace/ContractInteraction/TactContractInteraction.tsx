@@ -27,7 +27,7 @@ const TactContractInteraction: FC<ProjectInteractionProps> = ({
       {abi.getters.map((getter) => (
         <TactABIUi
           key={getter.name}
-          abi={getter as TactType}
+          abiType={getter as TactType}
           contract={contract}
           contractAddress={contractAddress}
           network={network}
@@ -40,7 +40,7 @@ const TactContractInteraction: FC<ProjectInteractionProps> = ({
       {abi.setters.map((setter) => (
         <TactABIUi
           key={setter.name}
-          abi={setter as TactType}
+          abiType={setter as TactType}
           contract={contract}
           contractAddress={contractAddress}
           network={network}

@@ -80,6 +80,10 @@
           background: #101010;
         }
       }
+      &:disabled {
+        opacity: 0.5;
+        color: #fff;
+      }
 
       &:before {
         content: '';

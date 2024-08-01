@@ -217,11 +217,11 @@ export const renderField = (
 };
 
 type TactABI = Omit<ABIUiProps, 'abi'> & {
-  abi: TactType;
+  abiType: TactType;
 };
 
 const TactABIUi: FC<TactABI> = ({
-  abi,
+  abiType,
   contractAddress,
   network,
   contract = null,
@@ -242,6 +242,8 @@ const TactABIUi: FC<TactABI> = ({
   };
 
   const hasFormErrors = () => {
+    if (type === 'Getter' && abiType.params.length === 0) return false;
+    if (type === 'Setter' && !abiType.params[0].fields) return false;
     return (
       !form.isFieldsTouched() ||
       form.getFieldsError().some(({ errors }) => errors.length > 0)
@@ -296,16 +298,16 @@ const TactABIUi: FC<TactABI> = ({
   return (
     <div className={`${s.root} ${s.tact} ${s[type]}`}>
       <Form
-        key={abi.name}
+        key={abiType.name}
         form={form}
         className={`${s.form} ${s.nestedForm} app-form`}
         layout="vertical"
         onFinish={(values) => {
-          onSubmit(values, abi.name).catch(() => {});
+          onSubmit(values, abiType.name).catch(() => {});
         }}
       >
-        <h4 className={s.abiHeading}>{getItemHeading(abi)}:</h4>
-        {abi.params.map((field) => (
+        <h4 className={s.abiHeading}>{getItemHeading(abiType)}:</h4>
+        {abiType.params.map((field) => (
           <Fragment key={field.name}>
             {renderField(field as TactABIField, [], type === 'Setter' ? -1 : 0)}
           </Fragment>
@@ -316,8 +318,8 @@ const TactABIUi: FC<TactABI> = ({
               className={`${s.btnAction} bordered-gradient`}
               type="default"
               htmlType="submit"
-              disabled={abi.params.length > 0 && hasFormErrors()}
-              loading={loading === abi.name}
+              disabled={hasFormErrors()}
+              loading={loading === abiType.name}
             >
               {type === 'Getter' ? 'Call' : 'Send'}
             </Button>
