@@ -90,6 +90,7 @@ export const renderField = (
     <Form.List name={[...name, 'value']} initialValue={[]}>
       {(fieldCollection, { add, remove, move }) => (
         <div className={s.fieldList}>
+          <h3 className={s.structName}>{field.name}</h3>
           {fieldCollection.map(({ key, name: fieldName }, index) => {
             return (
               <div key={key} className={s.dictItem}>
