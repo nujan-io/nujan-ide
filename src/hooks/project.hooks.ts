@@ -213,6 +213,8 @@ export function useProjectActions() {
         name: 'tact',
         options: {
           debug: isContractDebugEnabled(),
+          interfacesGetter: true,
+          ipfsAbiGetter: true,
         },
       },
       project: fs,
