@@ -579,7 +579,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     const contractName = extractContractName(selectedContract);
 
     const _code = `async function main() {
-      ${output.finalJsoutput}
+      ${output.finalJSoutput}
       const contractInit  = await ${contractName}.fromAddress(window.TonCore.Address.parse('${activeProject.contractAddress}'));
       return contractInit;
     } return main()`;
