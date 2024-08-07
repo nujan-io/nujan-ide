@@ -233,8 +233,8 @@ export function getContractInitParams(
 ) {
   const contactType = getType(ctx, contractName);
 
-  if (!contactType.init?.params) return [];
-  return contactType.init.params.map((item) => {
+  if (!contactType.init?.args) return [];
+  return contactType.init.args.map((item) => {
     let additionalProps = {};
     switch (item.type.kind) {
       case 'ref':
@@ -253,13 +253,13 @@ export function getContractInitParams(
         break;
       case 'void':
         additionalProps = {
-          name: item.name.text,
+          name: item.name,
           type: 'void',
         };
         break;
       case 'null':
         additionalProps = {
-          name: item.name.text,
+          name: item.name,
           type: 'null',
         };
         break;
@@ -271,7 +271,7 @@ export function getContractInitParams(
         break;
     }
     return {
-      name: item.name.text,
+      name: item.name,
       type: {
         ...additionalProps,
         kind: item.type.kind === 'map' ? 'dict' : 'simple',

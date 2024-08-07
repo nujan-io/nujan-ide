@@ -217,9 +217,9 @@ export function useProjectActions() {
       },
       project: fs,
       stdlib: '@stdlib',
-      logger: new TactLogger(),
+      logger: TactLogger,
     });
-    if (!response.ok) {
+    if (!response) {
       throw new Error('Error while building');
     }
 
