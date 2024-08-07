@@ -9,6 +9,7 @@ import { buildTs } from '@/utility/typescriptHelper';
 import { notification } from 'antd';
 import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
+import { OutputChunk } from 'rollup';
 import { v4 } from 'uuid';
 export { useWorkspaceActions };
 
@@ -41,6 +42,7 @@ function useWorkspaceActions() {
     updateFileContent,
     updateProjectById,
     closeAllFile,
+    getAllFilesWithContent,
     compileTsFile,
     isProjectEditable,
     clearWorkSpace,
@@ -117,7 +119,7 @@ function useWorkspaceActions() {
     return projects().find((p) => p.id === projectId);
   }
 
-  function projectFiles(projectId: string) {
+  function projectFiles(projectId: string): Tree[] {
     return workspace.projectFiles?.[projectId] ?? [];
   }
 
@@ -490,24 +492,36 @@ function useWorkspaceActions() {
     };
   }
 
-  async function compileTsFile(rootFile: Tree, projectId: Project['id']) {
-    if (!rootFile.name.endsWith('.ts')) {
-      throw new Error('Not a typescript file');
+  async function getAllFilesWithContent(
+    projectId: Project['id'],
+    filterFunction?: (file: Tree) => boolean,
+  ) {
+    let files = projectFiles(projectId);
+
+    if (filterFunction) {
+      files = files.filter(filterFunction);
     }
 
-    const tsFiles = projectFiles(projectId).filter((f) =>
-      f.name.endsWith('.ts'),
-    );
     const filesWithContent: Record<string, string> = {};
 
     // eslint-disable-next-line @typescript-eslint/prefer-for-of
-    for (let index = 0; index < tsFiles.length; index++) {
-      const currentFile = tsFiles[index];
+    for (let index = 0; index < files.length; index++) {
+      const currentFile = files[index];
       if (!currentFile.path) continue;
       filesWithContent[currentFile.path] =
         (await getFileById(currentFile.id, projectId))?.content ?? '';
     }
-    return buildTs(filesWithContent, rootFile.path);
+    return filesWithContent;
+  }
+
+  async function compileTsFile(rootFile: Tree, projectId: Project['id']) {
+    if (!rootFile.name.endsWith('.ts')) {
+      throw new Error('Not a typescript file');
+    }
+    const filesWithContent = await getAllFilesWithContent(projectId, (file) =>
+      file.name.endsWith('.ts'),
+    );
+    return buildTs(filesWithContent, rootFile.path) as Promise<OutputChunk[]>;
   }
 
   function isProjectEditable() {

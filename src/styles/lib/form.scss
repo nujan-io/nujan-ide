@@ -39,6 +39,9 @@ div.ant-form-item {
       border-color: #454545;
     }
   }
+  textarea.ant-input {
+    height: auto;
+  }
 }
 
 /* Change the background color for autofilled input fields */

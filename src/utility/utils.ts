@@ -130,18 +130,6 @@ export const getFileExtension = (fileName: string) => {
   return fileName.split('.').slice(1).join('.');
 };
 
-export const capitalizeFirstLetter = (inputString: string) => {
-  if (inputString.length === 0) {
-    return inputString; // Return an empty string as-is
-  }
-
-  // Capitalize the first letter
-  const firstLetter = inputString.charAt(0).toUpperCase();
-  const restOfTheString = inputString.slice(1);
-
-  return firstLetter + restOfTheString;
-};
-
 // eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
 export const convertToText = (obj: any): string => {
   //create an array that will later be joined into a string.
@@ -199,3 +187,26 @@ export const tonHttpEndpoint = ({ network }: Config) => {
     network === 'testnet' ? 'testnet.' : ''
   }toncenter.com/api/v2/jsonRPC`;
 };
+
+/**
+ * Check if the nested object contains the key `type` with the value `cell`
+ * @param obj
+ * @returns boolean
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isIncludesTypeCell(obj: Record<string, any>): boolean {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (key === 'type' && obj[key] === 'cell') {
+        return true;
+      }
+
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        if (isIncludesTypeCell(obj[key])) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}

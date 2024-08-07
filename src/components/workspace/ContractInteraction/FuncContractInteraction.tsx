@@ -8,6 +8,7 @@ import { useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import { FC, useEffect, useRef, useState } from 'react';
+import { OutputChunk } from 'rollup';
 import ABIUi from '../ABIUi';
 import CellBuilder, {
   CellValues,
@@ -66,7 +67,7 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
         },
         'cell.ts',
       );
-      const finalJsoutput = jsOutout[0].code
+      const finalJsoutput = (jsOutout as OutputChunk[])[0].code
         .replace(/^import\s+{/, 'const {')
         .replace(/}\s+from\s.+/, '} = window.TonCore;');
 

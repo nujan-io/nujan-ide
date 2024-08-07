@@ -5,6 +5,7 @@ import {
 } from '@/interfaces/workspace.interface';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import { getType } from '@tact-lang/compiler/dist/types/resolveDescriptors';
+
 import {
   ABIArgument,
   ABIField,
@@ -15,6 +16,8 @@ import {
   DictionaryKeyTypes,
 } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
+import { OutputChunk, RenderedChunk } from 'rollup';
+import { buildTs } from './typescriptHelper';
 
 export type ABITypeObject = Record<string, ABIType>;
 
@@ -277,10 +280,14 @@ export function getContractInitParams(
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseInputs(inputFields: TactInputFields, key?: string): any {
+export async function parseInputs(
+  inputFields: TactInputFields,
+  files: Record<string, string>,
+  key?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> {
   if (typeof inputFields === 'object' && !Array.isArray(inputFields)) {
-    // check if both `value` and `type` are present in current object. If not then it may be map or struct.
+    // Check if both `value` and `type` are present in the current object. If not, then it may be a map or struct.
     if ('value' in inputFields && 'type' in inputFields) {
       const value = inputFields['value'] as
         | string
@@ -298,6 +305,8 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
           } catch (error) {
             throw new Error(`Parsing failed for ${key}: ${value}`);
           }
+        case 'cell':
+          return await generateCell(value as string, files);
         case 'address':
           return Address.parse(value as string);
         case 'string':
@@ -321,16 +330,19 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
       ) {
         parsedObj['$$type'] = inputFields['$$type'];
       } else {
-        // If has `value` and value is an array then it is a map
+        // If has `value` and value is an array, then it is a map
         if ('value' in inputFields && Array.isArray(inputFields['value'])) {
           const listItem = Dictionary.empty();
-          (inputFields['value'] as unknown[]).forEach((item) => {
-            const parsedItem = parseInputs(item as TactInputFields);
+          for (const item of inputFields['value'] as unknown[]) {
+            const parsedItem = await parseInputs(
+              item as TactInputFields,
+              files,
+            );
             listItem.set(
               Object.values(parsedItem[0])[0] as unknown as DictionaryKeyTypes,
               Object.values(parsedItem[1])[0],
             );
-          });
+          }
           return listItem;
         }
       }
@@ -339,7 +351,7 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
           Object.prototype.hasOwnProperty.call(inputFields, key) &&
           !key.startsWith('$$')
         ) {
-          parsedObj[key] = parseInputs(inputFields[key], key);
+          parsedObj[key] = await parseInputs(inputFields[key], files, key);
         }
       }
       return parsedObj;
@@ -347,4 +359,32 @@ export function parseInputs(inputFields: TactInputFields, key?: string): any {
   } else {
     return inputFields;
   }
+}
+
+async function generateCell(
+  rootFilePath: string,
+  files: Record<string, string>,
+) {
+  files['ide__cell.ts'] = `
+    import exported__cell from "./${rootFilePath}"; window.exported__cell = exported__cell;`;
+  // files['ide__cell.ts'] = `import exported__cell from "./cellFile.ts";
+  // window.exported__cell = exported__cell;`;
+
+  let jsOutout: RenderedChunk[] | string = await buildTs(files, 'ide__cell.ts');
+
+  console.log('jsOutout', jsOutout);
+
+  jsOutout = (jsOutout as OutputChunk[])[0].code
+    .replace(/import\s*{/g, 'const {')
+    .replace(/}\s*from\s*'@ton\/core';/, '} = window.TonCore;')
+    .replace(/}\s*from\s*'ton-core';/, '} = window.TonCore;')
+    .replace(/}\s*from\s*'@ton\/crypto';/, '} = window.TonCrypto;');
+
+  const _code = `async function main() {
+     ${jsOutout as string}
+      return window.exported__cell
+    } return main()`;
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  const cell = await new Function(_code)();
+  return cell;
 }

@@ -11,14 +11,19 @@ import {
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
-import { delay, getFileExtension, tonHttpEndpoint } from '@/utility/utils';
+import {
+  delay,
+  getFileExtension,
+  isIncludesTypeCell,
+  tonHttpEndpoint,
+} from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import { ABIArgument, Cell } from '@ton/core';
 import { Blockchain, SandboxContract } from '@ton/sandbox';
 import { CHAIN, useTonAddress, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button, Form, Select } from 'antd';
 import Link from 'next/link';
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, Fragment, useEffect, useRef, useState } from 'react';
 import ContractInteraction from '../ContractInteraction';
 import ExecuteFile from '../ExecuteFile/ExecuteFile';
 import s from './BuildProject.module.scss';
@@ -30,6 +35,7 @@ import { Maybe } from '@ton/core/dist/utils/maybe';
 import { TonClient } from '@ton/ton';
 import { useForm } from 'antd/lib/form/Form';
 import packageJson from 'package.json';
+import { OutputChunk } from 'rollup';
 import { renderField } from '../ABIUi/TactABIUi';
 import { globalWorkspace } from '../globalWorkspace';
 import CellBuilder, { CellValues, generateCellCode } from './CellBuilder';
@@ -84,6 +90,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     updateProjectById,
     project,
     activeFile,
+    getAllFilesWithContent,
   } = useWorkspaceActions();
 
   const currentActiveFile = activeFile(projectId as string);
@@ -170,7 +177,14 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
           <div className={s.nestedForm}>
             {selectedContract &&
               contractABI.initParams?.map((item) => {
-                return renderField(item as unknown as TactABIField);
+                return (
+                  <Fragment key={item.name}>
+                    {renderField(
+                      item as unknown as TactABIField,
+                      projectFiles(projectId),
+                    )}
+                  </Fragment>
+                );
               })}
           </div>
           <Button
@@ -196,20 +210,35 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   }
 
   const initDeploy = async (formValues: FormValues) => {
-    const _temp = { ...formValues };
+    const tempFormValues = { ...formValues };
 
     let initParams = '';
-    if (_temp.queryId) {
-      delete _temp.queryId;
+    if (tempFormValues.queryId) {
+      delete tempFormValues.queryId;
     }
-    if (_temp.cell) {
-      delete _temp.cell;
+    if (tempFormValues.cell) {
+      delete tempFormValues.cell;
     }
 
     try {
       if (activeProject?.language === 'tact') {
-        delete _temp.contract;
-        initParams = parseInputs(JSON.parse(JSON.stringify(_temp)));
+        delete tempFormValues.contract;
+
+        let tsProjectFiles = {};
+        if (isIncludesTypeCell(tempFormValues)) {
+          tsProjectFiles = await getAllFilesWithContent(
+            projectId,
+            (file) =>
+              !file.path?.startsWith('dist') &&
+              file.name.endsWith('.ts') &&
+              !file.name.endsWith('.spec.ts'),
+          );
+        }
+
+        initParams = await parseInputs(
+          JSON.parse(JSON.stringify(tempFormValues)),
+          tsProjectFiles,
+        );
       } else if (formValues.cell) {
         initParams = formValues.cell;
       }
@@ -316,7 +345,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     }
 
     try {
-      let jsOutout = [{ code: '' }];
+      let jsOutout = [];
 
       if (activeProject?.language == 'tact') {
         jsOutout = await buildTs(
@@ -357,7 +386,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         );
       }
 
-      const finalJsoutput = fromJSModule(jsOutout[0].code);
+      const finalJsoutput = fromJSModule((jsOutout as OutputChunk[])[0].code);
 
       const contractName = extractContractName(selectedContract);
 
@@ -521,9 +550,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       'tact.ts',
     );
 
-    const finalJsoutput = fromJSModule(jsOutout[0].code);
+    const finalJSoutput = fromJSModule((jsOutout as OutputChunk[])[0].code);
 
-    return { finalJsoutput };
+    return { finalJSoutput };
   };
 
   const updateContractInstance = async () => {

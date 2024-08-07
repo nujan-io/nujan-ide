@@ -8,7 +8,6 @@ import {
 } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import {
-  capitalizeFirstLetter,
   convertToText,
   tonHttpEndpoint as getHttpEndpoint,
 } from '@/utility/utils';
@@ -38,6 +37,7 @@ import { StateInit, TonClient } from '@ton/ton';
 import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
+import { pascalCase } from 'change-case';
 import { useSettingAction } from './setting.hooks';
 
 export function useContractAction() {
@@ -322,8 +322,7 @@ export function useContractAction() {
 
       if (language === 'tact') {
         // convert getter function name as per script function name. Ex. counter will become getCounter
-        const _method = ('get' +
-          capitalizeFirstLetter(methodName)) as keyof Contract;
+        const _method = ('get' + pascalCase(methodName)) as keyof Contract;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if (!(contract as any)[_method]) {

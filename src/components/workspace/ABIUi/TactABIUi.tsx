@@ -1,19 +1,23 @@
 import AppIcon from '@/components/ui/icon';
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
+import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { LogType } from '@/interfaces/log.interface';
 import {
   TactABIField,
   TactInputFields,
   TactType,
+  Tree,
 } from '@/interfaces/workspace.interface';
 import { parseInputs } from '@/utility/abi';
+import { isIncludesTypeCell } from '@/utility/utils';
 import { MinusCircleOutlined } from '@ant-design/icons';
 import { Address, TupleItem } from '@ton/core';
 import { SandboxContract } from '@ton/sandbox';
-import { Button, Form, Input, Switch } from 'antd';
+import { Button, Form, Input, Popover, Select, Switch } from 'antd';
 import { Rule, RuleObject } from 'antd/es/form';
 import { useForm } from 'antd/lib/form/Form';
+import { useRouter } from 'next/router';
 import { FC, Fragment, useState } from 'react';
 import { ABIUiProps } from './ABIUi';
 import s from './ABIUi.module.scss';
@@ -63,8 +67,47 @@ function getValidtionRule(field: TactABIField) {
   return rules;
 }
 
+function FieldItem(
+  fieldType: string,
+  files: Tree[],
+  placeholder?: string,
+): JSX.Element {
+  const renderFilesForCell = () => {
+    return files
+      .filter(
+        (f) =>
+          f.name.includes('.ts') &&
+          !f.path?.startsWith('dist') &&
+          !f.path?.endsWith('.spec.ts'),
+      )
+      .map((file) => (
+        <Select.Option
+          key={`${file.id}-${file.name}`}
+          value={file.path}
+          title={file.path}
+        >
+          {file.name}
+        </Select.Option>
+      ));
+  };
+
+  switch (fieldType) {
+    case 'bool':
+      return <Switch />;
+    case 'cell':
+      return (
+        <Select placeholder="Select a TS file" allowClear>
+          {renderFilesForCell()}
+        </Select>
+      );
+    default:
+      return <Input placeholder={placeholder} />;
+  }
+}
+
 export const renderField = (
   field: TactABIField,
+  files: Tree[],
   prefix: string[] = [],
   level = 0,
 ) => {
@@ -98,6 +141,7 @@ export const renderField = (
                   <Fragment key={subField.name}>
                     {renderField(
                       subField as TactABIField,
+                      files,
                       [fieldName.toString(), _i === 0 ? '0' : '1'],
                       level + 1,
                     )}
@@ -158,6 +202,7 @@ export const renderField = (
           <Fragment key={subField.name}>
             {renderField(
               subField as TactABIField,
+              files,
               [...prefix, field.name],
               level + 1,
             )}
@@ -182,6 +227,40 @@ export const renderField = (
     return null;
   };
 
+  const additionalFieldNotes = () => {
+    if (!(fieldKind === 'simple' && field.type.type === 'cell')) {
+      return null;
+    }
+
+    const popoverContent = () => (
+      <div>
+        <p>Note: Create a TypeScript file and use the default export.</p>
+
+        <p>
+          <i>Example:</i>
+        </p>
+        <pre>
+          {`import { beginCell } from "@ton/core";
+
+const cell = beginCell().storeInt(9, 32).endCell();
+
+export default cell;`}
+        </pre>
+        <p style={{ color: `var(--color-warning)` }}>
+          <b>Supported npm packages:</b> @ton/core, @ton/crypto
+        </p>
+      </div>
+    );
+
+    return (
+      <div className={s.notes}>
+        <Popover content={popoverContent()}>
+          <a>Need help?</a>
+        </Popover>
+      </div>
+    );
+  };
+
   return (
     <>
       <Form.Item
@@ -191,18 +270,16 @@ export const renderField = (
         name={[...name, 'value']}
         initialValue={getInitialValue()}
         noStyle={field.type.defaultValue !== undefined}
+        extra={additionalFieldNotes()}
         {...(fieldKind === 'simple' && field.type.type === 'bool'
           ? { valuePropName: 'checked' }
           : {})}
         rules={getValidtionRule(field)}
       >
-        {isSwitch ? (
-          <Switch />
-        ) : (
-          <Input
-            placeholder={inputFieldType}
-            type={field.type.defaultValue ? 'hidden' : 'text'}
-          />
+        {FieldItem(
+          fieldKind === 'simple' ? field.type.type : 'unknown',
+          files,
+          inputFieldType,
         )}
       </Form.Item>
       <Form.Item
@@ -232,6 +309,9 @@ const TactABIUi: FC<TactABI> = ({
   const { callGetter, callSetter } = useContractAction();
   const { createLog } = useLogActivity();
   const [form] = useForm();
+  const { projectFiles, getAllFilesWithContent } = useWorkspaceActions();
+  const router = useRouter();
+  const { id: projectId } = router.query;
 
   const getItemHeading = (item: TactType) => {
     if (item.type?.kind === 'simple') {
@@ -253,7 +333,19 @@ const TactABIUi: FC<TactABI> = ({
 
   const onSubmit = async (formValues: TactInputFields, fieldName: string) => {
     try {
-      const parsedInputsValues = Object.values(await parseInputs(formValues));
+      let tsProjectFiles = {};
+      if (isIncludesTypeCell(formValues)) {
+        tsProjectFiles = await getAllFilesWithContent(
+          projectId as string,
+          (file) =>
+            !file.path?.startsWith('dist') &&
+            file.name.endsWith('.ts') &&
+            !file.name.endsWith('.spec.ts'),
+        );
+      }
+      const parsedInputsValues = Object.values(
+        await parseInputs(formValues, tsProjectFiles),
+      );
       setLoading(fieldName);
       const callableFunction = type === 'Getter' ? callGetter : callSetter;
 
@@ -310,7 +402,12 @@ const TactABIUi: FC<TactABI> = ({
         <h4 className={s.abiHeading}>{getItemHeading(abiType)}:</h4>
         {abiType.params.map((field) => (
           <Fragment key={field.name}>
-            {renderField(field as TactABIField, [], type === 'Setter' ? -1 : 0)}
+            {renderField(
+              field as TactABIField,
+              projectFiles(projectId as string),
+              [],
+              type === 'Setter' ? -1 : 0,
+            )}
           </Fragment>
         ))}
         <Form.Item shouldUpdate noStyle>
