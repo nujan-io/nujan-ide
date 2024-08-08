@@ -14,7 +14,7 @@ import { buildTs } from '@/utility/typescriptHelper';
 import {
   delay,
   getFileExtension,
-  isIncludesTypeCell,
+  isIncludesTypeCellOrSlice,
   tonHttpEndpoint,
 } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
@@ -225,7 +225,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         delete tempFormValues.contract;
 
         let tsProjectFiles = {};
-        if (isIncludesTypeCell(tempFormValues)) {
+        if (isIncludesTypeCellOrSlice(tempFormValues)) {
           tsProjectFiles = await getAllFilesWithContent(
             projectId,
             (file) =>

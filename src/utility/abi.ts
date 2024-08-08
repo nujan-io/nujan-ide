@@ -306,6 +306,7 @@ export async function parseInputs(
             throw new Error(`Parsing failed for ${key}: ${value}`);
           }
         case 'cell':
+        case 'slice':
           return await generateCell(value as string, files);
         case 'address':
           return Address.parse(value as string);
@@ -367,12 +368,8 @@ async function generateCell(
 ) {
   files['ide__cell.ts'] = `
     import exported__cell from "./${rootFilePath}"; window.exported__cell = exported__cell;`;
-  // files['ide__cell.ts'] = `import exported__cell from "./cellFile.ts";
-  // window.exported__cell = exported__cell;`;
 
   let jsOutout: RenderedChunk[] | string = await buildTs(files, 'ide__cell.ts');
-
-  console.log('jsOutout', jsOutout);
 
   jsOutout = (jsOutout as OutputChunk[])[0].code
     .replace(/import\s*{/g, 'const {')
@@ -385,6 +382,5 @@ async function generateCell(
       return window.exported__cell
     } return main()`;
   // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  const cell = await new Function(_code)();
-  return cell;
+  return new Function(_code)();
 }

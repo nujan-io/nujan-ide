@@ -10,7 +10,7 @@ import {
   Tree,
 } from '@/interfaces/workspace.interface';
 import { parseInputs } from '@/utility/abi';
-import { isIncludesTypeCell } from '@/utility/utils';
+import { isIncludesTypeCellOrSlice } from '@/utility/utils';
 import { MinusCircleOutlined } from '@ant-design/icons';
 import { Address, TupleItem } from '@ton/core';
 import { SandboxContract } from '@ton/sandbox';
@@ -95,6 +95,7 @@ function FieldItem(
     case 'bool':
       return <Switch />;
     case 'cell':
+    case 'slice':
       return (
         <Select placeholder="Select a TS file" allowClear>
           {renderFilesForCell()}
@@ -334,7 +335,7 @@ const TactABIUi: FC<TactABI> = ({
   const onSubmit = async (formValues: TactInputFields, fieldName: string) => {
     try {
       let tsProjectFiles = {};
-      if (isIncludesTypeCell(formValues)) {
+      if (isIncludesTypeCellOrSlice(formValues)) {
         tsProjectFiles = await getAllFilesWithContent(
           projectId as string,
           (file) =>

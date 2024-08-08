@@ -194,15 +194,15 @@ export const tonHttpEndpoint = ({ network }: Config) => {
  * @returns boolean
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isIncludesTypeCell(obj: Record<string, any>): boolean {
+export function isIncludesTypeCellOrSlice(obj: Record<string, any>): boolean {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      if (key === 'type' && obj[key] === 'cell') {
+      if (key === 'type' && (obj[key] === 'cell' || obj[key] === 'slice')) {
         return true;
       }
 
       if (typeof obj[key] === 'object' && obj[key] !== null) {
-        if (isIncludesTypeCell(obj[key])) {
+        if (isIncludesTypeCellOrSlice(obj[key])) {
           return true;
         }
       }
