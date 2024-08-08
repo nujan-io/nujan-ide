@@ -8,6 +8,7 @@ import {
   NetworkEnvironment,
   Project,
   TactABIField,
+  TactInputFields,
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import { buildTs } from '@/utility/typescriptHelper';
@@ -91,6 +92,8 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     project,
     activeFile,
     getAllFilesWithContent,
+    updateABIInputValues,
+    getABIInputValues,
   } = useWorkspaceActions();
 
   const currentActiveFile = activeFile(projectId as string);
@@ -223,6 +226,15 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     try {
       if (activeProject?.language === 'tact') {
         delete tempFormValues.contract;
+
+        updateABIInputValues(
+          {
+            key: 'init',
+            value: tempFormValues as TactInputFields,
+            type: 'Init',
+          },
+          projectId as string,
+        );
 
         let tsProjectFiles = {};
         if (isIncludesTypeCellOrSlice(tempFormValues)) {
@@ -648,6 +660,13 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         };
       });
     };
+
+    if (activeProject?.language === 'tact') {
+      const abiFields = getABIInputValues(projectId as string, 'init', 'Init');
+      if (abiFields) {
+        deployForm.setFieldsValue(abiFields);
+      }
+    }
 
     window.addEventListener('message', handler);
     return () => {

@@ -18,7 +18,7 @@ import { Button, Form, Input, Popover, Select, Switch } from 'antd';
 import { Rule, RuleObject } from 'antd/es/form';
 import { useForm } from 'antd/lib/form/Form';
 import { useRouter } from 'next/router';
-import { FC, Fragment, useState } from 'react';
+import { FC, Fragment, useEffect, useState } from 'react';
 import { ABIUiProps } from './ABIUi';
 import s from './ABIUi.module.scss';
 
@@ -139,7 +139,7 @@ export const renderField = (
             return (
               <div key={key} className={s.dictItem}>
                 {field.fields?.map((subField, _i) => (
-                  <Fragment key={subField.name}>
+                  <Fragment key={`${key}-${_i}-${subField.name}`}>
                     {renderField(
                       subField as TactABIField,
                       files,
@@ -310,9 +310,16 @@ const TactABIUi: FC<TactABI> = ({
   const { callGetter, callSetter } = useContractAction();
   const { createLog } = useLogActivity();
   const [form] = useForm();
-  const { projectFiles, getAllFilesWithContent } = useWorkspaceActions();
+  const {
+    projectFiles,
+    getAllFilesWithContent,
+    updateABIInputValues,
+    getABIInputValues,
+    project,
+  } = useWorkspaceActions();
   const router = useRouter();
   const { id: projectId } = router.query;
+  const activeProject = project(projectId as string);
 
   const getItemHeading = (item: TactType) => {
     if (item.type?.kind === 'simple') {
@@ -372,6 +379,10 @@ const TactABIUi: FC<TactABI> = ({
       } else {
         createLog(JSON.stringify(response));
       }
+      updateABIInputValues(
+        { key: abiType.name, value: formValues, type: type },
+        projectId as string,
+      );
     } catch (error) {
       if ((error as Error).message.includes('no healthy nodes for')) {
         createLog(
@@ -388,6 +399,17 @@ const TactABIUi: FC<TactABI> = ({
       setLoading(null);
     }
   };
+
+  useEffect(() => {
+    if (!activeProject) return;
+    const abiFields = getABIInputValues(
+      projectId as string,
+      abiType.name,
+      type,
+    );
+    if (!abiFields) return;
+    form.setFieldsValue(abiFields);
+  }, []);
 
   return (
     <div className={`${s.root} ${s.tact} ${s[type]}`}>

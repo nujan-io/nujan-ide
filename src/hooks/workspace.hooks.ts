@@ -1,4 +1,5 @@
 import {
+  ABIFormInputValues,
   Project,
   Tree,
   WorkspaceState,
@@ -45,6 +46,8 @@ function useWorkspaceActions() {
     getAllFilesWithContent,
     compileTsFile,
     isProjectEditable,
+    updateABIInputValues,
+    getABIInputValues,
     clearWorkSpace,
   };
 
@@ -526,6 +529,43 @@ function useWorkspaceActions() {
 
   function isProjectEditable() {
     return true;
+  }
+
+  function updateABIInputValues(
+    inputValues: ABIFormInputValues,
+    projectId: string,
+  ) {
+    const projectItem = project(projectId);
+    if (!projectItem) {
+      return;
+    }
+    const formInputValues = cloneDeep(inputValues);
+    const abiFormInputValues = cloneDeep(projectItem.abiFormInputValues) ?? [];
+    const index = abiFormInputValues.findIndex(
+      (item) =>
+        item.key === formInputValues.key && item.type === formInputValues.type,
+    );
+    if (index < 0) {
+      abiFormInputValues.push(formInputValues);
+    } else {
+      abiFormInputValues[index] = formInputValues;
+    }
+    updateProjectById(
+      {
+        abiFormInputValues,
+      } as Project,
+      projectId,
+    );
+  }
+
+  function getABIInputValues(projectId: string, key: string, type: string) {
+    const projectItem = project(projectId);
+    if (!projectItem) {
+      return [];
+    }
+    return projectItem.abiFormInputValues?.find(
+      (item) => item.type === type && item.key === key,
+    )?.value;
   }
 
   function clearWorkSpace() {

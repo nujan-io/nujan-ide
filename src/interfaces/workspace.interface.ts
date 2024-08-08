@@ -32,6 +32,13 @@ export interface CellABI {
   deploy?: InitParams;
   setter?: InitParams;
 }
+
+export interface ABIFormInputValues {
+  key: string;
+  value: TactInputFields;
+  type: 'Init' | 'Getter' | 'Setter';
+}
+
 export interface Project {
   id: string;
   userId?: string;
@@ -50,6 +57,7 @@ export interface Project {
   createdAt?: Date;
   updatedAt?: Date;
   cellABI?: CellABI;
+  abiFormInputValues?: ABIFormInputValues[];
 }
 
 export type WorkspaceState = {
