@@ -85,7 +85,7 @@ export const getContractURL = (
   }
   return `https://${
     chainNetwork === 'TESTNET' ? 'testnet.' : ''
-  }tonscan.org/address/${contractAddress}`;
+  }tonviewer.com/${contractAddress}`;
 };
 
 export const htmlToAnsi = (html: string) => {

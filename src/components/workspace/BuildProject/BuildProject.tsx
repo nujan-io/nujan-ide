@@ -757,7 +757,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
           <Link
             href={`https://${
               chain === CHAIN.TESTNET ? 'testnet.' : ''
-            }tonscan.org/address/${activeProject.contractAddress}`}
+            }tonviewer.com/${activeProject.contractAddress}`}
             target="_blank"
           >
             <AppIcon name="Eye" /> View Deployed Contract
