@@ -85,7 +85,7 @@ export const getContractURL = (
   }
   return `https://${
     chainNetwork === 'TESTNET' ? 'testnet.' : ''
-  }tonscan.org/address/${contractAddress}`;
+  }tonviewer.com/${contractAddress}`;
 };
 
 export const htmlToAnsi = (html: string) => {
@@ -128,18 +128,6 @@ export const getFileNameFromPath = (filePath: string): string => {
 export const getFileExtension = (fileName: string) => {
   if (!fileName) return;
   return fileName.split('.').slice(1).join('.');
-};
-
-export const capitalizeFirstLetter = (inputString: string) => {
-  if (inputString.length === 0) {
-    return inputString; // Return an empty string as-is
-  }
-
-  // Capitalize the first letter
-  const firstLetter = inputString.charAt(0).toUpperCase();
-  const restOfTheString = inputString.slice(1);
-
-  return firstLetter + restOfTheString;
 };
 
 // eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
@@ -199,3 +187,26 @@ export const tonHttpEndpoint = ({ network }: Config) => {
     network === 'testnet' ? 'testnet.' : ''
   }toncenter.com/api/v2/jsonRPC`;
 };
+
+/**
+ * Check if the nested object contains the key `type` with the value `cell`
+ * @param obj
+ * @returns boolean
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isIncludesTypeCellOrSlice(obj: Record<string, any>): boolean {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (key === 'type' && (obj[key] === 'cell' || obj[key] === 'slice')) {
+        return true;
+      }
+
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        if (isIncludesTypeCellOrSlice(obj[key])) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}

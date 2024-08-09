@@ -1,5 +1,6 @@
 import type { TonCore } from '@ton/core';
 import { Contract } from '@ton/core';
+import type { TonCrypto } from '@ton/crypto';
 import { WebContainer } from '@webcontainer/api';
 
 export {};
@@ -12,5 +13,6 @@ declare global {
     };
     webcontainerInstance: WebContainer | null | undefined;
     TonCore: TonCore;
+    TonCrypto: TonCrypto;
   }
 }

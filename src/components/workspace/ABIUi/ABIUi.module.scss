@@ -1,10 +1,11 @@
 .root {
   padding: 1rem 0px;
   position: relative;
-  &:before {
+  &:before,
+  &.tact .form:not(:last-child)::before {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: -0.8rem;
     left: 0;
     right: 0;
     width: 5rem;
@@ -12,8 +13,32 @@
     margin: 0 auto;
     background-color: #373636;
   }
-  .formItemABI {
-    margin-bottom: 3px;
+  &.tact {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    .form {
+      position: relative;
+      margin: 0;
+    }
+    &::before {
+      display: none;
+    }
+  }
+  .nestedForm {
+    margin: 0.5rem 0;
+    background: rgba(14, 14, 16, 0.9);
+    border-radius: 5px;
+    padding: 5px;
+
+    > div {
+      border-left: 0 !important;
+    }
+  }
+  .abiHeading {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: rgba(186, 74, 255, 1);
   }
   .abiResponse {
     word-break: break-word;
@@ -55,6 +80,10 @@
           background: #101010;
         }
       }
+      &:disabled {
+        opacity: 0.5;
+        color: #fff;
+      }
 
       &:before {
         content: '';
@@ -67,6 +96,51 @@
         z-index: -1;
         border-radius: inherit;
       }
+    }
+  }
+}
+
+.structName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--primary);
+  padding: 5px;
+}
+
+.formItemABI {
+  margin-bottom: 3px;
+}
+
+.notes {
+  margin: 0.5rem 0;
+}
+
+.fieldList {
+  margin: 0.8rem 0;
+  .dictItem {
+    border: 1px solid var(--grey--50);
+    margin: 0.5rem 0.1rem;
+    border-radius: 6px;
+    background: var(--grey--10);
+    padding: 0.4rem;
+    border-style: dashed;
+  }
+  .addMoreField {
+    border-color: var(--grey--50);
+    width: 100%;
+    box-shadow: none;
+    background: var(--grey--10);
+    color: var(--light-grey);
+  }
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    button {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
     }
   }
 }

@@ -6,7 +6,9 @@ import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
 import * as TonCore from '@ton/core';
+import * as TonCrypto from '@ton/crypto';
 import { Blockchain } from '@ton/sandbox';
+import { Buffer } from 'buffer';
 import { useRouter } from 'next/router';
 import { FC, useEffect, useMemo, useState } from 'react';
 import Split from 'react-split';
@@ -109,6 +111,8 @@ const WorkSpace: FC = () => {
   useEffectOnce(() => {
     setIsLoaded(true);
     window.TonCore = TonCore;
+    window.TonCrypto = TonCrypto;
+    window.Buffer = Buffer;
   });
 
   return (

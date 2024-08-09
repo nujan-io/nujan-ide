@@ -23,6 +23,16 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+  .nestedForm {
+    margin: 0.5rem 0;
+    background: rgba(14, 14, 16, 0.9);
+    border-radius: 5px;
+    padding: 2px;
+    > div {
+      border-left: 0 !important;
+    }
+  }
+
   .formItem {
     margin-bottom: 0.4rem;
     &,

@@ -17,8 +17,8 @@ import {
 } from '@tact-lang/compiler';
 import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
-import { getType } from '@tact-lang/compiler/dist/types/resolveDescriptors';
 
+import { getContractInitParams } from '@/utility/abi';
 import TactLogger from '@/utility/tactLogger';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
 import {
@@ -217,9 +217,9 @@ export function useProjectActions() {
       },
       project: fs,
       stdlib: '@stdlib',
-      logger: new TactLogger(),
+      logger: TactLogger,
     });
-    if (!response.ok) {
+    if (!response) {
       throw new Error('Error while building');
     }
 
@@ -258,7 +258,7 @@ export function useProjectActions() {
         fileContent = JSON.parse(fileContent);
         const parsedFileContent = {
           ...(fileContent as Partial<Tree>),
-          initParams: getInitParams(ctx, contractName, fileContent),
+          init: getContractInitParams(ctx, contractName),
         };
         fileContent = JSON.stringify(parsedFileContent);
       }
@@ -395,41 +395,4 @@ const importUserFile = async (
     files: [...files, ...commonFiles.files],
     filesWithId: [...filesWithId, ...commonFiles.filesWithId],
   };
-};
-
-const getInitParams = (
-  ctx: CompilerContext,
-  contractName: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  abi: any,
-) => {
-  const contactType = getType(ctx, contractName);
-  let initParams: { name: string; type: string; optional: boolean }[] = [];
-
-  initParams =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contactType.init?.params.map((item: any) => {
-      return {
-        name: item.name.text,
-        type: item.type.name.toLowerCase(),
-        optional: item.type.optional,
-      };
-    }) ?? [];
-
-  const deployFields = abi.types.find(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (item: any) => item.name === 'Deploy',
-  )?.fields;
-
-  if (deployFields && deployFields.length > 0) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    deployFields.forEach((item: any) => {
-      initParams.push({
-        name: item.name,
-        type: item.type.type,
-        optional: item.type.optional,
-      });
-    });
-  }
-  return initParams;
 };

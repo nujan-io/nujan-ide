@@ -1,14 +1,13 @@
 import { globalWorkspace } from '@/components/workspace/globalWorkspace';
 import {
   ContractLanguage,
-  InitParams,
   NetworkEnvironment,
   ParameterType,
   Project,
+  TactInputFields,
 } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import {
-  capitalizeFirstLetter,
   convertToText,
   tonHttpEndpoint as getHttpEndpoint,
 } from '@/utility/utils';
@@ -38,7 +37,7 @@ import { StateInit, TonClient } from '@ton/ton';
 import { ITonConnect, SendTransactionRequest } from '@tonconnect/sdk';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { message } from 'antd';
-import BN from 'bn.js';
+import { pascalCase } from 'change-case';
 import { useSettingAction } from './setting.hooks';
 
 export function useContractAction() {
@@ -58,7 +57,6 @@ export function useContractAction() {
     dataCell: string,
     network: Network | Partial<NetworkEnvironment>,
     project: Project,
-    initParams: InitParams[],
   ): Promise<{
     address: string;
     contract?: SandboxContract<UserContract>;
@@ -89,21 +87,11 @@ export function useContractAction() {
     const _contractInit = window.contractInit;
     let _userContract: Contract | null = null;
 
-    if (initParams.length > 0) {
-      const hasQueryId = initParams.findIndex(
-        (item) => item.name === 'queryId',
-      );
-      const queryId = BigInt(0);
-      if (hasQueryId > -1) {
-        messageParams = {
-          $$type: 'Deploy',
-          queryId,
-        };
-      } else {
-        messageParams = {
-          $$type: 'Deploy',
-        };
-      }
+    if (project.language === 'tact') {
+      messageParams = {
+        $$type: 'Deploy',
+        queryId: BigInt(0),
+      };
     }
 
     if (project.language === 'tact' && network.toUpperCase() !== 'SANDBOX') {
@@ -124,6 +112,7 @@ export function useContractAction() {
       if (_contractInit) {
         _userContract = sandboxBlockchain.openContract(_contractInit);
       }
+
       sender = sandboxWallet!.getSender();
     }
 
@@ -273,71 +262,32 @@ export function useContractAction() {
   ): Promise<
     { message: string; logs?: string[]; status?: string } | undefined
   > {
-    if (language === 'tact' && contract) {
-      let sender: Sender | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!(contract as any).send)
+      throw new Error('Contract is not deployed yet.');
 
-      if (network === 'SANDBOX') {
-        const { sandboxWallet } = globalWorkspace;
-        sender = sandboxWallet!.getSender();
-      } else {
-        sender = new TonConnectSender(tonConnector.connector);
-      }
+    let sender: Sender | null = null;
 
-      let messageParams: Record<string, string> | string | null = {
-        $$type: methodName,
-      };
-      if (kind === 'text') {
-        messageParams = methodName || '';
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      stack?.forEach((item: any) => {
-        switch (item.type) {
-          case 'address':
-            item.value = Address.parse(item.value);
-            break;
-          default:
-            item.value = BigInt(item.value || 0);
-            break;
-        }
-        messageParams = {
-          ...(typeof messageParams === 'object' ? messageParams : {}),
-          [item.name]: item.value,
-        };
-      });
-
-      if (kind === 'empty') {
-        messageParams = null;
-      }
-      if (
-        kind === 'text' &&
-        typeof messageParams == 'object' &&
-        Object.keys(messageParams as object).length === 0
-      ) {
-        messageParams = '';
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response = await (contract as any).send(
-        sender,
-        {
-          value: tonAmountForInteraction,
-        },
-        messageParams,
-      );
-
-      return {
-        message: 'Message sent successfully',
-        logs: terminalLogMessages([response], [contract as Contract]),
-      };
+    if (network === 'SANDBOX') {
+      const { sandboxWallet } = globalWorkspace;
+      sender = sandboxWallet!.getSender();
+    } else {
+      sender = new TonConnectSender(tonConnector.connector);
     }
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function parseInt(item: any, language: ContractLanguage) {
-    if (language === 'tact') {
-      return new BN(item.value.toString());
-    }
-    return BigInt(item.value);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await (contract as any).send(
+      sender,
+      {
+        value: tonAmountForInteraction,
+      },
+      stack ? stack[0] : '',
+    );
+
+    return {
+      message: 'Message sent successfully',
+      logs: terminalLogMessages([response], [contract as Contract]),
+    };
   }
 
   type RESPONSE_VALUES =
@@ -355,36 +305,12 @@ export function useContractAction() {
   ): Promise<
     { message?: string; logs?: string[]; status?: string } | RESPONSE_VALUES[]
   > {
-    // type could be TupleItem
+    // TODO: Type could be TupleItem
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parsedStack = stack?.map((item: any) => {
-      switch (item.type as ParameterType) {
-        case 'int':
-          return {
-            type: item.type,
-            value: parseInt(item, language),
-          };
-        case 'address':
-          return {
-            type: 'slice',
-            cell: beginCell()
-              .storeAddress(Address.parse(item.value as string))
-              .endCell(),
-          };
-        case 'bool':
-          return {
-            type: item.type,
-            value: item.value === 'true',
-          };
-        default:
-          return {
-            type: item.type,
-            value: Cell.fromBoc(
-              Buffer.from(item.value.toString(), 'base64'),
-            )[0],
-          };
-      }
-    });
+    let parsedStack: any = stack;
+    if (language === 'func') {
+      parsedStack = parseStackForFunc(stack);
+    }
     if (network === 'SANDBOX' && !contract) {
       return {
         logs: ['The contract has not been deployed yet.'],
@@ -393,21 +319,24 @@ export function useContractAction() {
     }
     if (network === 'SANDBOX' && contract) {
       const responseValues = [];
+
       if (language === 'tact') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const params = parsedStack?.map((item: any) => {
-          switch (item.type) {
-            case 'int':
-              return item.value;
-            default:
-              return item.value;
-          }
-        });
         // convert getter function name as per script function name. Ex. counter will become getCounter
-        const _method = ('get' +
-          capitalizeFirstLetter(methodName)) as keyof Contract;
+        const _method = ('get' + pascalCase(methodName)) as keyof Contract;
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const response = await (contract as any)[_method](...(params as any));
+        if (!(contract as any)[_method]) {
+          return {
+            logs: [
+              'The contract has not been deployed yet or method not found.',
+            ],
+            status: 'error',
+          };
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response = await (contract as any)[_method](
+          ...(parsedStack as TactInputFields[]),
+        );
         printDebugLog();
         responseValues.push({
           method: methodName,
@@ -708,6 +637,38 @@ function shorten(
     if (format === 'coins') return fromNano(long);
   }
   return '';
+}
+
+function parseStackForFunc(stack: TupleItem[] | undefined) {
+  if (!stack) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return stack.map((item: any) => {
+    switch (item.type as ParameterType) {
+      case 'int':
+        return {
+          type: item.type,
+          value: BigInt(item.value),
+        };
+      case 'address':
+        return {
+          type: 'slice',
+          cell: beginCell()
+            .storeAddress(Address.parse(item.value as string))
+            .endCell(),
+        };
+      case 'bool':
+        return {
+          type: item.type,
+          value: item.value === 'true',
+        };
+      default:
+        return {
+          type: item.type,
+          value: Cell.fromBoc(Buffer.from(item.value.toString(), 'base64'))[0],
+        };
+    }
+  });
 }
 
 function printDebugLog() {
