@@ -70,7 +70,8 @@ function getValidtionRule(field: TactABIField) {
 function FieldItem(
   fieldType: string,
   files: Tree[],
-  placeholder?: string,
+  placeholder: string,
+  defaultValue?: string | number | undefined,
 ): JSX.Element {
   const renderFilesForCell = () => {
     return files
@@ -102,7 +103,12 @@ function FieldItem(
         </Select>
       );
     default:
-      return <Input placeholder={placeholder} />;
+      return (
+        <Input
+          placeholder={placeholder}
+          type={defaultValue ? 'hidden' : 'text'}
+        />
+      );
   }
 }
 
@@ -281,6 +287,7 @@ export default cell;`}
           fieldKind === 'simple' ? field.type.type : 'unknown',
           files,
           inputFieldType,
+          field.type.defaultValue,
         )}
       </Form.Item>
       <Form.Item
