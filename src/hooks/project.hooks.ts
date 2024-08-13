@@ -12,6 +12,7 @@ import { OverwritableVirtualFileSystem } from '@/utility/OverwritableVirtualFile
 import { FileInterface } from '@/utility/fileSystem';
 import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
 import {
+  LogLevel,
   build as buildTact,
   createVirtualFileSystem,
 } from '@tact-lang/compiler';
@@ -217,9 +218,9 @@ export function useProjectActions() {
       },
       project: fs,
       stdlib: '@stdlib',
-      logger: TactLogger,
+      logger: new TactLogger(LogLevel.DEBUG),
     });
-    if (!response) {
+    if (!response.ok) {
       throw new Error('Error while building');
     }
 
