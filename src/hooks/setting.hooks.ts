@@ -15,6 +15,7 @@ export function useSettingAction() {
     getTonAmountForInteraction,
     isAutoBuildAndDeployEnabled,
     toggleAutoBuildAndDeploy,
+    updateEditorMode,
   };
 
   function updateStateByKey(dataByKey: Partial<SettingInterface>) {
@@ -69,6 +70,12 @@ export function useSettingAction() {
   ) {
     updateStateByKey({
       autoBuildAndDeploy: active,
+    });
+  }
+
+  function updateEditorMode(mode: 'default' | 'vim') {
+    updateStateByKey({
+      editorMode: mode,
     });
   }
 }

@@ -23,13 +23,14 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   const { updateFileContent, getFileContent, updateOpenFile } =
     useWorkspaceActions();
 
-  const { isFormatOnSave } = useSettingAction();
+  const { isFormatOnSave, getSettingStateByKey } = useSettingAction();
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditorInitialized, setIsEditorInitialized] = useState(false);
   const [cursorPosition, setCursorPosition] = useState<[number, number]>([
     0, 0,
   ]);
+  const editorMode = getSettingStateByKey('editorMode');
 
   // Using this extra state to trigger save file from js event
   const [saveFileCounter, setSaveFileCounter] = useState(1);
@@ -42,6 +43,10 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
+  const vimStatusBarRef = useRef(null);
+  const vimModeRef = useRef<{
+    dispose: () => void;
+  } | null>(null);
 
   // eslint-disable-next-line prefer-const
   let lspWebSocket: ReconnectingWebSocket | null;
@@ -158,6 +163,21 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   };
 
   useEffect(() => {
+    (async () => {
+      if (!editorRef.current) return;
+      if (editorMode === 'vim') {
+        const { initVimMode } = await import('monaco-vim');
+        vimModeRef.current = initVimMode(
+          editorRef.current,
+          vimStatusBarRef.current as unknown as HTMLElement,
+        );
+      } else {
+        vimModeRef.current?.dispose();
+      }
+    })().catch(() => {});
+  }, [editorRef, editorMode]);
+
+  useEffect(() => {
     if (!isEditorInitialized) {
       return;
     }
@@ -180,6 +200,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       lspWebSocket?.close();
     };
     return () => {
+      vimModeRef.current?.dispose();
       lspWebSocket?.close();
     };
   }, []);
@@ -191,6 +212,9 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   return (
     <div className={`${s.container} ${className}`}>
       <div className={s.editorInfo}>
+        <div>
+          <span className={s.vimStatuBar} ref={vimStatusBarRef} />
+        </div>
         <span>
           Ln {cursorPosition[0]}, Col {cursorPosition[1]}
         </span>

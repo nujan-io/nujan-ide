@@ -11,9 +11,12 @@
     z-index: 1;
     display: flex;
     gap: 1rem;
-    justify-content: flex-end;
+    justify-content: space-between;
     font-size: 0.8rem;
     padding: 0.2rem 1rem;
+    .vimStatuBar {
+      font-family: monospace;
+    }
   }
 
   .editor {
