@@ -11,6 +11,7 @@ export const settingState = atom<SettingInterface>({
     formatOnSave: false,
     autoBuildAndDeploy: true,
     tonAmountForInteraction: '0.05',
+    editorMode: 'default',
   },
   effects_UNSTABLE: [persistAtom],
 });

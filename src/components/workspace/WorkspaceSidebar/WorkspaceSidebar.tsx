@@ -4,7 +4,7 @@ import { AppData } from '@/constant/AppData';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
-import { Form, Input, Popover, Switch } from 'antd';
+import { Form, Input, Popover, Select, Switch } from 'antd';
 import Link from 'next/link';
 import { FC } from 'react';
 import s from './WorkspaceSidebar.module.scss';
@@ -38,9 +38,12 @@ const WorkspaceSidebar: FC<Props> = ({
     getTonAmountForInteraction,
     isAutoBuildAndDeployEnabled,
     toggleAutoBuildAndDeploy,
+    getSettingStateByKey,
+    updateEditorMode,
   } = useSettingAction();
 
   const hasEditAccess = isProjectEditable();
+  const editorMode = getSettingStateByKey('editorMode') ?? 'default';
 
   const menuItems: MenuItem[] = [
     {
@@ -111,6 +114,20 @@ const WorkspaceSidebar: FC<Props> = ({
             saved <br /> if the environment is set to Sandbox.
           </small>
         </p>
+      </div>
+      <div className={s.settingItem}>
+        <Form.Item label="Editor Mode">
+          <Select
+            style={{ width: '10rem' }}
+            value={editorMode}
+            onChange={(value) => {
+              updateEditorMode(value as 'default' | 'vim');
+            }}
+          >
+            <Select.Option value="default">Default</Select.Option>
+            <Select.Option value="vim">Vim</Select.Option>
+          </Select>
+        </Form.Item>
       </div>
 
       <div className={s.settingItem}>

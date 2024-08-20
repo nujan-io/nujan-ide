@@ -3,4 +3,5 @@ export interface SettingInterface {
   formatOnSave?: boolean;
   autoBuildAndDeploy?: boolean;
   tonAmountForInteraction?: string;
+  editorMode: 'default' | 'vim';
 }
