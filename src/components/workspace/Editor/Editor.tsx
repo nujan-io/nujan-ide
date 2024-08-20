@@ -43,7 +43,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
-  const vimStatusBarRef = useRef(null);
+  const vimStatusBarRef = useRef<HTMLElement | null>(null);
   const vimModeRef = useRef<{
     dispose: () => void;
   } | null>(null);
@@ -162,20 +162,28 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     updateOpenFile(file.id, { isDirty: true }, projectId);
   };
 
+  const initializeEditorMode = async () => {
+    if (!editorRef.current || !vimStatusBarRef.current) return;
+
+    if (editorMode === 'vim') {
+      const { initVimMode } = await import('monaco-vim');
+      vimModeRef.current = initVimMode(
+        editorRef.current,
+        vimStatusBarRef.current as unknown as HTMLElement,
+      );
+    } else {
+      vimModeRef.current?.dispose();
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      if (!editorRef.current) return;
-      if (editorMode === 'vim') {
-        const { initVimMode } = await import('monaco-vim');
-        vimModeRef.current = initVimMode(
-          editorRef.current,
-          vimStatusBarRef.current as unknown as HTMLElement,
-        );
-      } else {
-        vimModeRef.current?.dispose();
-      }
-    })().catch(() => {});
-  }, [editorRef, editorMode]);
+    if (editorRef.current) {
+      initializeEditorMode().catch(() => {});
+    }
+    return () => {
+      vimModeRef.current?.dispose();
+    };
+  }, [editorMode]);
 
   useEffect(() => {
     if (!isEditorInitialized) {
@@ -244,6 +252,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
             setIsEditorInitialized(true);
             await editorOnMount(editor, monaco);
+            await initializeEditorMode();
             editor.onDidChangeCursorPosition(() => {
               const position = editor.getPosition();
               if (position) {
