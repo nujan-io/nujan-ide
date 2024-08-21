@@ -8,8 +8,9 @@ import {
 } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import {
-  convertToText,
+  GetterJSONReponse,
   tonHttpEndpoint as getHttpEndpoint,
+  serializeToJSONFormat,
 } from '@/utility/utils';
 import { Network } from '@orbs-network/ton-access';
 import {
@@ -291,8 +292,8 @@ export function useContractAction() {
   }
 
   type RESPONSE_VALUES =
-    | { method: string; value: string }
-    | { type: string; value: string };
+    | { method: string; value: string | GetterJSONReponse }
+    | { type: string; value: string | GetterJSONReponse };
 
   async function callGetter(
     contractAddress: string,
@@ -340,7 +341,7 @@ export function useContractAction() {
         printDebugLog();
         responseValues.push({
           method: methodName,
-          value: convertToText(response),
+          value: serializeToJSONFormat(response),
         });
       } else {
         const call = await contract.getData(

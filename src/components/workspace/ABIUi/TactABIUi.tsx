@@ -375,7 +375,7 @@ const TactABIUi: FC<TactABI> = ({
       );
 
       if (Array.isArray(response)) {
-        createLog(JSON.stringify(response));
+        createLog(JSON.stringify(response, null, 2));
       } else if (response?.logs) {
         for (const log of response.logs) {
           createLog(
@@ -384,7 +384,7 @@ const TactABIUi: FC<TactABI> = ({
           );
         }
       } else {
-        createLog(JSON.stringify(response));
+        createLog(JSON.stringify(response, null, 2));
       }
       updateABIInputValues(
         { key: abiType.name, value: formValues, type: type },

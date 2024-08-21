@@ -131,55 +131,77 @@ export const getFileExtension = (fileName: string) => {
 };
 
 // eslint-disable-next-line complexity, @typescript-eslint/no-explicit-any
-export const convertToText = (obj: any): string => {
-  //create an array that will later be joined into a string.
-  const string = [];
+export type GetterJSONReponse =
+  | string
+  | number
+  | boolean
+  | null
+  | GetterJSONReponse[]
+  | { [key: string]: GetterJSONReponse };
 
+/**
+ * Converts various types of objects, including custom types, arrays, dictionaries, and primitives, into a JSON-compatible format.
+ *
+ * This function is particularly useful when dealing with complex data structures that need to be serialized into a JSON format.
+ * It handles different types, including custom objects like `Address`, `Slice`, `Cell`, and `Dictionary`, converting them into strings.
+ * Arrays and objects are recursively converted, ensuring that all nested structures are correctly transformed.
+ *
+ * @param obj - The object or value to be converted to a JSON-compatible format. It can be of any type.
+ * @returns A JSON-compatible value (`string`, `number`, `boolean`, `null`, array, or object), or `null` if the input is `undefined` or `null`.
+ */
+export const serializeToJSONFormat = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: any,
+): GetterJSONReponse | GetterJSONReponse[] | null => {
   //is object
   //    Both arrays and objects seem to return "object"
   //    when typeof(obj) is applied to them. So instead
   //    I am checking to see if they have the property
   //    join, which normal objects don't have but
   //    arrays do.
-  if (obj == undefined) {
-    return String(obj);
-  } else if (typeof obj == 'object' && obj.join == undefined) {
+  if (obj === undefined || obj === null) {
+    return null;
+  }
+
+  if (typeof obj === 'object' && obj.join === undefined) {
     if (obj instanceof Address) return obj.toString();
     if (obj instanceof Slice) return obj.toString();
     if (obj instanceof Cell) return obj.toString();
     if (obj instanceof Dictionary) {
-      const items = [];
-      for (const key of obj.keys())
-        items.push(`${convertToText(key)}: ${convertToText(obj.get(key))}`);
-      const itemsStr = items.join(', ');
-      return itemsStr ? `{ ${itemsStr} }` : `{}`;
+      const resultDict: Record<string, GetterJSONReponse> = {};
+      for (const key of obj.keys()) {
+        const jsonKey = serializeToJSONFormat(key);
+        if (typeof jsonKey === 'string') {
+          resultDict[jsonKey] = serializeToJSONFormat(obj.get(key));
+        }
+      }
+      return resultDict;
     }
 
+    if (Array.isArray(obj)) {
+      return obj.map((item) => serializeToJSONFormat(item));
+    }
+
+    const resultObj: Record<string, GetterJSONReponse> = {};
     for (const prop in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, prop))
-        string.push(prop + ': ' + convertToText(obj[prop]));
+      if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+        resultObj[prop] = serializeToJSONFormat(
+          (obj as Record<string, unknown>)[prop],
+        );
+      }
     }
-    return '{' + string.join(', ') + '}';
-
-    //is array
-  } else if (typeof obj == 'object' && !(obj.join == undefined)) {
-    for (const prop in obj) {
-      string.push(convertToText(obj[prop]));
-    }
-    return '[' + string.join(',') + ']';
-
-    //is function
-  } else if (typeof obj == 'function') {
-    string.push(obj.toString());
-
-    //all other values can be done with JSON.stringify
-  } else {
-    if (typeof obj == 'string') string.push(JSON.stringify(obj));
-    else if (typeof obj == 'bigint') string.push(obj.toString());
-    else string.push(obj.toString());
+    return resultObj;
   }
 
-  return string.join(',');
+  if (typeof obj === 'function') {
+    return obj.toString();
+  }
+
+  if (typeof obj === 'string' || typeof obj === 'bigint') {
+    return obj.toString();
+  }
+
+  return obj as GetterJSONReponse;
 };
 
 export const tonHttpEndpoint = ({ network }: Config) => {

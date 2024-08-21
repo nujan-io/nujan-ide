@@ -108,10 +108,11 @@ const LogView: FC<Props> = ({ filter }) => {
         import('@xterm/addon-search'),
       ]);
       _terminal = new Terminal({
-        fontSize: 17,
+        fontSize: 16.5,
         cursorBlink: false,
         cursorStyle: 'bar',
         disableStdin: true,
+        convertEol: true,
       });
 
       terminal.current = _terminal;
