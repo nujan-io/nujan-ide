@@ -4,6 +4,7 @@ import {
   Tree,
   WorkspaceState,
 } from '@/interfaces/workspace.interface';
+import fileSystemV2 from '@/lib/fs';
 import { workspaceState } from '@/state/workspace.state';
 import { FileInterface, fileSystem } from '@/utility/fileSystem';
 import { buildTs } from '@/utility/typescriptHelper';
@@ -48,6 +49,8 @@ function useWorkspaceActions() {
     isProjectEditable,
     updateABIInputValues,
     getABIInputValues,
+    setActiveProject,
+    getActiveProject,
     clearWorkSpace,
   };
 
@@ -71,26 +74,7 @@ function useWorkspaceActions() {
   }
 
   async function deleteProject(projectId: string) {
-    const projectIndex = projects().findIndex((item) => item.id === projectId);
-    if (projectIndex < 0) {
-      return;
-    }
-    let _projectFiles = cloneDeep(workspace.projectFiles);
-
-    if (_projectFiles?.[projectId]) {
-      const fileIds = _projectFiles[projectId].map((item) => item.id);
-      await fileSystem.files.bulkDelete(fileIds);
-
-      // delete project files
-      const { [projectId]: _, ...rest } = _projectFiles;
-      _projectFiles = rest;
-    }
-    const projectList = [...workspace.projects];
-    projectList.splice(projectIndex, 1);
-    updateStateByKey({
-      projects: projectList,
-      projectFiles: _projectFiles,
-    });
+    await fileSystemV2.rmdir(projectId, { recursive: true });
   }
 
   function setProjects(projects: Project[]) {
@@ -297,7 +281,7 @@ function useWorkspaceActions() {
     }
     item.node.name = name;
     let newPath = name;
-    const pathArray = item.node.path?.split('/') ?? [];
+    const pathArray = item.node.path.split('/');
     if (pathArray.length > 1) {
       const currentPath = pathArray.pop() ?? [];
       newPath = currentPath.toString() + '/' + name;
@@ -345,7 +329,7 @@ function useWorkspaceActions() {
     }
 
     sourceItem.node.parent = parent;
-    sourceItem.node.path = sourcePath;
+    sourceItem.node.path = sourcePath ?? '';
     updateProjectFiles(sourceItem.project, projectId);
   }
 
@@ -566,6 +550,14 @@ function useWorkspaceActions() {
     return projectItem.abiFormInputValues?.find(
       (item) => item.type === type && item.key === key,
     )?.value;
+  }
+
+  function setActiveProject(project: string | null) {
+    updateStateByKey({ activeProject: project });
+  }
+
+  function getActiveProject() {
+    return workspace.activeProject;
   }
 
   function clearWorkSpace() {

@@ -9,7 +9,6 @@ import {
   Tree,
 } from '@/interfaces/workspace.interface';
 import { OverwritableVirtualFileSystem } from '@/utility/OverwritableVirtualFileSystem';
-import { FileInterface } from '@/utility/fileSystem';
 import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
 import {
   LogLevel,
@@ -19,6 +18,7 @@ import {
 import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
 
+import ZIP from '@/lib/zip';
 import { getContractInitParams } from '@/utility/abi';
 import TactLogger from '@/utility/tactLogger';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
@@ -27,21 +27,13 @@ import {
   SuccessResult,
   compileFunc,
 } from '@ton-community/func-js';
-import { BlobReader, TextWriter, ZipReader } from '@zip.js/zip.js';
 import { RcFile } from 'antd/es/upload';
 import cloneDeep from 'lodash.clonedeep';
-import { v4 as uuidv4 } from 'uuid';
 import { useSettingAction } from './setting.hooks';
 import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
-  const {
-    createNewProject,
-    getFileByPath,
-    addFilesToDatabase,
-    createFiles,
-    projectFiles,
-  } = useWorkspaceActions();
+  const { getFileByPath, createFiles, projectFiles } = useWorkspaceActions();
   const { isContractDebugEnabled } = useSettingAction();
 
   return {
@@ -57,44 +49,63 @@ export function useProjectActions() {
     file: RcFile | null,
     defaultFiles?: Tree[],
   ) {
-    let { files, filesWithId } =
+    const fileSystem = (await import('@/lib/fs')).default;
+    // Create project directory at the root of the file system
+    const projectDirectory = await fileSystem.mkdir(`/${name}`, {
+      overwrite: false,
+    });
+
+    let files =
       template === 'import' && defaultFiles?.length == 0
-        ? await importUserFile(file as RcFile, language)
+        ? await new ZIP(fileSystem).importZip(file as RcFile, projectDirectory)
         : createTemplateBasedProject(template, language, defaultFiles);
 
-    const convertedFileObject: Record<string, Tree | undefined> = files.reduce(
+    const fileMapping: Record<string, Partial<Tree> | undefined> = files.reduce(
       (acc, current) => {
-        acc[current.name] = current;
+        acc[current.path] = current;
         return acc;
       },
-      {} as Record<string, Tree>,
+      {} as Record<string, Partial<Tree>>,
     );
 
     if (
-      (!convertedFileObject['stateInit.cell.ts'] ||
-        !convertedFileObject['message.cell.ts']) &&
-      language !== 'tact'
+      (!fileMapping['stateInit.cell.ts'] || !fileMapping['message.cell.ts']) &&
+      language === 'func'
     ) {
       const commonFiles = createTemplateBasedProject(
         'import',
         language,
         commonProjectFiles,
       );
-      files = [...files, ...commonFiles.files];
-      filesWithId = [...filesWithId, ...commonFiles.filesWithId];
+      files = [...files, ...commonFiles];
     }
 
-    addFilesToDatabase(filesWithId);
-    const projectId = uuidv4();
     const project = {
-      id: projectId,
-      name,
       language,
       template,
     };
 
-    createNewProject({ ...project }, files);
-    return projectId;
+    // Create files, directories
+    await Promise.all(
+      files.map(async (file) => {
+        const path = `/${projectDirectory}/${file.path}`;
+        if (file.type === 'directory') {
+          return fileSystem.mkdir(path);
+        }
+        return fileSystem.writeFile(path, file.content ?? '');
+      }),
+    );
+
+    // Save project settings
+    const projectSettingPath = `/${projectDirectory}/.ide/setting.json`;
+    if (!(await fileSystem.exists(projectSettingPath))) {
+      await fileSystem.writeFile(
+        projectSettingPath,
+        JSON.stringify({ project }),
+      );
+    }
+
+    return projectDirectory;
   }
 
   async function compileFuncProgram(
@@ -107,7 +118,7 @@ export function useProjectActions() {
 
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
-      const file = await getFileByPath(fileToProcess, projectId);
+      const file = await getFileByPath(fileToProcess!, projectId);
       if (file?.content) {
         fileList[file.id] = file;
       }
@@ -117,10 +128,10 @@ export function useProjectActions() {
       let compileDirectives = await extractCompilerDiretive(file.content);
 
       compileDirectives = compileDirectives.map((d: string) => {
-        const pathParts = file.path?.split('/');
-        if (!pathParts) {
-          return d;
-        }
+        const pathParts = file.path.split('/');
+        // if (!pathParts) {
+        //   return d;
+        // }
 
         // Convert relative path to absolute path by prepending the current file directory
         if (pathParts.length > 1) {
@@ -155,7 +166,7 @@ export function useProjectActions() {
 
     const abi = await generateABI(fileList);
 
-    const contractName = file.path?.replace('.fc', '');
+    const contractName = file.path.replace('.fc', '');
     await createFiles(
       [
         {
@@ -187,7 +198,7 @@ export function useProjectActions() {
       if (
         /\.(tact|fc|func)$/.test(f.name) &&
         !filesToProcess.includes(f.path) &&
-        !f.path?.startsWith('dist/')
+        !f.path.startsWith('dist/')
       ) {
         filesToProcess.push(f.path);
       }
@@ -197,7 +208,7 @@ export function useProjectActions() {
 
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
-      const file = await getFileByPath(fileToProcess, projectId);
+      const file = await getFileByPath(fileToProcess!, projectId);
       if (file?.path) {
         fs.writeContractFile(file.path!, file.content ?? '');
       }
@@ -296,104 +307,17 @@ const createTemplateBasedProject = (
   language: ContractLanguage = 'tact',
   files: Tree[] = [],
 ) => {
-  let _files: Tree[] = cloneDeep(files);
+  let _files: Pick<Tree, 'type' | 'path' | 'content'>[] = cloneDeep(files);
   if (files.length === 0 && template !== 'import') {
     _files = ProjectTemplateData[template][language];
   }
-  const filesWithId: FileInterface[] = [];
 
   _files = _files.map((file) => {
-    if (file.type !== 'file') {
-      return file;
-    }
-    const fileId = uuidv4();
-    filesWithId.push({ id: fileId, content: file.content ?? '' });
     return {
-      ...file,
-      id: fileId,
-      content: '',
+      type: file.type,
+      path: file.path,
+      content: file.content,
     };
   });
-  return { files: _files, filesWithId };
-};
-
-const importUserFile = async (
-  file: RcFile,
-  language: ContractLanguage = 'tact',
-) => {
-  const sysrootArchiveReader = new ZipReader(new BlobReader(file));
-  const sysrootArchiveEntries = await sysrootArchiveReader.getEntries();
-  const filesToSkip = [
-    '._',
-    '._.DS_Store',
-    '.DS_Store',
-    'node_modules',
-    'build',
-    '.git',
-    '.zip',
-  ];
-  const files: Tree[] = [];
-
-  const fileDirectoryMap: Record<string, string> = {};
-
-  // for storing file in indexed DB
-  const filesWithId: FileInterface[] = [];
-  for (const entry of sysrootArchiveEntries) {
-    if (filesToSkip.some((file) => entry.filename.includes(file))) {
-      continue;
-    }
-    const filePath = entry.filename;
-    const pathParts = filePath.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-    const fileDirectory = pathParts.slice(0, pathParts.length - 1).join('/');
-    const currentDirectory = fileDirectory.split('/').slice(-1)[0];
-    let parentDirectory = '';
-    let fileContent = '';
-
-    if (entry.directory) {
-      parentDirectory = fileDirectory.split('/').slice(0, -1).join('/');
-    }
-
-    const fileId = uuidv4();
-
-    const currentFile: Tree = {
-      id: fileId,
-      name: entry.directory ? currentDirectory : fileName,
-      type: entry.directory ? 'directory' : 'file',
-      parent: null,
-      path: filePath.replace(/^\/|\/$/g, ''), // remove last slash
-    };
-
-    currentFile.parent =
-      fileDirectoryMap[fileDirectory] || fileDirectoryMap[parentDirectory];
-
-    if (entry.directory && fileDirectory) {
-      fileDirectoryMap[fileDirectory] = fileId;
-    }
-
-    if (!entry.directory) {
-      fileContent = await entry.getData!(new TextWriter());
-    }
-
-    filesWithId.push({ id: fileId, content: fileContent });
-    files.push(currentFile);
-  }
-
-  let commonFiles: { files: Tree[]; filesWithId: FileInterface[] } = {
-    files: [],
-    filesWithId: [],
-  };
-
-  if (language !== 'tact') {
-    commonFiles = createTemplateBasedProject(
-      'import',
-      language,
-      commonProjectFiles,
-    );
-  }
-
-  return {
-    files: [...files, ...commonFiles.files],
-    filesWithId: [...filesWithId, ...commonFiles.filesWithId],
-  };
+  return _files;
 };

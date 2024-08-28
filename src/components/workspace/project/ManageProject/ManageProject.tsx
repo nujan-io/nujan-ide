@@ -4,31 +4,30 @@ import AppIcon from '@/components/ui/icon';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { Button, Modal, Select, message } from 'antd';
-import { useRouter } from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import s from './ManageProject.module.scss';
 
 const ManageProject: FC = () => {
-  const { project, projects, deleteProject } = useWorkspaceActions();
-  const [currentProject, setCurrentProject] = useState<Project | null>(null);
+  const { deleteProject, setActiveProject, getActiveProject } =
+    useWorkspaceActions();
+  const [currentProject, setCurrentProject] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [projects, setProjects] = useState<string[]>([]);
 
-  const router = useRouter();
-  const { id: projectId, importURL } = router.query;
+  const activeProject = getActiveProject();
+
+  const getProjects = async () => {
+    const fileSystem = (await import('@/lib/fs')).default;
+    const _projects = await fileSystem.readdir('/', { onlyDir: true });
+    setProjects(_projects);
+  };
 
   const projectHeader = () => (
     <>
       <span className={s.heading}>Projects</span>
       <div className={s.options}>
         <NewProject />
-        <NewProject
-          label="Import"
-          projectType="git"
-          heading="Import from GitHub"
-          icon="GitHub"
-          className={s.git}
-          active={!!importURL}
-        />
+
         <NewProject
           label="Import"
           projectType="local"
@@ -60,7 +59,7 @@ const ManageProject: FC = () => {
         placeholder="Select a project"
         showSearch
         className="w-100 select-search-input-dark"
-        value={currentProject?.id}
+        value={currentProject}
         onChange={(_project) => {
           openProject(_project).catch(() => {});
         }}
@@ -69,13 +68,10 @@ const ManageProject: FC = () => {
           return option?.title.toLowerCase().includes(inputValue.toLowerCase());
         }}
       >
-        {[...projects()].reverse().map((project) => (
-          <Select.Option
-            key={project.id}
-            value={project.id}
-            title={project.name}
-          >
-            {project.name} - <span>{project.language ?? 'func'}</span>
+        {[...projects].reverse().map((project) => (
+          <Select.Option key={project} value={project} title={project}>
+            {project}
+            {/* {project.name} - <span>{project.language ?? 'func'}</span> */}
           </Select.Option>
         ))}
       </Select>
@@ -89,44 +85,44 @@ const ManageProject: FC = () => {
     </div>
   );
 
-  const hasProjects = () => {
-    return projects().length > 0;
-  };
-
   const deleteSelectedProject = async (id: Project['id']) => {
     try {
-      await deleteProject(id);
+      await deleteProject(`/${id}`);
+      setActiveProject(null);
       setCurrentProject(null);
       setIsDeleteConfirmOpen(false);
-      await router.push('/');
+      await getProjects();
     } catch (error) {
+      console.log('Failed to delete project', error);
       await message.error('Failed to delete project');
     }
   };
 
   const openProject = async (id: Project['id']) => {
     if (!id) return;
-    const selectedProject = project(id as string);
+    const selectedProject = id as string;
     if (!selectedProject) {
       await message.error('Project not found');
       return;
     }
     setCurrentProject(selectedProject);
-    await router.push(`/project/${selectedProject.id}`);
+    setActiveProject(selectedProject);
   };
 
   useEffect(() => {
-    if (!projectId || currentProject?.id == projectId) return;
-    openProject(projectId as string).catch(() => {});
-  }, [projectId]);
+    if (!activeProject) return;
+    openProject(activeProject as string).catch(() => {});
+    getProjects().catch((error) => {
+      console.log('Failed to get projects', error);
+    });
+  }, [activeProject]);
 
   return (
     <div className={s.root}>
       <div className={s.header}>
-        {hasProjects() && projectHeader()}
-        {!hasProjects() && noProjectExistsUI()}
+        {projects.length > 0 ? projectHeader() : noProjectExistsUI()}
       </div>
-      {hasProjects() && projectOptions()}
+      {projects.length > 0 && projectOptions()}
 
       <Modal
         className="modal-delete-project"
@@ -135,8 +131,7 @@ const ManageProject: FC = () => {
         footer={null}
       >
         <span className={s.modalTitle}>
-          <AppIcon name="Info" /> Delete my <b>`{currentProject?.name}`</b>{' '}
-          Project?
+          <AppIcon name="Info" /> Delete my <b>`{currentProject}`</b> Project?
         </span>
         <div className={s.modalDescription}>
           <p>
@@ -164,7 +159,7 @@ const ManageProject: FC = () => {
             danger
             onClick={() => {
               if (currentProject) {
-                deleteSelectedProject(currentProject.id).catch(() => {});
+                deleteSelectedProject(currentProject).catch(() => {});
               }
             }}
           >

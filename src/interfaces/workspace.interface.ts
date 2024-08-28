@@ -7,7 +7,7 @@ export interface Tree {
   parent: string | null;
   type: 'directory' | 'file';
   isOpen?: boolean;
-  path?: string;
+  path: string;
   content?: string;
   isDirty?: boolean;
   createdAt?: Date;
@@ -64,7 +64,7 @@ export type WorkspaceState = {
   openFiles: ProjectFiles;
   projectFiles: ProjectFiles | null;
   projects: Project[];
-  activeProjectId: string;
+  activeProject: string | null;
 };
 
 export interface ABIParameter {

@@ -9,7 +9,6 @@ import {
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
-import { downloadRepo } from '@/utility/gitRepoDownloader';
 import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import type { RcFile } from 'antd/lib/upload';
@@ -43,7 +42,7 @@ const NewProject: FC<Props> = ({
   name,
 }) => {
   const [isActive, setIsActive] = useState(active);
-  const { projects } = useWorkspaceActions();
+  const { projects, setActiveProject } = useWorkspaceActions();
   const { createProject } = useProjectActions();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,7 +72,7 @@ const NewProject: FC<Props> = ({
   const onFormFinish = async (values: FormValues) => {
     const { githubUrl, language } = values;
     let { name: projectName } = values;
-    let files: Tree[] = defaultFiles;
+    const files: Tree[] = defaultFiles;
 
     try {
       setIsLoading(true);
@@ -82,10 +81,14 @@ const NewProject: FC<Props> = ({
       }
 
       if (projectType === 'git') {
-        files = await downloadRepo(githubUrl as string);
+        throw new Error(
+          `Git import has been disabled for now. Repo: ${githubUrl}`,
+        );
+        // TODO: Implement downloadRepo function
+        // files = await downloadRepo(githubUrl as string);
       }
 
-      const projectId = await createProject(
+      const projectPath = await createProject(
         projectName,
         language,
         values.template ?? 'import',
@@ -101,8 +104,11 @@ const NewProject: FC<Props> = ({
         sourceType: projectType,
         template: values.template,
       });
-      await message.success(`Project '${projectName}' created`);
-      await router.push(`/project/${projectId}`);
+
+      // Remove leading slash from project path and set it as active project
+      setActiveProject(projectPath.slice(1));
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      message.success(`Project '${projectName}' created`);
     } catch (error) {
       let errorMessage = 'Error in creating project';
       if (typeof error === 'string') {
@@ -110,7 +116,8 @@ const NewProject: FC<Props> = ({
       } else {
         errorMessage = (error as Error).message || errorMessage;
       }
-      await message.error(errorMessage);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      message.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -244,7 +251,7 @@ const NewProject: FC<Props> = ({
               >
                 <div className={s.fileUploadLabel}>
                   <AppIcon name="Download" className={s.icon} />
-                  <b>Choose a file</b> <span>or drag it here</span>
+                  <b>Choose a .zip file</b> <span>or drag it here</span>
                 </div>
               </Upload.Dragger>
             </Form.Item>

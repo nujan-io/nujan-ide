@@ -107,7 +107,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       .filter((f) => {
         const _fileExtension = getFileExtension(f.name || '');
         return (
-          f.path?.startsWith('dist') &&
+          f.path.startsWith('dist') &&
           ['abi'].includes(_fileExtension as string)
         );
       })
@@ -241,7 +241,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
           tsProjectFiles = await getAllFilesWithContent(
             projectId,
             (file) =>
-              !file.path?.startsWith('dist') &&
+              !file.path.startsWith('dist') &&
               file.name.endsWith('.ts') &&
               !file.name.endsWith('.spec.ts'),
           );
@@ -278,7 +278,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   const deploy = async () => {
     createLog(`Deploying contract ...`, 'info');
     const contractBOCPath = selectedContract?.replace('.abi', '.code.boc');
-    const contractBOC = await getFileByPath(contractBOCPath, projectId);
+    const contractBOC = await getFileByPath(contractBOCPath!, projectId);
     if (!contractBOC?.content) {
       throw new Error('Contract BOC is missing. Rebuild the contract.');
     }
@@ -312,7 +312,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         environment: environment.toLowerCase(),
       });
       createLog(
-        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}}`,
+        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}`,
         'success',
       );
 

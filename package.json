@@ -13,6 +13,7 @@
   "dependencies": {
     "@codingame/monaco-jsonrpc": "^0.3.1",
     "@codingame/monaco-languageclient": "^0.17.0",
+    "@isomorphic-git/lightning-fs": "^4.6.0",
     "@minoru/react-dnd-treeview": "^3.4.1",
     "@monaco-editor/react": "^4.5.1",
     "@orbs-network/ton-access": "^2.3.0",

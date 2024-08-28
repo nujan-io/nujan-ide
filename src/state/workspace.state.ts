@@ -11,7 +11,7 @@ export const workspaceState = atom<WorkspaceState>({
     openFiles: {},
     projectFiles: null,
     projects: [],
-    activeProjectId: '1',
+    activeProject: null,
   },
   effects_UNSTABLE: [persistAtom],
 });

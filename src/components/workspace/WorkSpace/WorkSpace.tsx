@@ -1,3 +1,5 @@
+'use client';
+
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
@@ -23,13 +25,12 @@ import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
 import { globalWorkspace } from '../globalWorkspace';
 import { ManageProject } from '../project';
-import FileTree from '../tree/FileTree';
 import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
-  const { createLog, clearLog } = useLogActivity();
+  const { clearLog } = useLogActivity();
 
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
@@ -37,18 +38,20 @@ const WorkSpace: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [contract, setContract] = useState<any>('');
 
-  const { id: projectId, tab } = router.query;
+  const { tab } = router.query;
+  const projectName = workspaceAction.getActiveProject();
 
-  const activeFile = workspaceAction.activeFile(projectId as string);
+  const activeFile = workspaceAction.activeFile(projectName as string);
 
   const activeProject = useMemo(() => {
-    return workspaceAction.project(projectId as string);
-  }, [projectId]);
+    return workspaceAction.project(projectName as string);
+  }, [projectName]);
 
   const commitItemCreation = (type: string, name: string) => {
-    workspaceAction
-      .createNewItem('', name, type, projectId as string)
-      .catch(() => {});
+    console.log('commitItemCreation', type, name);
+    // workspaceAction
+    //   .createNewItem('', name, type, projectId as string)
+    //   .catch(() => {});
   };
 
   const createSandbox = async (force: boolean = false) => {
@@ -72,16 +75,16 @@ const WorkSpace: FC = () => {
     if (!activeProject) {
       return;
     }
-    createLog(`Project '${activeProject.name}' is opened`);
+    // createLog(`Project '${activeProject.name}' is opened`);
     createSandbox(true).catch(() => {});
 
-    if (activeFile) return;
-    const projectFiles = workspaceAction.projectFiles(activeProject.id);
-    const mainFile = projectFiles.find((file) =>
-      ['main.tact', 'main.fc'].includes(file.name),
-    );
-    if (!mainFile) return;
-    workspaceAction.openFile(mainFile.id, activeProject.id);
+    // if (activeFile) return;
+    // const projectFiles = workspaceAction.projectFiles(activeProject.id);
+    // const mainFile = projectFiles.find((file) =>
+    //   ['main.tact', 'main.fc'].includes(file.name),
+    // );
+    // if (!mainFile) return;
+    // workspaceAction.openFile(mainFile.id, activeProject.id);
   }, [activeProject]);
 
   useEffect(() => {
@@ -120,7 +123,7 @@ const WorkSpace: FC = () => {
       <div className={`${s.sidebar} onboarding-workspace-sidebar`}>
         <WorkspaceSidebar
           activeMenu={activeMenu}
-          projectId={projectId as string}
+          projectName={projectName}
           onMenuClicked={(name) => {
             setActiveMenu(name);
             router
@@ -142,7 +145,7 @@ const WorkSpace: FC = () => {
       >
         <div className={s.tree}>
           {activeMenu === 'setting' && (
-            <ProjectSetting projectId={projectId as Project['id']} />
+            <ProjectSetting projectId={projectName as Project['id']} />
           )}
           {isLoaded && activeMenu === 'code' && (
             <div className="onboarding-file-explorer">
@@ -164,12 +167,12 @@ const WorkSpace: FC = () => {
                 </div>
               )}
 
-              <FileTree projectId={projectId as string} />
+              {/* <FileTree projectId={projectName as string} /> */}
             </div>
           )}
           {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
             <BuildProject
-              projectId={projectId as string}
+              projectId={projectName as string}
               onCodeCompile={(_codeBOC) => {}}
               contract={contract}
               updateContract={(contractInstance) => {
@@ -179,7 +182,7 @@ const WorkSpace: FC = () => {
           )}
           {activeMenu === 'test-cases' && (
             <div className={s.testCaseArea}>
-              <TestCases projectId={projectId as string} />
+              <TestCases projectId={projectName as string} />
             </div>
           )}
         </div>
@@ -198,15 +201,15 @@ const WorkSpace: FC = () => {
               >
                 <div>
                   <div className={s.tabsWrapper}>
-                    <Tabs projectId={projectId as string} />
+                    <Tabs projectId={projectName as string} />
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>
-                    {!projectId && !activeFile && <ProjectTemplate />}
+                    {!projectName && !activeFile && <ProjectTemplate />}
                     {activeFile && (
                       <Editor
                         file={activeFile as Tree}
-                        projectId={projectId as string}
+                        projectId={projectName as string}
                       />
                     )}
                   </div>

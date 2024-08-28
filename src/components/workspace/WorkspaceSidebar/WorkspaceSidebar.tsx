@@ -3,7 +3,6 @@ import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { AppData } from '@/constant/AppData';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Project } from '@/interfaces/workspace.interface';
 import { Form, Input, Popover, Select, Switch } from 'antd';
 import Link from 'next/link';
 import { FC } from 'react';
@@ -20,13 +19,13 @@ interface MenuItem {
 interface Props {
   activeMenu: WorkSpaceMenu;
   onMenuClicked: (name: WorkSpaceMenu) => void;
-  projectId: Project['id'];
+  projectName?: string | null;
 }
 
 const WorkspaceSidebar: FC<Props> = ({
   activeMenu,
   onMenuClicked,
-  projectId,
+  projectName,
 }) => {
   const { isProjectEditable } = useWorkspaceActions();
   const {
@@ -180,9 +179,9 @@ const WorkspaceSidebar: FC<Props> = ({
               <div
                 className={`${s.action} ${
                   activeMenu === menu.value ? s.isActive : ''
-                } ${!projectId ? s.disabled : ''}`}
+                } ${!projectName ? s.disabled : ''}`}
                 onClick={() => {
-                  if (!projectId) return;
+                  if (!projectName) return;
                   onMenuClicked(menu.value);
                 }}
               >

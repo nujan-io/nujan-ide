@@ -55,7 +55,7 @@ const TestCases: FC<Props> = ({ projectId }) => {
     //   createLog('Please specify contract path', 'error');
     //   return;
     // }
-    const contractFile = await getFileByPath(contractPath, projectId);
+    const contractFile = await getFileByPath(contractPath!, projectId);
     if (contractPath && !contractFile) {
       createLog(
         `Contract file not found - ${contractPath}. Define correct absolute path. Ex. contracts/main.fc`,

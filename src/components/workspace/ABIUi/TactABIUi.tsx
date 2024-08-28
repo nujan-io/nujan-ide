@@ -78,8 +78,8 @@ function FieldItem(
       .filter(
         (f) =>
           f.name.includes('.ts') &&
-          !f.path?.startsWith('dist') &&
-          !f.path?.endsWith('.spec.ts'),
+          !f.path.startsWith('dist') &&
+          !f.path.endsWith('.spec.ts'),
       )
       .map((file) => (
         <Select.Option
@@ -353,7 +353,7 @@ const TactABIUi: FC<TactABI> = ({
         tsProjectFiles = await getAllFilesWithContent(
           projectId as string,
           (file) =>
-            !file.path?.startsWith('dist') &&
+            !file.path.startsWith('dist') &&
             file.name.endsWith('.ts') &&
             !file.name.endsWith('.spec.ts'),
         );
