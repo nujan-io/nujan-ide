@@ -1,7 +1,6 @@
 import { Tooltip } from '@/components/ui';
 import AppIcon, { AppIconType } from '@/components/ui/icon';
-import { useProjectActions } from '@/hooks/project.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProjects } from '@/hooks/projectV2.hooks';
 import {
   ContractLanguage,
   ProjectTemplate,
@@ -42,8 +41,7 @@ const NewProject: FC<Props> = ({
   name,
 }) => {
   const [isActive, setIsActive] = useState(active);
-  const { projects, setActiveProject } = useWorkspaceActions();
-  const { createProject } = useProjectActions();
+  const { createProject } = useProjects();
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
@@ -71,14 +69,11 @@ const NewProject: FC<Props> = ({
 
   const onFormFinish = async (values: FormValues) => {
     const { githubUrl, language } = values;
-    let { name: projectName } = values;
+    const { name: projectName } = values;
     const files: Tree[] = defaultFiles;
 
     try {
       setIsLoading(true);
-      if (projects().findIndex((p) => p.name == projectName) >= 0) {
-        projectName += '-' + projects().length + 1;
-      }
 
       if (projectType === 'git') {
         throw new Error(
@@ -88,7 +83,7 @@ const NewProject: FC<Props> = ({
         // files = await downloadRepo(githubUrl as string);
       }
 
-      const projectPath = await createProject(
+      await createProject(
         projectName,
         language,
         values.template ?? 'import',
@@ -104,9 +99,6 @@ const NewProject: FC<Props> = ({
         sourceType: projectType,
         template: values.template,
       });
-
-      // Remove leading slash from project path and set it as active project
-      setActiveProject(projectPath.slice(1));
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       message.success(`Project '${projectName}' created`);
     } catch (error) {

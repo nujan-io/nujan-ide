@@ -1,26 +1,17 @@
 import { NewProject } from '@/components/project';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProjects } from '@/hooks/projectV2.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { Button, Modal, Select, message } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import s from './ManageProject.module.scss';
 
 const ManageProject: FC = () => {
-  const { deleteProject, setActiveProject, getActiveProject } =
-    useWorkspaceActions();
-  const [currentProject, setCurrentProject] = useState<string | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [projects, setProjects] = useState<string[]>([]);
 
-  const activeProject = getActiveProject();
-
-  const getProjects = async () => {
-    const fileSystem = (await import('@/lib/fs')).default;
-    const _projects = await fileSystem.readdir('/', { onlyDir: true });
-    setProjects(_projects);
-  };
+  const { projects, setActiveProject, deleteProject, activeProject } =
+    useProjects();
 
   const projectHeader = () => (
     <>
@@ -38,11 +29,9 @@ const ManageProject: FC = () => {
 
         <Tooltip title="Delete Project" placement="bottom">
           <div
-            className={`${s.deleteProject} ${
-              !currentProject ? s.disabled : ''
-            }`}
+            className={`${s.deleteProject} ${!activeProject ? s.disabled : ''}`}
             onClick={() => {
-              if (!currentProject) return;
+              if (!activeProject) return;
               setIsDeleteConfirmOpen(true);
             }}
           >
@@ -59,7 +48,7 @@ const ManageProject: FC = () => {
         placeholder="Select a project"
         showSearch
         className="w-100 select-search-input-dark"
-        value={currentProject}
+        value={activeProject}
         onChange={(_project) => {
           openProject(_project).catch(() => {});
         }}
@@ -89,9 +78,7 @@ const ManageProject: FC = () => {
     try {
       await deleteProject(`/${id}`);
       setActiveProject(null);
-      setCurrentProject(null);
       setIsDeleteConfirmOpen(false);
-      await getProjects();
     } catch (error) {
       console.log('Failed to delete project', error);
       await message.error('Failed to delete project');
@@ -105,16 +92,12 @@ const ManageProject: FC = () => {
       await message.error('Project not found');
       return;
     }
-    setCurrentProject(selectedProject);
     setActiveProject(selectedProject);
   };
 
   useEffect(() => {
     if (!activeProject) return;
     openProject(activeProject as string).catch(() => {});
-    getProjects().catch((error) => {
-      console.log('Failed to get projects', error);
-    });
   }, [activeProject]);
 
   return (
@@ -131,7 +114,7 @@ const ManageProject: FC = () => {
         footer={null}
       >
         <span className={s.modalTitle}>
-          <AppIcon name="Info" /> Delete my <b>`{currentProject}`</b> Project?
+          <AppIcon name="Info" /> Delete my <b>`{activeProject}`</b> Project?
         </span>
         <div className={s.modalDescription}>
           <p>
@@ -158,8 +141,8 @@ const ManageProject: FC = () => {
             type="primary"
             danger
             onClick={() => {
-              if (currentProject) {
-                deleteSelectedProject(currentProject).catch(() => {});
+              if (activeProject) {
+                deleteSelectedProject(activeProject).catch(() => {});
               }
             }}
           >

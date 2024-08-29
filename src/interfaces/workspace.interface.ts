@@ -64,7 +64,6 @@ export type WorkspaceState = {
   openFiles: ProjectFiles;
   projectFiles: ProjectFiles | null;
   projects: Project[];
-  activeProject: string | null;
 };
 
 export interface ABIParameter {

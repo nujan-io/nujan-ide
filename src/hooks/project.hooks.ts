@@ -1,13 +1,4 @@
-import {
-  ProjectTemplate as ProjectTemplateData,
-  commonProjectFiles,
-} from '@/constant/ProjectTemplate';
-import {
-  ContractLanguage,
-  Project,
-  ProjectTemplate,
-  Tree,
-} from '@/interfaces/workspace.interface';
+import { Project, Tree } from '@/interfaces/workspace.interface';
 import { OverwritableVirtualFileSystem } from '@/utility/OverwritableVirtualFileSystem';
 import { extractCompilerDiretive, parseGetters } from '@/utility/getterParser';
 import {
@@ -18,7 +9,6 @@ import {
 import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
 
-import ZIP from '@/lib/zip';
 import { getContractInitParams } from '@/utility/abi';
 import TactLogger from '@/utility/tactLogger';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
@@ -27,8 +17,6 @@ import {
   SuccessResult,
   compileFunc,
 } from '@ton-community/func-js';
-import { RcFile } from 'antd/es/upload';
-import cloneDeep from 'lodash.clonedeep';
 import { useSettingAction } from './setting.hooks';
 import { useWorkspaceActions } from './workspace.hooks';
 
@@ -37,76 +25,9 @@ export function useProjectActions() {
   const { isContractDebugEnabled } = useSettingAction();
 
   return {
-    createProject,
     compileFuncProgram,
     compileTactProgram,
   };
-
-  async function createProject(
-    name: string,
-    language: ContractLanguage,
-    template: ProjectTemplate,
-    file: RcFile | null,
-    defaultFiles?: Tree[],
-  ) {
-    const fileSystem = (await import('@/lib/fs')).default;
-    // Create project directory at the root of the file system
-    const projectDirectory = await fileSystem.mkdir(`/${name}`, {
-      overwrite: false,
-    });
-
-    let files =
-      template === 'import' && defaultFiles?.length == 0
-        ? await new ZIP(fileSystem).importZip(file as RcFile, projectDirectory)
-        : createTemplateBasedProject(template, language, defaultFiles);
-
-    const fileMapping: Record<string, Partial<Tree> | undefined> = files.reduce(
-      (acc, current) => {
-        acc[current.path] = current;
-        return acc;
-      },
-      {} as Record<string, Partial<Tree>>,
-    );
-
-    if (
-      (!fileMapping['stateInit.cell.ts'] || !fileMapping['message.cell.ts']) &&
-      language === 'func'
-    ) {
-      const commonFiles = createTemplateBasedProject(
-        'import',
-        language,
-        commonProjectFiles,
-      );
-      files = [...files, ...commonFiles];
-    }
-
-    const project = {
-      language,
-      template,
-    };
-
-    // Create files, directories
-    await Promise.all(
-      files.map(async (file) => {
-        const path = `/${projectDirectory}/${file.path}`;
-        if (file.type === 'directory') {
-          return fileSystem.mkdir(path);
-        }
-        return fileSystem.writeFile(path, file.content ?? '');
-      }),
-    );
-
-    // Save project settings
-    const projectSettingPath = `/${projectDirectory}/.ide/setting.json`;
-    if (!(await fileSystem.exists(projectSettingPath))) {
-      await fileSystem.writeFile(
-        projectSettingPath,
-        JSON.stringify({ project }),
-      );
-    }
-
-    return projectDirectory;
-  }
 
   async function compileFuncProgram(
     file: Pick<Tree, 'path'>,
@@ -301,23 +222,3 @@ export function useProjectActions() {
     return results[0];
   }
 }
-
-const createTemplateBasedProject = (
-  template: 'tonBlank' | 'tonCounter' | 'import',
-  language: ContractLanguage = 'tact',
-  files: Tree[] = [],
-) => {
-  let _files: Pick<Tree, 'type' | 'path' | 'content'>[] = cloneDeep(files);
-  if (files.length === 0 && template !== 'import') {
-    _files = ProjectTemplateData[template][language];
-  }
-
-  _files = _files.map((file) => {
-    return {
-      type: file.type,
-      path: file.path,
-      content: file.content,
-    };
-  });
-  return _files;
-};

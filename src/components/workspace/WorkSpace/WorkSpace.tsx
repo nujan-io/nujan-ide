@@ -3,6 +3,7 @@
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
+import { useProjects } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
@@ -12,7 +13,7 @@ import * as TonCrypto from '@ton/crypto';
 import { Blockchain } from '@ton/sandbox';
 import { Buffer } from 'buffer';
 import { useRouter } from 'next/router';
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import Split from 'react-split';
 import { useEffectOnce } from 'react-use';
 import BottomPanel from '../BottomPanel/BottomPanel';
@@ -25,6 +26,7 @@ import WorkspaceSidebar from '../WorkspaceSidebar';
 import { WorkSpaceMenu } from '../WorkspaceSidebar/WorkspaceSidebar';
 import { globalWorkspace } from '../globalWorkspace';
 import { ManageProject } from '../project';
+import FileTree from '../tree/FileTree';
 import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
 
@@ -39,13 +41,9 @@ const WorkSpace: FC = () => {
   const [contract, setContract] = useState<any>('');
 
   const { tab } = router.query;
-  const projectName = workspaceAction.getActiveProject();
+  const { activeProject } = useProjects();
 
-  const activeFile = workspaceAction.activeFile(projectName as string);
-
-  const activeProject = useMemo(() => {
-    return workspaceAction.project(projectName as string);
-  }, [projectName]);
+  const activeFile = workspaceAction.activeFile(activeProject as string);
 
   const commitItemCreation = (type: string, name: string) => {
     console.log('commitItemCreation', type, name);
@@ -123,7 +121,7 @@ const WorkSpace: FC = () => {
       <div className={`${s.sidebar} onboarding-workspace-sidebar`}>
         <WorkspaceSidebar
           activeMenu={activeMenu}
-          projectName={projectName}
+          projectName={activeProject}
           onMenuClicked={(name) => {
             setActiveMenu(name);
             router
@@ -145,7 +143,7 @@ const WorkSpace: FC = () => {
       >
         <div className={s.tree}>
           {activeMenu === 'setting' && (
-            <ProjectSetting projectId={projectName as Project['id']} />
+            <ProjectSetting projectId={activeProject as Project['id']} />
           )}
           {isLoaded && activeMenu === 'code' && (
             <div className="onboarding-file-explorer">
@@ -167,12 +165,12 @@ const WorkSpace: FC = () => {
                 </div>
               )}
 
-              {/* <FileTree projectId={projectName as string} /> */}
+              <FileTree projectId={activeProject as string} />
             </div>
           )}
           {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
             <BuildProject
-              projectId={projectName as string}
+              projectId={activeProject as string}
               onCodeCompile={(_codeBOC) => {}}
               contract={contract}
               updateContract={(contractInstance) => {
@@ -182,7 +180,7 @@ const WorkSpace: FC = () => {
           )}
           {activeMenu === 'test-cases' && (
             <div className={s.testCaseArea}>
-              <TestCases projectId={projectName as string} />
+              <TestCases projectId={activeProject as string} />
             </div>
           )}
         </div>
@@ -201,15 +199,15 @@ const WorkSpace: FC = () => {
               >
                 <div>
                   <div className={s.tabsWrapper}>
-                    <Tabs projectId={projectName as string} />
+                    <Tabs projectId={activeProject as string} />
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>
-                    {!projectName && !activeFile && <ProjectTemplate />}
+                    {!activeProject && !activeFile && <ProjectTemplate />}
                     {activeFile && (
                       <Editor
                         file={activeFile as Tree}
-                        projectId={projectName as string}
+                        projectId={activeProject as string}
                       />
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProjects } from '@/hooks/projectV2.hooks';
 import {
   DropOptions,
   getBackendOptions,
@@ -16,31 +16,32 @@ interface Props {
 }
 
 const FileTree: FC<Props> = ({ projectId }) => {
-  const workspaceAction = useWorkspaceActions();
+  const { projectFiles } = useProjects();
 
-  const projectFiles = (): NodeModel[] => {
-    return workspaceAction.projectFiles(projectId).map((item) => {
+  const getProjectFiles = (): NodeModel[] => {
+    return [...projectFiles].map((item) => {
       return {
-        id: item.id,
+        id: item.path,
         parent: item.parent ?? 0,
         droppable: item.type === 'directory',
         text: item.name,
       };
     });
   };
-  const handleDrop = (_: unknown, options: DropOptions) => {
-    workspaceAction.moveFile(
-      options.dragSourceId as string,
-      options.dropTargetId as string,
-      projectId,
-    );
+
+  const handleDrop = (_: unknown, _options: DropOptions) => {
+    // workspaceAction.moveFile(
+    //   options.dragSourceId as string,
+    //   options.dropTargetId as string,
+    //   projectId,
+    // );
   };
 
   return (
     <div className={s.root}>
       <DndProvider backend={MultiBackend} options={getBackendOptions()}>
         <Tree
-          tree={projectFiles()}
+          tree={getProjectFiles()}
           rootId={0}
           onDrop={handleDrop}
           render={(node, { depth, isOpen, onToggle }) => (

@@ -19,9 +19,7 @@ function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
 
   return {
-    createNewProject,
     deleteProject,
-    setProjects,
     projects,
     project,
     projectFiles,
@@ -49,8 +47,6 @@ function useWorkspaceActions() {
     isProjectEditable,
     updateABIInputValues,
     getABIInputValues,
-    setActiveProject,
-    getActiveProject,
     clearWorkSpace,
   };
 
@@ -63,24 +59,8 @@ function useWorkspaceActions() {
     });
   }
 
-  function createNewProject(project: Project, template: Tree[]) {
-    if (projects().findIndex((p) => p.name == project.name) >= 0) {
-      throw new Error('Project with the same name already exists');
-    }
-    updateStateByKey({
-      projects: [...workspace.projects, project],
-      projectFiles: { ...workspace.projectFiles, [project.id]: template },
-    });
-  }
-
   async function deleteProject(projectId: string) {
     await fileSystemV2.rmdir(projectId, { recursive: true });
-  }
-
-  function setProjects(projects: Project[]) {
-    updateStateByKey({
-      projects,
-    });
   }
 
   function updateProjectList(projectId: string, projectListItem: Project) {
@@ -550,14 +530,6 @@ function useWorkspaceActions() {
     return projectItem.abiFormInputValues?.find(
       (item) => item.type === type && item.key === key,
     )?.value;
-  }
-
-  function setActiveProject(project: string | null) {
-    updateStateByKey({ activeProject: project });
-  }
-
-  function getActiveProject() {
-    return workspace.activeProject;
   }
 
   function clearWorkSpace() {
