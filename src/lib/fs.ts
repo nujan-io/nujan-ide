@@ -103,6 +103,19 @@ class FileSystem {
     return newPath;
   }
 
+  async create(path: string, type: 'file' | 'directory') {
+    if (await this.exists(path)) {
+      const name = path.substring(path.lastIndexOf('/') + 1);
+      throw new Error(
+        `File or folder already exists with the same name: ${name}`,
+      );
+    }
+    if (type === 'file') {
+      return this.writeFile(path, '');
+    }
+    return this.mkdir(path);
+  }
+
   async rmdir(path: string, options: { recursive?: boolean } = {}) {
     if (!options.recursive) {
       return this.fs.rmdir(path);
@@ -145,7 +158,12 @@ class FileSystem {
   }
 
   async rename(oldPath: string, newPath: string) {
-    return this.fs.rename(oldPath, newPath);
+    if (oldPath === newPath) return false;
+    if (await this.exists(newPath)) {
+      throw new Error(`File or folder already exists with the same name`);
+    }
+    await this.fs.rename(oldPath, newPath);
+    return true;
   }
 
   async copy(oldPath: string, newPath: string) {

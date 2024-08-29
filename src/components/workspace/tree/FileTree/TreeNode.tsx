@@ -1,3 +1,5 @@
+import { useLogActivity } from '@/hooks/logActivity.hooks';
+import { useProjects } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
@@ -10,11 +12,15 @@ import ItemAction, { actionsTypes } from './ItemActions';
 import TreePlaceholderInput from './TreePlaceholderInput';
 
 interface Props {
-  node: NodeModel;
+  node: NodeModel<TreeNodeData>;
   depth: number;
   isOpen: boolean;
   onToggle: (id: NodeModel['id']) => void;
   projectId: Project['id'];
+}
+
+export interface TreeNodeData {
+  path: string;
 }
 
 const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
@@ -27,13 +33,15 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const router = useRouter();
   const { id: projectId } = router.query;
 
-  const { openFile, renameItem, deleteItem, createNewItem, isProjectEditable } =
-    useWorkspaceActions();
+  const { openFile, isProjectEditable } = useWorkspaceActions();
+  const { deleteProjectFile, renameProjectFile, newFileFolder } = useProjects();
+  const { createLog } = useLogActivity();
 
   const disallowedFile = [
     'message.cell.ts',
     'stateInit.cell.ts',
     'test.spec.js',
+    'setting.json',
   ];
 
   const handleClick = (e: React.MouseEvent) => {
@@ -51,19 +59,32 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     setIsEditing(true);
   };
 
-  const commitEditing = (name: string) => {
-    renameItem(node.id as string, name, projectId as string);
-    reset();
+  const commitEditing = async (name: string) => {
+    try {
+      await renameProjectFile(node.data?.path as string, name);
+      reset();
+    } catch (error) {
+      createLog((error as Error).message, 'error');
+    }
   };
 
-  const commitItemCreation = (name: string) => {
-    createNewItem(
-      node.id as string,
-      name,
-      newItemAdd,
-      projectId as string,
-    ).catch(() => {});
-    reset();
+  const commitItemCreation = async (name: string) => {
+    if (!newItemAdd) return;
+    const path = `${node.data?.path}/${name}`;
+    try {
+      await newFileFolder(path, newItemAdd);
+      reset();
+    } catch (error) {
+      createLog((error as Error).message, 'error');
+    }
+  };
+
+  const updateItemTypeCreation = (type: Tree['type']) => {
+    if (!isAllowed()) return;
+    if (node.droppable && !isOpen) {
+      onToggle(node.id);
+    }
+    setNewItemAdd(type);
   };
 
   const reset = () => {
@@ -86,8 +107,14 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     return ['Edit', 'Close'];
   };
 
-  const deleteItemFromNode = () => {
-    deleteItem(node.id as string, projectId as string);
+  const deleteItemFromNode = async () => {
+    const nodePath = node.data?.path;
+    if (!nodePath) {
+      createLog(`'${nodePath}' not found`, 'error');
+      return;
+    }
+
+    await deleteProjectFile(nodePath);
   };
 
   const isAllowed = () => {
@@ -133,19 +160,13 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
                 }}
                 allowedActions={getAllowedActions() as actionsTypes[]}
                 onNewFile={() => {
-                  if (!isAllowed()) {
-                    return;
-                  }
-                  setNewItemAdd('file');
+                  updateItemTypeCreation('file');
                 }}
                 onNewDirectory={() => {
-                  if (!isAllowed()) {
-                    return;
-                  }
-                  setNewItemAdd('directory');
+                  updateItemTypeCreation('directory');
                 }}
                 onDelete={() => {
-                  deleteItemFromNode();
+                  deleteItemFromNode().catch(() => {});
                 }}
               />
             )}
@@ -163,7 +184,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
       </div>
       {newItemAdd && (
         <TreePlaceholderInput
-          style={{ paddingInlineStart: 15 * (depth + 1) }}
+          style={{ paddingInlineStart: 15 * (depth + 2) }}
           onSubmit={commitItemCreation}
           onCancel={reset}
           type={newItemAdd}

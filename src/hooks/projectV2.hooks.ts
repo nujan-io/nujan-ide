@@ -165,12 +165,58 @@ export const useProjects = () => {
     return projectName;
   };
 
+  const newFileFolder = async (path: string, type: 'file' | 'directory') => {
+    if (!activeProject) return;
+    const newPath = `${baseProjectPath}${activeProject}/${path}`;
+    await fileSystem.create(newPath, type);
+    await loadProjectFiles(activeProject);
+  };
+
+  const deleteProjectFile = async (path: string) => {
+    if (!activeProject) return;
+    await fileSystem.remove(`${baseProjectPath}${activeProject}/${path}`, {
+      recursive: true,
+    });
+    await loadProjectFiles(activeProject);
+  };
+
+  const moveItem = async (oldPath: string, targetPath: string) => {
+    if (!activeProject) return;
+    if (oldPath === targetPath) return;
+
+    const newPath = targetPath + '/' + oldPath.split('/').pop();
+
+    await fileSystem.rename(
+      `${baseProjectPath}/${oldPath}`,
+      `${baseProjectPath}/${newPath}`,
+    );
+    await loadProjectFiles(activeProject);
+  };
+
+  const renameProjectFile = async (oldPath: string, newName: string) => {
+    if (!activeProject) return;
+    const newPath = oldPath.includes('/')
+      ? oldPath.split('/').slice(0, -1).join('/') + '/' + newName
+      : newName;
+
+    const success = await fileSystem.rename(
+      `${baseProjectPath}${activeProject}/${oldPath}`,
+      `${baseProjectPath}${activeProject}/${newPath}`,
+    );
+    if (!success) return;
+    await loadProjectFiles(activeProject);
+  };
+
   return {
     projects,
-    createProject,
     projectFiles,
-    deleteProject,
     activeProject,
+    createProject,
+    deleteProject,
+    newFileFolder,
+    deleteProjectFile,
+    moveItem,
+    renameProjectFile,
     setActiveProject,
   };
 };

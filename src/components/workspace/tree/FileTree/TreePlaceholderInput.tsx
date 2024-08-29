@@ -66,15 +66,10 @@ const TreePlaceholderInput: FC<Props> = ({
   return (
     <div className={rootClassName} style={style}>
       {type === 'directory' ? (
-        <FolderEdit
-          style={style}
-          inputRef={inputRef}
-          defaultValue={defaultValue}
-        />
+        <FolderEdit inputRef={inputRef} defaultValue={defaultValue} />
       ) : (
         <FileEdit
           ext={ext}
-          style={style}
           updateExt={updateExt}
           inputRef={inputRef}
           defaultValue={defaultValue}
@@ -90,14 +85,9 @@ interface FolderEditProps {
   style?: React.CSSProperties;
 }
 
-const FolderEdit: FC<FolderEditProps> = ({ inputRef, defaultValue, style }) => {
+const FolderEdit: FC<FolderEditProps> = ({ inputRef, defaultValue }) => {
   return (
-    <input
-      ref={inputRef}
-      className={s.treeInput}
-      defaultValue={defaultValue}
-      style={style}
-    />
+    <input ref={inputRef} className={s.treeInput} defaultValue={defaultValue} />
   );
 };
 
@@ -109,19 +99,9 @@ interface FileEditProps {
   style?: React.CSSProperties;
 }
 
-const FileEdit: FC<FileEditProps> = ({
-  inputRef,
-  updateExt,
-  defaultValue,
-  style,
-}) => {
+const FileEdit: FC<FileEditProps> = ({ inputRef, updateExt, defaultValue }) => {
   return (
-    <input
-      ref={inputRef}
-      onChange={updateExt}
-      defaultValue={defaultValue}
-      style={style}
-    />
+    <input ref={inputRef} onChange={updateExt} defaultValue={defaultValue} />
   );
 };
 

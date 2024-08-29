@@ -32,7 +32,7 @@ import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
   const workspaceAction = useWorkspaceActions();
-  const { clearLog } = useLogActivity();
+  const { clearLog, createLog } = useLogActivity();
 
   const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<WorkSpaceMenu>('code');
@@ -41,15 +41,17 @@ const WorkSpace: FC = () => {
   const [contract, setContract] = useState<any>('');
 
   const { tab } = router.query;
-  const { activeProject } = useProjects();
+  const { activeProject, newFileFolder } = useProjects();
 
   const activeFile = workspaceAction.activeFile(activeProject as string);
 
-  const commitItemCreation = (type: string, name: string) => {
-    console.log('commitItemCreation', type, name);
-    // workspaceAction
-    //   .createNewItem('', name, type, projectId as string)
-    //   .catch(() => {});
+  const commitItemCreation = async (type: Tree['type'], name: string) => {
+    if (!name) return;
+    try {
+      await newFileFolder(name, type);
+    } catch (error) {
+      createLog((error as Error).message, 'error');
+    }
   };
 
   const createSandbox = async (force: boolean = false) => {
