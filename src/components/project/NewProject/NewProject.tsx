@@ -1,6 +1,6 @@
 import { Tooltip } from '@/components/ui';
 import AppIcon, { AppIconType } from '@/components/ui/icon';
-import { useProjects } from '@/hooks/projectV2.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import {
   ContractLanguage,
   ProjectTemplate,
@@ -41,7 +41,7 @@ const NewProject: FC<Props> = ({
   name,
 }) => {
   const [isActive, setIsActive] = useState(active);
-  const { createProject } = useProjects();
+  const { createProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();

@@ -21,7 +21,7 @@ interface FileNode {
   parent?: string;
 }
 
-export const useProjects = () => {
+export const useProject = () => {
   const {
     projects,
     setProjects,

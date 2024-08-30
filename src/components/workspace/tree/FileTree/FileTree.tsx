@@ -1,4 +1,4 @@
-import { useProjects } from '@/hooks/projectV2.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import {
   DropOptions,
   getBackendOptions,
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const FileTree: FC<Props> = ({ projectId }) => {
-  const { activeProject, projectFiles, moveItem } = useProjects();
+  const { activeProject, projectFiles, moveItem } = useProject();
 
   const getProjectFiles = (): NodeModel[] => {
     if (!activeProject) return [];

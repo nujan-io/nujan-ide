@@ -1,7 +1,7 @@
 import { NewProject } from '@/components/project';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import { useProjects } from '@/hooks/projectV2.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import { Button, Modal, Select, message } from 'antd';
 import { FC, useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ const ManageProject: FC = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const { projects, setActiveProject, deleteProject, activeProject } =
-    useProjects();
+    useProject();
 
   const projectHeader = () => (
     <>

@@ -1,5 +1,5 @@
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useProjects } from '@/hooks/projectV2.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
@@ -34,7 +34,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { id: projectId } = router.query;
 
   const { openFile, isProjectEditable } = useWorkspaceActions();
-  const { deleteProjectFile, renameProjectFile, newFileFolder } = useProjects();
+  const { deleteProjectFile, renameProjectFile, newFileFolder } = useProject();
   const { createLog } = useLogActivity();
 
   const disallowedFile = [

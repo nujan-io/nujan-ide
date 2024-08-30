@@ -3,7 +3,7 @@
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useProjects } from '@/hooks/projectV2.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
@@ -41,7 +41,7 @@ const WorkSpace: FC = () => {
   const [contract, setContract] = useState<any>('');
 
   const { tab } = router.query;
-  const { activeProject, newFileFolder } = useProjects();
+  const { activeProject, newFileFolder } = useProject();
 
   const activeFile = workspaceAction.activeFile(activeProject as string);
 
