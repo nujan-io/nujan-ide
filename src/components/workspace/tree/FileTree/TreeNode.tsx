@@ -1,3 +1,4 @@
+import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
@@ -5,7 +6,6 @@ import { Project, Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
 import cn from 'clsx';
-import { useRouter } from 'next/router';
 import { FC, useState } from 'react';
 import s from './FileTree.module.scss';
 import ItemAction, { actionsTypes } from './ItemActions';
@@ -30,11 +30,9 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newItemAdd, setNewItemAdd] = useState<Tree['type'] | ''>('');
 
-  const router = useRouter();
-  const { id: projectId } = router.query;
-
-  const { openFile, isProjectEditable } = useWorkspaceActions();
+  const { isProjectEditable } = useWorkspaceActions();
   const { deleteProjectFile, renameProjectFile, newFileFolder } = useProject();
+  const { open: openTab } = useFileTab();
   const { createLog } = useLogActivity();
 
   const disallowedFile = [
@@ -48,7 +46,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     e.stopPropagation();
     onToggle(node.id);
     if (!node.droppable) {
-      openFile(node.id as string, projectId as string);
+      openTab(node.text, node.data?.path as string);
     }
   };
 

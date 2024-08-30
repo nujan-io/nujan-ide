@@ -32,16 +32,6 @@ export const useProject = () => {
   } = useContext(IDEContext);
   const baseProjectPath = '/';
 
-  useEffect(() => {
-    if (activeProject) {
-      loadProjectFiles(activeProject).catch(() => {});
-    }
-  }, [activeProject]);
-
-  useEffect(() => {
-    loadProjects().catch(() => {});
-  }, []);
-
   const loadProjects = async () => {
     const projectCollection = await fileSystem.readdir(baseProjectPath, {
       onlyDir: true,
@@ -207,6 +197,15 @@ export const useProject = () => {
     await loadProjectFiles(activeProject);
   };
 
+  const updateActiveProject = (projectName: string | null) => {
+    if (activeProject === projectName) return;
+    setActiveProject(projectName);
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
   return {
     projects,
     projectFiles,
@@ -217,7 +216,8 @@ export const useProject = () => {
     deleteProjectFile,
     moveItem,
     renameProjectFile,
-    setActiveProject,
+    setActiveProject: updateActiveProject,
+    loadProjectFiles,
   };
 };
 

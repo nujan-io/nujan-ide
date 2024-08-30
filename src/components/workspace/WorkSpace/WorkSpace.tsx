@@ -201,7 +201,7 @@ const WorkSpace: FC = () => {
               >
                 <div>
                   <div className={s.tabsWrapper}>
-                    <Tabs projectId={activeProject as string} />
+                    <Tabs />
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>

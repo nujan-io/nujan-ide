@@ -1,5 +1,16 @@
 import { Tree } from '@/interfaces/workspace.interface';
-import { FC, createContext, useEffect, useState } from 'react';
+import { FC, createContext, useEffect, useMemo, useState } from 'react';
+
+interface ITabItems {
+  name: string;
+  path: string;
+  isDirty: boolean;
+}
+
+export interface IFileTab {
+  items: ITabItems[];
+  active: string | null;
+}
 
 interface IDEContextProps {
   projects: string[];
@@ -8,39 +19,47 @@ interface IDEContextProps {
   setProjectFiles: (files: Tree[]) => void;
   activeProject: string | null;
   setActiveProject: (project: string | null) => void;
-  tabs: string[];
-  setTabs: (tabs: string[]) => void;
+  fileTab: IFileTab;
+  setFileTab: (fileTab: IFileTab) => void;
 }
 
-export const IDEContext = createContext<IDEContextProps>({
+const defaultState = {
   projects: [],
   projectFiles: [],
   setProjectFiles: () => {},
   setProjects: () => {},
   activeProject: null,
   setActiveProject: () => {},
-  tabs: [],
-  setTabs: () => {},
-});
+  fileTab: {
+    items: [],
+    active: null,
+  },
+  setFileTab: () => {},
+};
+
+export const IDEContext = createContext<IDEContextProps>(defaultState);
 
 export const IDEProvider: FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [projects, setProjects] = useState<string[]>([]);
   const [projectFiles, setProjectFiles] = useState<Tree[]>([]);
-  const [tabs, setTabs] = useState<string[]>([]);
+  const [fileTab, setFileTab] = useState<IFileTab>(defaultState.fileTab);
   const [activeProject, setActiveProject] = useState<string | null>(null);
 
-  const value = {
-    projects,
-    setProjects,
-    projectFiles,
-    setProjectFiles,
-    activeProject,
-    setActiveProject,
-    tabs,
-    setTabs,
-  };
+  const value = useMemo(
+    () => ({
+      projects,
+      setProjects,
+      projectFiles,
+      setProjectFiles,
+      activeProject,
+      setActiveProject,
+      fileTab,
+      setFileTab,
+    }),
+    [activeProject, projects, projectFiles, fileTab],
+  );
 
   const onInit = () => {
     const storedActiveProject = localStorage.getItem('IDE_activeProject');

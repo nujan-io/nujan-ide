@@ -7,6 +7,9 @@ class FileSystem {
   }
 
   async readFile(path: string) {
+    if (!(await this.exists(path))) {
+      throw new Error(`File not found: ${path}`);
+    }
     return this.fs.readFile(path, 'utf8');
   }
 
@@ -17,8 +20,13 @@ class FileSystem {
    * @param data - The content to be written to the file. Can be a string or Uint8Array.
    * @returns A promise that resolves once the file has been written.
    */
-  async writeFile(path: string, data: string | Uint8Array) {
-    const finalPath = await this.getUniquePath(path);
+  async writeFile(
+    path: string,
+    data: string | Uint8Array,
+    options?: { overwrite?: boolean },
+  ) {
+    const { overwrite } = options ?? {};
+    const finalPath = overwrite ? path : await this.getUniquePath(path);
     await this.ensureDirectoryExists(finalPath);
     return this.fs.writeFile(finalPath, data);
   }

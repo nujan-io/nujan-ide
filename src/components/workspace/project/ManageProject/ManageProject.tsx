@@ -10,8 +10,13 @@ import s from './ManageProject.module.scss';
 const ManageProject: FC = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
-  const { projects, setActiveProject, deleteProject, activeProject } =
-    useProject();
+  const {
+    projects,
+    setActiveProject,
+    deleteProject,
+    activeProject,
+    loadProjectFiles,
+  } = useProject();
 
   const projectHeader = () => (
     <>
@@ -85,14 +90,13 @@ const ManageProject: FC = () => {
     }
   };
 
-  const openProject = async (id: Project['id']) => {
-    if (!id) return;
-    const selectedProject = id as string;
+  const openProject = async (selectedProject: Project['id']) => {
     if (!selectedProject) {
       await message.error('Project not found');
       return;
     }
     setActiveProject(selectedProject);
+    await loadProjectFiles(selectedProject);
   };
 
   useEffect(() => {
