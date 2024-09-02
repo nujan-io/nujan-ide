@@ -1,12 +1,14 @@
 import { useSettingAction } from '@/hooks/setting.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { ContractLanguage, Tree } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import { highlightCodeSnippets } from '@/utility/syntaxHighlighter';
-import { fileTypeFromFileName } from '@/utility/utils';
+import { delay, fileTypeFromFileName } from '@/utility/utils';
 import EditorDefault, { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { FC, useEffect, useRef, useState } from 'react';
+// import { useLatest } from 'react-use';
+import { useFile, useFileTab } from '@/hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { useLatest } from 'react-use';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import s from './Editor.module.scss';
@@ -14,14 +16,13 @@ import { editorOnMount } from './EditorOnMount';
 type Monaco = typeof monaco;
 
 interface Props {
-  file: Tree;
-  projectId: string;
   className?: string;
 }
 
-const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
-  const { updateFileContent, getFileContent, updateOpenFile } =
-    useWorkspaceActions();
+const Editor: FC<Props> = ({ className = '' }) => {
+  const { activeProject } = useProject();
+  const { getFile, saveFile: storeFileContent } = useFile();
+  const { fileTab } = useFileTab();
 
   const { isFormatOnSave, getSettingStateByKey } = useSettingAction();
 
@@ -34,7 +35,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   // Using this extra state to trigger save file from js event
   const [saveFileCounter, setSaveFileCounter] = useState(1);
-  const latestFile = useLatest(file);
+  const latestFile = useLatest(fileTab.active);
 
   const [initialFile, setInitialFile] = useState<Pick<
     Tree,
@@ -53,7 +54,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
   const saveFile = async () => {
     const fileContent = editorRef.current?.getValue() ?? '';
-    if (!fileContent) return;
+    if (!fileContent || !fileTab.active) return;
     try {
       if (isFormatOnSave()) {
         editorRef.current?.trigger(
@@ -61,9 +62,10 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
           'editor.action.formatDocument',
           {},
         );
+        await delay(200);
       }
-      await updateFileContent(file.id, fileContent, projectId);
-      EventEmitter.emit('FILE_SAVED', { fileId: file.id });
+      await storeFileContent(fileTab.active, fileContent);
+      EventEmitter.emit('FILE_SAVED', { fileId: fileTab.active });
     } catch (error) {
       /* empty */
     }
@@ -76,13 +78,16 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       window.MonacoEnvironment.getWorkerUrl = (_: string, label: string) => {
         if (label === 'typescript') {
           return '/_next/static/ts.worker.js';
+        } else if (label === 'json') {
+          return '/_next/static/json.worker.js';
         }
         return '/_next/static/editor.worker.js';
       };
       loader.config({ monaco });
+      if (!fileTab.active) return;
       await highlightCodeSnippets(
         loader,
-        fileTypeFromFileName(file.name) as ContractLanguage,
+        fileTypeFromFileName(fileTab.active) as ContractLanguage,
       );
     }
 
@@ -113,8 +118,10 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
 
     // If file is changed e.g. in case of build process then force update in editor
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
+      const latestFilePath = `/${activeProject}/${latestFile.current}`;
+
       (async () => {
-        if (filePath !== latestFile.current.path) return;
+        if (filePath !== latestFilePath) return;
         await fetchFileContent(true);
       })().catch((error) => {
         console.error('Error handling FORCE_UPDATE_FILE event:', error);
@@ -127,8 +134,10 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
   }, [isLoaded]);
 
   const fetchFileContent = async (force = false) => {
-    if ((!file.id || file.id === initialFile?.id) && !force) return;
-    let content = await getFileContent(file.id);
+    if (!fileTab.active) return;
+    if ((!fileTab.active || fileTab.active === initialFile?.id) && !force)
+      return;
+    let content = (await getFile(fileTab.active)) as string;
     if (!editorRef.current) return;
     let modelContent = editorRef.current.getValue();
 
@@ -141,25 +150,24 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     } else {
       editorRef.current.setValue(content);
     }
-    setInitialFile({ id: file.id, content });
+    setInitialFile({ id: fileTab.active, content });
     editorRef.current.focus();
   };
 
   const markFileDirty = () => {
-    if (!editorRef.current) return;
-    const fileContent = editorRef.current.getValue();
-    if (
-      file.id !== initialFile?.id ||
-      !initialFile.content ||
-      initialFile.content === fileContent
-    ) {
-      return;
-    }
-    if (!fileContent) {
-      return;
-    }
-
-    updateOpenFile(file.id, { isDirty: true }, projectId);
+    // if (!editorRef.current) return;
+    // const fileContent = editorRef.current.getValue();
+    // if (
+    //   file.id !== initialFile?.id ||
+    //   !initialFile.content ||
+    //   initialFile.content === fileContent
+    // ) {
+    //   return;
+    // }
+    // if (!fileContent) {
+    //   return;
+    // }
+    // updateOpenFile(file.id, { isDirty: true }, projectId);
   };
 
   const initializeEditorMode = async () => {
@@ -192,7 +200,7 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
     (async () => {
       await fetchFileContent();
     })().catch(() => {});
-  }, [file, isEditorInitialized]);
+  }, [fileTab.active, isEditorInitialized]);
 
   useEffect(() => {
     if (!monacoRef.current) {
@@ -229,12 +237,12 @@ const Editor: FC<Props> = ({ file, projectId, className = '' }) => {
       </div>
       <EditorDefault
         className={s.editor}
-        path={file.id ? `${projectId}/${file.id}}` : ''}
+        path={fileTab.active ? `${activeProject}/${fileTab.active}` : ''}
         theme="vs-theme-dark"
         // height="90vh"
-        defaultLanguage={fileTypeFromFileName(file.name)}
+        defaultLanguage={fileTypeFromFileName(fileTab.active ?? '')}
         // defaultLanguage={`func`}
-        defaultValue=""
+        defaultValue={undefined}
         onChange={markFileDirty}
         options={{
           minimap: {

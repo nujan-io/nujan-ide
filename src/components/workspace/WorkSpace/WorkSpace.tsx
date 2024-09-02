@@ -2,6 +2,7 @@
 
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
+import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
@@ -42,6 +43,7 @@ const WorkSpace: FC = () => {
 
   const { tab } = router.query;
   const { activeProject, newFileFolder } = useProject();
+  const { fileTab } = useFileTab();
 
   const activeFile = workspaceAction.activeFile(activeProject as string);
 
@@ -205,13 +207,8 @@ const WorkSpace: FC = () => {
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>
-                    {!activeProject && !activeFile && <ProjectTemplate />}
-                    {activeFile && (
-                      <Editor
-                        file={activeFile as Tree}
-                        projectId={activeProject as string}
-                      />
-                    )}
+                    {!fileTab.active && !activeFile && <ProjectTemplate />}
+                    {fileTab.active && <Editor />}
                   </div>
                 </div>
                 <div>

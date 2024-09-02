@@ -32,5 +32,6 @@ export enum FileExtensionToFileType {
   rs = FileType.Rust,
   fc = FileType.FC,
   tact = FileType.TACT,
+  json = FileType.JSON,
 }
 /* eslint-enable @typescript-eslint/prefer-literal-enum-member */

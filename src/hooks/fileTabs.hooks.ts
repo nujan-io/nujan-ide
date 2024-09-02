@@ -1,5 +1,6 @@
 import fileSystem from '@/lib/fs';
 import { IDEContext, IFileTab } from '@/state/IDE.context';
+import EventEmitter from '@/utility/eventEmitter';
 import { useContext } from 'react';
 
 const useFileTab = () => {
@@ -20,7 +21,7 @@ const useFileTab = () => {
       if (!(await fileSystem.exists(settingPath))) {
         await fileSystem.writeFile(
           settingPath,
-          JSON.stringify(defaultSetting, null, 2),
+          JSON.stringify(defaultSetting, null, 4),
           {
             overwrite: true,
           },
@@ -47,6 +48,7 @@ const useFileTab = () => {
           overwrite: true,
         },
       );
+      EventEmitter.emit('FORCE_UPDATE_FILE', settingPath);
     } catch (error) {
       console.error('Error syncing tab settings:', error);
     }

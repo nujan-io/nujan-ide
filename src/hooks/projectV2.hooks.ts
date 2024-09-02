@@ -11,7 +11,7 @@ import fileSystem from '@/lib/fs';
 import ZIP from '@/lib/zip';
 import { RcFile } from 'antd/es/upload';
 import cloneDeep from 'lodash.clonedeep';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { IDEContext } from '../state/IDE.context';
 
 interface FileNode {
@@ -20,6 +20,8 @@ interface FileNode {
   type: 'file' | 'directory';
   parent?: string;
 }
+
+export const baseProjectPath = '/';
 
 export const useProject = () => {
   const {
@@ -30,7 +32,6 @@ export const useProject = () => {
     projectFiles,
     setProjectFiles,
   } = useContext(IDEContext);
-  const baseProjectPath = '/';
 
   const loadProjects = async () => {
     const projectCollection = await fileSystem.readdir(baseProjectPath, {
@@ -202,10 +203,6 @@ export const useProject = () => {
     setActiveProject(projectName);
   };
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
   return {
     projects,
     projectFiles,
@@ -218,6 +215,7 @@ export const useProject = () => {
     renameProjectFile,
     setActiveProject: updateActiveProject,
     loadProjectFiles,
+    loadProjects,
   };
 };
 

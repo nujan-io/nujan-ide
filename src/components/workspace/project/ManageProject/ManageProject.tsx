@@ -16,6 +16,7 @@ const ManageProject: FC = () => {
     deleteProject,
     activeProject,
     loadProjectFiles,
+    loadProjects,
   } = useProject();
 
   const projectHeader = () => (
@@ -103,6 +104,10 @@ const ManageProject: FC = () => {
     if (!activeProject) return;
     openProject(activeProject as string).catch(() => {});
   }, [activeProject]);
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
 
   return (
     <div className={s.root}>
