@@ -54,7 +54,7 @@ const ManageProject: FC = () => {
         placeholder="Select a project"
         showSearch
         className="w-100 select-search-input-dark"
-        value={activeProject}
+        value={activeProject?.path}
         onChange={(_project) => {
           openProject(_project).catch(() => {});
         }}
@@ -102,7 +102,7 @@ const ManageProject: FC = () => {
 
   useEffect(() => {
     if (!activeProject) return;
-    openProject(activeProject as string).catch(() => {});
+    openProject(activeProject.path as string).catch(() => {});
   }, [activeProject]);
 
   useEffect(() => {
@@ -123,7 +123,8 @@ const ManageProject: FC = () => {
         footer={null}
       >
         <span className={s.modalTitle}>
-          <AppIcon name="Info" /> Delete my <b>`{activeProject}`</b> Project?
+          <AppIcon name="Info" /> Delete my <b>`{activeProject?.name}`</b>{' '}
+          Project?
         </span>
         <div className={s.modalDescription}>
           <p>
@@ -150,8 +151,8 @@ const ManageProject: FC = () => {
             type="primary"
             danger
             onClick={() => {
-              if (activeProject) {
-                deleteSelectedProject(activeProject).catch(() => {});
+              if (activeProject?.path) {
+                deleteSelectedProject(activeProject.path).catch(() => {});
               }
             }}
           >

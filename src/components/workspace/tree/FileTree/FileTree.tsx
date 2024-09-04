@@ -19,11 +19,13 @@ const FileTree: FC<Props> = ({ projectId }) => {
   const { activeProject, projectFiles, moveItem } = useProject();
 
   const getProjectFiles = (): NodeModel[] => {
-    if (!activeProject) return [];
+    if (!activeProject?.path) return [];
     return projectFiles.map((item) => {
       return {
-        id: `${activeProject}/${item.path}`,
-        parent: item.parent ? `${activeProject}/${item.parent}` : activeProject,
+        id: `${activeProject.path}/${item.path}`,
+        parent: item.parent
+          ? `${activeProject.path}/${item.parent}`
+          : (activeProject.path as string),
         droppable: item.type === 'directory',
         text: item.name,
         data: {
@@ -40,14 +42,14 @@ const FileTree: FC<Props> = ({ projectId }) => {
     );
   };
 
-  if (!activeProject) return null;
+  if (!activeProject?.path) return null;
 
   return (
     <div className={s.root}>
       <DndProvider backend={MultiBackend} options={getBackendOptions()}>
         <Tree
           tree={getProjectFiles()}
-          rootId={activeProject}
+          rootId={activeProject.path}
           onDrop={handleDrop}
           render={(node, { depth, isOpen, onToggle }) => (
             <TreeNode

@@ -67,6 +67,7 @@ class FileSystem {
     path: string,
     options: { recursive?: boolean; basePath?: string; onlyDir?: boolean } = {},
   ) {
+    if (!path) return [];
     const { recursive, basePath, onlyDir } = options;
     if (!recursive) {
       const files = await this.fs.readdir(path);
@@ -104,6 +105,7 @@ class FileSystem {
     path: string,
     options: { overwrite?: boolean } = { overwrite: true },
   ) {
+    if (!path) return;
     const newPath = options.overwrite
       ? path
       : await this.getUniquePath(path, true);

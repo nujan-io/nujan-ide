@@ -118,7 +118,8 @@ const Editor: FC<Props> = ({ className = '' }) => {
 
     // If file is changed e.g. in case of build process then force update in editor
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
-      const latestFilePath = `/${activeProject}/${latestFile.current}`;
+      if (!activeProject?.path) return;
+      const latestFilePath = `/${activeProject.path}/${latestFile.current}`;
 
       (async () => {
         if (filePath !== latestFilePath) return;
@@ -237,7 +238,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
       </div>
       <EditorDefault
         className={s.editor}
-        path={fileTab.active ? `${activeProject}/${fileTab.active}` : ''}
+        path={fileTab.active ? `${activeProject?.path}/${fileTab.active}` : ''}
         theme="vs-theme-dark"
         // height="90vh"
         defaultLanguage={fileTypeFromFileName(fileTab.active ?? '')}

@@ -1,3 +1,4 @@
+import { IFileTab } from '@/state/IDE.context';
 import { ABITypeRef } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
 
@@ -42,9 +43,9 @@ export interface ABIFormInputValues {
 export interface Project {
   id: string;
   userId?: string;
-  name: string;
+  name?: string;
   language?: ContractLanguage;
-  template: string;
+  template?: string;
   contractAddress?: string;
   contractBOC?: string;
   abi?: ABI;
@@ -58,6 +59,19 @@ export interface Project {
   updatedAt?: Date;
   cellABI?: CellABI;
   abiFormInputValues?: ABIFormInputValues[];
+  path?: string;
+}
+
+export interface ProjectSetting {
+  name?: string;
+  path?: string;
+  template?: ProjectTemplate;
+  language?: ContractLanguage;
+  contractName?: string;
+  network?: NetworkEnvironment;
+  selectedContract?: string;
+  contractAddress?: string;
+  tab?: IFileTab;
 }
 
 export type WorkspaceState = {

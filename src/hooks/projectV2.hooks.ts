@@ -4,11 +4,13 @@ import {
 } from '@/constant/ProjectTemplate';
 import {
   ContractLanguage,
+  ProjectSetting,
   ProjectTemplate,
   Tree,
 } from '@/interfaces/workspace.interface';
 import fileSystem from '@/lib/fs';
 import ZIP from '@/lib/zip';
+import EventEmitter from '@/utility/eventEmitter';
 import { RcFile } from 'antd/es/upload';
 import cloneDeep from 'lodash.clonedeep';
 import { useContext } from 'react';
@@ -19,6 +21,7 @@ interface FileNode {
   path: string;
   type: 'file' | 'directory';
   parent?: string;
+  content?: string;
 }
 
 export const baseProjectPath = '/';
@@ -53,6 +56,7 @@ export const useProject = () => {
         overwrite: false,
       },
     );
+    if (!projectDirectory) return;
 
     let files =
       template === 'import' && defaultFiles?.length == 0
@@ -79,32 +83,49 @@ export const useProject = () => {
       files = [...files, ...commonFiles];
     }
 
+    const projectName = projectDirectory.slice(1);
+
     const project = {
+      name: projectName,
       language,
       template,
     };
 
-    await Promise.all(
-      files.map(async (file) => {
-        const path = `/${projectDirectory}/${file.path}`;
-        if (file.type === 'directory') {
-          return fileSystem.mkdir(path);
-        }
-        return fileSystem.writeFile(path, file.content ?? '');
-      }),
-    );
+    await writeFiles(projectDirectory, files);
 
     const projectSettingPath = `${projectDirectory}/.ide/setting.json`;
     if (!(await fileSystem.exists(projectSettingPath))) {
       await fileSystem.writeFile(
         projectSettingPath,
-        JSON.stringify({ project }),
+        JSON.stringify({ ...project }),
       );
     }
     await loadProjects();
 
-    setActiveProject(projectDirectory.slice(1));
+    setActiveProject({
+      path: projectName,
+      ...project,
+    });
     return projectDirectory;
+  };
+
+  const writeFiles = async (
+    projectPath: string,
+    files: Pick<Tree, 'type' | 'path' | 'content'>[],
+    options?: { overwrite?: boolean },
+  ) => {
+    await Promise.all(
+      files.map(async (file) => {
+        const path = `/${projectPath}/${file.path}`;
+        if (file.type === 'directory') {
+          return fileSystem.mkdir(path);
+        }
+        await fileSystem.writeFile(path, file.content ?? '', options);
+        EventEmitter.emit('FORCE_UPDATE_FILE', path);
+        return path;
+      }),
+    );
+    EventEmitter.emit('RELOAD_PROJECT_FILES', projectPath);
   };
 
   const loadProjectFiles = async (projectName: string) => {
@@ -119,7 +140,11 @@ export const useProject = () => {
    */
   const readdirTree = async (
     path: string,
-    options: { basePath: null | string } = { basePath: null },
+    options: { basePath: null | string; content: boolean } = {
+      basePath: null,
+      content: false,
+    },
+    filter?: (fileNode: FileNode) => boolean,
   ): Promise<FileNode[]> => {
     const results: FileNode[] = [];
     const basePath = options.basePath ?? path;
@@ -135,12 +160,24 @@ export const useProject = () => {
         type: stat.isDirectory() ? 'directory' : 'file',
         parent:
           path === basePath ? undefined : path.replace(basePath + '/', ''),
+        content: options.content
+          ? ((await fileSystem.readFile(filePath)) as string)
+          : '',
       };
 
-      results.push(fileNode);
+      if (!filter || filter(fileNode)) {
+        results.push(fileNode);
+      }
 
       if (stat.isDirectory()) {
-        const nestedFiles = await readdirTree(filePath, { basePath });
+        const nestedFiles = await readdirTree(
+          filePath,
+          {
+            basePath,
+            content: options.content,
+          },
+          filter,
+        );
         results.push(...nestedFiles);
       }
     }
@@ -157,22 +194,22 @@ export const useProject = () => {
   };
 
   const newFileFolder = async (path: string, type: 'file' | 'directory') => {
-    if (!activeProject) return;
-    const newPath = `${baseProjectPath}${activeProject}/${path}`;
+    if (!activeProject?.path) return;
+    const newPath = `${baseProjectPath}${activeProject.path}/${path}`;
     await fileSystem.create(newPath, type);
-    await loadProjectFiles(activeProject);
+    await loadProjectFiles(activeProject.path);
   };
 
   const deleteProjectFile = async (path: string) => {
-    if (!activeProject) return;
-    await fileSystem.remove(`${baseProjectPath}${activeProject}/${path}`, {
+    if (!activeProject?.path) return;
+    await fileSystem.remove(`${baseProjectPath}${activeProject.path}/${path}`, {
       recursive: true,
     });
-    await loadProjectFiles(activeProject);
+    await loadProjectFiles(activeProject.path);
   };
 
   const moveItem = async (oldPath: string, targetPath: string) => {
-    if (!activeProject) return;
+    if (!activeProject?.path) return;
     if (oldPath === targetPath) return;
 
     const newPath = targetPath + '/' + oldPath.split('/').pop();
@@ -181,26 +218,59 @@ export const useProject = () => {
       `${baseProjectPath}/${oldPath}`,
       `${baseProjectPath}/${newPath}`,
     );
-    await loadProjectFiles(activeProject);
+    await loadProjectFiles(activeProject.path);
   };
 
   const renameProjectFile = async (oldPath: string, newName: string) => {
-    if (!activeProject) return;
+    if (!activeProject?.path) return;
     const newPath = oldPath.includes('/')
       ? oldPath.split('/').slice(0, -1).join('/') + '/' + newName
       : newName;
 
     const success = await fileSystem.rename(
-      `${baseProjectPath}${activeProject}/${oldPath}`,
-      `${baseProjectPath}${activeProject}/${newPath}`,
+      `${baseProjectPath}${activeProject.path}/${oldPath}`,
+      `${baseProjectPath}${activeProject.path}/${newPath}`,
     );
     if (!success) return;
-    await loadProjectFiles(activeProject);
+    await loadProjectFiles(activeProject.path);
   };
 
-  const updateActiveProject = (projectName: string | null) => {
-    if (activeProject === projectName) return;
-    setActiveProject(projectName);
+  const updateActiveProject = async (
+    projectPath: string | null,
+    force = false,
+  ) => {
+    if (activeProject?.path === projectPath && !force) return;
+    const projectSettingPath = `${baseProjectPath}${projectPath}/.ide/setting.json`;
+    if (projectPath && (await fileSystem.exists(projectSettingPath))) {
+      const setting = (await fileSystem.readFile(projectSettingPath)) as string;
+      const parsedSetting = setting ? JSON.parse(setting) : {};
+      setActiveProject({
+        ...parsedSetting,
+        path: projectPath,
+      });
+    } else {
+      setActiveProject(null);
+    }
+  };
+
+  const updateProjectSetting = async (itemToUpdate: ProjectSetting) => {
+    if (!activeProject?.path) return;
+    const projectSettingPath = `${baseProjectPath}${activeProject.path}/.ide/setting.json`;
+    if (!(await fileSystem.exists(projectSettingPath))) {
+      await fileSystem.writeFile(projectSettingPath, JSON.stringify({}));
+    } else {
+      const setting = (await fileSystem.readFile(projectSettingPath)) as string;
+      const parsedSetting = setting ? JSON.parse(setting) : {};
+      await fileSystem.writeFile(
+        projectSettingPath,
+        JSON.stringify({ ...parsedSetting, ...itemToUpdate }),
+        {
+          overwrite: true,
+        },
+      );
+      await updateActiveProject(activeProject.path, true);
+    }
+    await loadProjectFiles(activeProject.path);
   };
 
   return {
@@ -208,7 +278,9 @@ export const useProject = () => {
     projectFiles,
     activeProject,
     createProject,
+    writeFiles,
     deleteProject,
+    readdirTree,
     newFileFolder,
     deleteProjectFile,
     moveItem,
@@ -216,6 +288,7 @@ export const useProject = () => {
     setActiveProject: updateActiveProject,
     loadProjectFiles,
     loadProjects,
+    updateProjectSetting,
   };
 };
 

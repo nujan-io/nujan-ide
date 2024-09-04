@@ -17,7 +17,7 @@ const useFileTab = () => {
     };
 
     try {
-      const settingPath = `/${activeProject}/.ide/setting.json`;
+      const settingPath = `/${activeProject.path}/.ide/setting.json`;
       if (!(await fileSystem.exists(settingPath))) {
         await fileSystem.writeFile(
           settingPath,
@@ -38,8 +38,8 @@ const useFileTab = () => {
           ...defaultSetting,
           ...parsedSetting,
         };
-        setFileTab(parsedSetting.tab);
       }
+      setFileTab(parsedSetting.tab);
 
       await fileSystem.writeFile(
         settingPath,
@@ -55,13 +55,12 @@ const useFileTab = () => {
   };
 
   const open = (name: string, path: string) => {
-    if (fileTab.active === name) return;
+    if (fileTab.active === path) return;
 
     const existingTab = fileTab.items.find((item) => item.path === path);
 
     if (existingTab) {
       const updatedTab = { ...fileTab, active: path };
-      setFileTab(updatedTab);
       syncTabSettings(updatedTab);
     } else {
       const newTab = { name, path, isDirty: false };
@@ -70,7 +69,6 @@ const useFileTab = () => {
         items: [...fileTab.items, newTab],
         active: path,
       };
-      setFileTab(updatedTab);
       syncTabSettings(updatedTab);
     }
   };

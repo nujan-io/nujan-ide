@@ -5,7 +5,6 @@ import { AppConfig } from '@/config/AppConfig';
 import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
@@ -32,7 +31,6 @@ import ItemAction from '../tree/FileTree/ItemActions';
 import s from './WorkSpace.module.scss';
 
 const WorkSpace: FC = () => {
-  const workspaceAction = useWorkspaceActions();
   const { clearLog, createLog } = useLogActivity();
 
   const router = useRouter();
@@ -42,10 +40,15 @@ const WorkSpace: FC = () => {
   const [contract, setContract] = useState<any>('');
 
   const { tab } = router.query;
-  const { activeProject, newFileFolder } = useProject();
-  const { fileTab } = useFileTab();
+  const {
+    activeProject,
+    setActiveProject,
+    projectFiles,
+    loadProjectFiles,
+    newFileFolder,
+  } = useProject();
 
-  const activeFile = workspaceAction.activeFile(activeProject as string);
+  const { fileTab, open: openTab } = useFileTab();
 
   const commitItemCreation = async (type: Tree['type'], name: string) => {
     if (!name) return;
@@ -66,6 +69,20 @@ const WorkSpace: FC = () => {
     globalWorkspace.sandboxWallet = wallet;
   };
 
+  const openProject = async (selectedProject: Project['id']) => {
+    if (!selectedProject) {
+      createLog(`${selectedProject} - project not found`, 'error');
+      return;
+    }
+    setActiveProject(selectedProject);
+    await loadProjectFiles(selectedProject);
+  };
+
+  useEffect(() => {
+    if (!activeProject) return;
+    openProject(activeProject.path as string).catch(() => {});
+  }, [activeProject]);
+
   const onKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
@@ -77,20 +94,24 @@ const WorkSpace: FC = () => {
     if (!activeProject) {
       return;
     }
-    // createLog(`Project '${activeProject.name}' is opened`);
+    createLog(`Project '${activeProject.name}' is opened`);
     createSandbox(true).catch(() => {});
 
-    // if (activeFile) return;
-    // const projectFiles = workspaceAction.projectFiles(activeProject.id);
-    // const mainFile = projectFiles.find((file) =>
-    //   ['main.tact', 'main.fc'].includes(file.name),
-    // );
-    // if (!mainFile) return;
-    // workspaceAction.openFile(mainFile.id, activeProject.id);
+    if (fileTab.active) return;
+    // Open main file on project switch
+    const mainFile = projectFiles.find((file) =>
+      ['main.tact', 'main.fc'].includes(file.name),
+    );
+    if (!mainFile) return;
+    openTab(mainFile.name, mainFile.path);
   }, [activeProject]);
 
   useEffect(() => {
     document.addEventListener('keydown', onKeydown);
+    EventEmitter.on('RELOAD_PROJECT_FILES', async () => {
+      if (!activeProject) return;
+      await loadProjectFiles(activeProject.path as string);
+    });
 
     Analytics.track('Project Opened', {
       platform: 'IDE',
@@ -125,7 +146,7 @@ const WorkSpace: FC = () => {
       <div className={`${s.sidebar} onboarding-workspace-sidebar`}>
         <WorkspaceSidebar
           activeMenu={activeMenu}
-          projectName={activeProject}
+          projectName={activeProject?.path ?? ''}
           onMenuClicked={(name) => {
             setActiveMenu(name);
             router
@@ -147,7 +168,7 @@ const WorkSpace: FC = () => {
       >
         <div className={s.tree}>
           {activeMenu === 'setting' && (
-            <ProjectSetting projectId={activeProject as Project['id']} />
+            <ProjectSetting projectId={activeProject?.path as Project['id']} />
           )}
           {isLoaded && activeMenu === 'code' && (
             <div className="onboarding-file-explorer">
@@ -169,12 +190,12 @@ const WorkSpace: FC = () => {
                 </div>
               )}
 
-              <FileTree projectId={activeProject as string} />
+              <FileTree projectId={activeProject?.path as string} />
             </div>
           )}
           {activeMenu === 'build' && globalWorkspace.sandboxBlockchain && (
             <BuildProject
-              projectId={activeProject as string}
+              projectId={activeProject?.path as string}
               onCodeCompile={(_codeBOC) => {}}
               contract={contract}
               updateContract={(contractInstance) => {
@@ -184,7 +205,7 @@ const WorkSpace: FC = () => {
           )}
           {activeMenu === 'test-cases' && (
             <div className={s.testCaseArea}>
-              <TestCases projectId={activeProject as string} />
+              <TestCases projectId={activeProject?.path as string} />
             </div>
           )}
         </div>
@@ -207,8 +228,7 @@ const WorkSpace: FC = () => {
                   </div>
 
                   <div style={{ height: 'calc(100% - 43px)' }}>
-                    {!fileTab.active && !activeFile && <ProjectTemplate />}
-                    {fileTab.active && <Editor />}
+                    {fileTab.active ? <Editor /> : <ProjectTemplate />}
                   </div>
                 </div>
                 <div>

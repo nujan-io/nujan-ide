@@ -9,6 +9,7 @@ import {
 import stdLibFiles from '@tact-lang/compiler/dist/imports/stdlib';
 import { precompile } from '@tact-lang/compiler/dist/pipeline/precompile';
 
+import fileSystem from '@/lib/fs';
 import { getContractInitParams } from '@/utility/abi';
 import TactLogger from '@/utility/tactLogger';
 import { CompilerContext } from '@tact-lang/compiler/dist/context';
@@ -17,12 +18,14 @@ import {
   SuccessResult,
   compileFunc,
 } from '@ton-community/func-js';
+import { useProject } from './projectV2.hooks';
 import { useSettingAction } from './setting.hooks';
 import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
   const { getFileByPath, createFiles, projectFiles } = useWorkspaceActions();
   const { isContractDebugEnabled } = useSettingAction();
+  const { writeFiles } = useProject();
 
   return {
     compileFuncProgram,
@@ -125,23 +128,25 @@ export function useProjectActions() {
       }
     });
 
-    const fs = new OverwritableVirtualFileSystem();
+    const fs = new OverwritableVirtualFileSystem(`/`);
 
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
-      const file = await getFileByPath(fileToProcess!, projectId);
-      if (file?.path) {
-        fs.writeContractFile(file.path!, file.content ?? '');
+      const filePath = `/${projectId}/${fileToProcess}`;
+      const fileContent = await fileSystem.readFile(filePath!);
+      if (fileContent) {
+        fs.writeContractFile(filePath!, fileContent as string);
       }
     }
 
     let ctx = new CompilerContext({ shared: {} });
     const stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
-    ctx = precompile(ctx, fs, stdlib, file.path!);
+    const entryFile = `/${projectId}/${file.path}`;
+    ctx = precompile(ctx, fs, stdlib, entryFile);
 
     const response = await buildTact({
       config: {
-        path: file.path!,
+        path: entryFile,
         output: 'dist',
         name: 'tact',
         options: {
@@ -178,7 +183,7 @@ export function useProjectActions() {
       }
     });
 
-    const buildFiles: Pick<Tree, 'path' | 'content'>[] = [];
+    const buildFiles: Pick<Tree, 'path' | 'content' | 'type'>[] = [];
     fs.overwrites.forEach((value, key) => {
       const filePath = key.slice(1);
 
@@ -201,13 +206,13 @@ export function useProjectActions() {
       buildFiles.push({
         path: filePath,
         content: fileContent,
+        type: 'file',
       });
       // TODO: Do this after the build files are updated.
       // EventEmitter.emit('FORCE_UPDATE_FILE', filePath);
     });
 
-    await createFiles(buildFiles, 'dist', projectId);
-
+    await writeFiles(projectId, buildFiles, { overwrite: true });
     return fs.overwrites;
   }
 

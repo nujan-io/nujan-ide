@@ -5,7 +5,7 @@ import { baseProjectPath } from './projectV2.hooks';
 
 const useFile = () => {
   const { activeProject } = useContext(IDEContext);
-  const projectPath = `${baseProjectPath}${activeProject}`;
+  const projectPath = `${baseProjectPath}${activeProject?.path}`;
   const getFile = async (filePath: string) => {
     return fileSystem.readFile(`${projectPath}/${filePath}`);
   };

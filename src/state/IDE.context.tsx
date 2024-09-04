@@ -1,4 +1,4 @@
-import { Tree } from '@/interfaces/workspace.interface';
+import { ProjectSetting, Tree } from '@/interfaces/workspace.interface';
 import { FC, createContext, useEffect, useMemo, useState } from 'react';
 
 interface ITabItems {
@@ -17,8 +17,8 @@ interface IDEContextProps {
   setProjects: (projects: string[]) => void;
   projectFiles: Tree[];
   setProjectFiles: (files: Tree[]) => void;
-  activeProject: string | null;
-  setActiveProject: (project: string | null) => void;
+  activeProject: ProjectSetting | null;
+  setActiveProject: (project: ProjectSetting | null) => void;
   fileTab: IFileTab;
   setFileTab: (fileTab: IFileTab) => void;
 }
@@ -45,7 +45,10 @@ export const IDEProvider: FC<{ children: React.ReactNode }> = ({
   const [projects, setProjects] = useState<string[]>([]);
   const [projectFiles, setProjectFiles] = useState<Tree[]>([]);
   const [fileTab, setFileTab] = useState<IFileTab>(defaultState.fileTab);
-  const [activeProject, setActiveProject] = useState<string | null>(null);
+  const [activeProject, setActiveProject] = useState<ProjectSetting | null>(
+    null,
+  );
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const value = useMemo(
     () => ({
@@ -64,16 +67,21 @@ export const IDEProvider: FC<{ children: React.ReactNode }> = ({
   const onInit = () => {
     const storedActiveProject = localStorage.getItem('IDE_activeProject');
     if (storedActiveProject) {
-      setActiveProject(storedActiveProject);
+      setActiveProject(JSON.parse(storedActiveProject));
     }
   };
 
   useEffect(() => {
     onInit();
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('IDE_activeProject', activeProject ?? '');
+    if (!isLoaded) return;
+    localStorage.setItem(
+      'IDE_activeProject',
+      JSON.stringify(activeProject ?? {}),
+    );
   }, [activeProject]);
 
   return <IDEContext.Provider value={value}>{children}</IDEContext.Provider>;

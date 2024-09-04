@@ -1,6 +1,7 @@
 import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
@@ -14,7 +15,6 @@ type ButtonClick =
   | React.MouseEvent<HTMLButtonElement, MouseEvent>
   | React.MouseEvent<HTMLAnchorElement, MouseEvent>;
 interface Props {
-  file?: Tree | undefined;
   projectId: Project['id'];
   onCompile?: () => void;
   onClick?: (e: ButtonClick, data: string) => void;
@@ -25,7 +25,6 @@ interface Props {
 }
 
 const ExecuteFile: FC<Props> = ({
-  // file,
   projectId,
   onCompile,
   onClick,
@@ -34,7 +33,8 @@ const ExecuteFile: FC<Props> = ({
   description = '',
   allowedFile = [],
 }) => {
-  const { compileTsFile, projectFiles } = useWorkspaceActions();
+  const { compileTsFile } = useWorkspaceActions();
+  const { projectFiles } = useProject();
   const { compileFuncProgram, compileTactProgram } = useProjectActions();
   const { createLog } = useLogActivity();
   const [selectedFile, setSelectedFile] = useState<Tree | undefined>();
@@ -44,7 +44,7 @@ const ExecuteFile: FC<Props> = ({
 
   const isAutoBuildAndDeployEnabledRef = useRef(false);
 
-  const fileList = projectFiles(projectId).filter((f: Tree | null) => {
+  const fileList = projectFiles.filter((f: Tree | null) => {
     const _fileExtension = getFileExtension(f?.name ?? '');
     if (f?.name === 'stdlib.fc') return false;
     return allowedFile.includes(_fileExtension as string);
@@ -110,7 +110,7 @@ const ExecuteFile: FC<Props> = ({
     e: number | string | React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const selectedFile = fileList.find((f) => {
-      if (typeof e === 'string') return f.id === e;
+      if (typeof e === 'string') return f.path === e;
       return (
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         f.id === (e as React.ChangeEvent<HTMLSelectElement>)?.target?.value
@@ -156,14 +156,14 @@ const ExecuteFile: FC<Props> = ({
         showSearch
         className="w-100"
         defaultActiveFirstOption
-        value={selectedFile?.id}
+        value={selectedFile?.path}
         onChange={selectFile}
         filterOption={(inputValue, option) => {
           return option?.title.toLowerCase().includes(inputValue.toLowerCase());
         }}
       >
         {fileList.map((f) => (
-          <Select.Option key={f.id} value={f.id} title={f.path}>
+          <Select.Option key={f.path} value={f.path} title={f.path}>
             {f.name}
           </Select.Option>
         ))}

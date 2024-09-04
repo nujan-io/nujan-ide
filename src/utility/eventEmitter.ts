@@ -12,6 +12,7 @@ export interface EventEmitterPayloads {
   FORCE_UPDATE_FILE: string;
   FILE_SAVED: { fileId: string };
   TEST_CASE_LOG: string;
+  RELOAD_PROJECT_FILES: string;
 }
 
 const EventEmitter = {
