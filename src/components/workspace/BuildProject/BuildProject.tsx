@@ -523,12 +523,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
 
   const updateSelectedContract = (contract: string) => {
     setSelectedContract(contract);
-    // updateProjectById(
-    //   {
-    //     selectedContract: contract,
-    //   } as Project,
-    //   projectId,
-    // );
+    updateProjectSetting({
+      selectedContract: contract,
+    } as ProjectSetting);
   };
 
   const extractContractName = (currentContractName: string) => {
