@@ -108,7 +108,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       .filter((f) => {
         const _fileExtension = getFileExtension(f.name || '');
         return (
-          f.path.startsWith('dist') &&
+          f.path!.startsWith('dist') &&
           ['abi'].includes(_fileExtension as string)
         );
       })
@@ -242,7 +242,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
           tsProjectFiles = await getAllFilesWithContent(
             projectId,
             (file) =>
-              !file.path.startsWith('dist') &&
+              !file.path!.startsWith('dist') &&
               file.name.endsWith('.ts') &&
               !file.name.endsWith('.spec.ts'),
           );
