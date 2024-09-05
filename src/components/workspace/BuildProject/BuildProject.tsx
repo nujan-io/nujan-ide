@@ -15,6 +15,7 @@ import { buildTs } from '@/utility/typescriptHelper';
 import {
   delay,
   getFileExtension,
+  htmlToAnsi,
   isIncludesTypeCellOrSlice,
   tonHttpEndpoint,
 } from '@/utility/utils';
@@ -107,7 +108,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       .filter((f) => {
         const _fileExtension = getFileExtension(f.name || '');
         return (
-          f.path?.startsWith('dist') &&
+          f.path.startsWith('dist') &&
           ['abi'].includes(_fileExtension as string)
         );
       })
@@ -241,7 +242,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
           tsProjectFiles = await getAllFilesWithContent(
             projectId,
             (file) =>
-              !file.path?.startsWith('dist') &&
+              !file.path.startsWith('dist') &&
               file.name.endsWith('.ts') &&
               !file.name.endsWith('.spec.ts'),
           );
@@ -290,7 +291,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         const wallet = await blockchain.treasury('user');
         globalWorkspace.sandboxWallet = wallet;
         createLog(
-          `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          htmlToAnsi(
+            `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          ),
           'info',
           false,
         );
@@ -312,7 +315,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         environment: environment.toLowerCase(),
       });
       createLog(
-        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}}`,
+        htmlToAnsi(
+          `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}`,
+        ),
         'success',
       );
 
