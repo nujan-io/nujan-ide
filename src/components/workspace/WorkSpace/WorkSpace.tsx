@@ -13,7 +13,7 @@ import * as TonCrypto from '@ton/crypto';
 import { Blockchain } from '@ton/sandbox';
 import { Buffer } from 'buffer';
 import { useRouter } from 'next/router';
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import Split from 'react-split';
 import { useEffectOnce } from 'react-use';
 import BottomPanel from '../BottomPanel/BottomPanel';
@@ -78,10 +78,15 @@ const WorkSpace: FC = () => {
     await loadProjectFiles(selectedProject);
   };
 
-  useEffect(() => {
-    if (!activeProject) return;
-    openProject(activeProject.path as string).catch(() => {});
+  const cachedProjectPath = useMemo(() => {
+    return activeProject?.path as string;
   }, [activeProject]);
+
+  useEffect(() => {
+
+    if (!cachedProjectPath) return;
+    openProject(cachedProjectPath).catch(() => {});
+  }, [cachedProjectPath]);
 
   const onKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -104,7 +109,7 @@ const WorkSpace: FC = () => {
     );
     if (!mainFile) return;
     openTab(mainFile.name, mainFile.path);
-  }, [activeProject]);
+  }, [cachedProjectPath]);
 
   useEffect(() => {
     document.addEventListener('keydown', onKeydown);
