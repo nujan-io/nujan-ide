@@ -13,10 +13,12 @@ import cloneDeep from 'lodash.clonedeep';
 import { useRecoilState } from 'recoil';
 import { OutputChunk } from 'rollup';
 import { v4 } from 'uuid';
+import { useProject } from './projectV2.hooks';
 export { useWorkspaceActions };
 
 function useWorkspaceActions() {
   const [workspace, updateWorkspace] = useRecoilState(workspaceState);
+  const { readdirTree } = useProject();
 
   return {
     deleteProject,
@@ -481,14 +483,29 @@ function useWorkspaceActions() {
     return filesWithContent;
   }
 
-  async function compileTsFile(rootFile: Tree, projectId: Project['id']) {
-    if (!rootFile.name.endsWith('.ts')) {
+  async function compileTsFile(
+    filePath: Tree['path'],
+    projectId: Project['id'],
+  ) {
+    if (!filePath.endsWith('.ts')) {
       throw new Error('Not a typescript file');
     }
-    const filesWithContent = await getAllFilesWithContent(projectId, (file) =>
-      file.name.endsWith('.ts'),
+    const tsProjectFiles: Record<string, string> = {};
+
+    const filesWithContent = await readdirTree(
+      `/${projectId}`,
+      {
+        basePath: null,
+        content: true,
+      },
+      (file: { path: string; name: string }) => file.name.endsWith('.ts'),
     );
-    return buildTs(filesWithContent, rootFile.path) as Promise<OutputChunk[]>;
+
+    filesWithContent.forEach((file) => {
+      tsProjectFiles[file.path!] = file.content ?? '';
+    });
+
+    return buildTs(tsProjectFiles, filePath) as Promise<OutputChunk[]>;
   }
 
   function isProjectEditable() {

@@ -1,10 +1,10 @@
 /* eslint-disable no-useless-escape */
+import { useFile } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProjectActions } from '@/hooks/project.hooks';
 import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
-import { getFileNameFromPath } from '@/utility/utils';
 import { FC } from 'react';
 import ExecuteFile from '../ExecuteFile';
 import s from './TestCases.module.scss';
@@ -16,16 +16,15 @@ interface Props {
 const TestCases: FC<Props> = ({ projectId }) => {
   const { createLog } = useLogActivity();
 
-  const { getFileByPath, compileTsFile } = useWorkspaceActions();
+  const { compileTsFile } = useWorkspaceActions();
+  const { getFile } = useFile();
   const { compileFuncProgram } = useProjectActions();
 
   const executeTestCases = async (filePath: string) => {
-    const file = await getFileByPath(filePath, projectId);
-    if (!file) return;
     let testCaseCode = '';
 
     try {
-      testCaseCode = (await compileTsFile(file, projectId))[0].code;
+      testCaseCode = (await compileTsFile(filePath, projectId))[0].code;
     } catch (error) {
       if ((error as Error).message) {
         createLog((error as Error).message, 'error');
@@ -55,7 +54,12 @@ const TestCases: FC<Props> = ({ projectId }) => {
     //   createLog('Please specify contract path', 'error');
     //   return;
     // }
-    const contractFile = await getFileByPath(contractPath!, projectId);
+    let contractFile = undefined;
+    try {
+      contractFile = await getFile(contractPath!);
+    } catch (error) {
+      /* empty */
+    }
     if (contractPath && !contractFile) {
       createLog(
         `Contract file not found - ${contractPath}. Define correct absolute path. Ex. contracts/main.fc`,
@@ -123,17 +127,18 @@ const TestCases: FC<Props> = ({ projectId }) => {
 
   const runIt = async (filePath: string, codeBase: string) => {
     const _webcontainerInstance = window.webcontainerInstance;
-    filePath = getFileNameFromPath(filePath).replace('.spec.ts', '.spec.js');
+    filePath = filePath.replace('.spec.ts', '.spec.js');
 
     if (!_webcontainerInstance?.path) {
       return;
     }
     createLog('Running test cases...', 'info', true);
-    await _webcontainerInstance.fs.writeFile(filePath, codeBase);
+    const fileName = filePath.split('/').pop();
+    await _webcontainerInstance.fs.writeFile(fileName!, codeBase);
 
     const response = await _webcontainerInstance.spawn('npx', [
       'jest',
-      filePath,
+      fileName!,
     ]);
 
     await response.output.pipeTo(
