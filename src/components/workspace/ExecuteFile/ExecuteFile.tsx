@@ -61,7 +61,7 @@ const ExecuteFile: FC<Props> = ({
     try {
       switch (_fileExtension) {
         case 'ts':
-          await compileTsFile(selectedFile, projectId);
+          await compileTsFile(selectedFile.path, projectId);
           break;
         case 'spec.ts':
           if (!onClick || !selectedFile.path) return;

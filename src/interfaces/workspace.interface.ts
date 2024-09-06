@@ -72,6 +72,7 @@ export interface ProjectSetting {
   selectedContract?: string;
   contractAddress?: string;
   tab?: IFileTab;
+  cellABI?: CellABI;
 }
 
 export type WorkspaceState = {

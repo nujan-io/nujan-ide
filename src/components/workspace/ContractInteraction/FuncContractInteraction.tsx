@@ -1,7 +1,8 @@
+import { useFile } from '@/hooks';
 import { useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { CellABI, Project } from '@/interfaces/workspace.interface';
+import { useProject } from '@/hooks/projectV2.hooks';
+import { CellABI, ProjectSetting } from '@/interfaces/workspace.interface';
 import { buildTs } from '@/utility/typescriptHelper';
 import { Cell } from '@ton/core';
 import { useTonConnectUI } from '@tonconnect/ui-react';
@@ -28,7 +29,8 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
   const [tonConnector] = useTonConnectUI();
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
-  const { getFileByPath, updateProjectById } = useWorkspaceActions();
+  const { getFile } = useFile();
+  const { updateProjectSetting } = useProject();
   const { createLog } = useLogActivity();
   const { sandboxWallet: wallet } = globalWorkspace;
   const [messageForm] = useForm();
@@ -41,23 +43,17 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
     if (!cellBuilderRef.current?.contentWindow) return;
     let cellCode = '';
 
-    const contractCellContent = await getFileByPath(
-      'message.cell.ts',
-      projectId,
-    );
-    if (contractCellContent && !contractCellContent.content && !cell) {
+    const contractCellContent = await getFile('message.cell.ts');
+    if (!contractCellContent && !cell) {
       throw new Error('Cell data is missing in file message.cell.ts');
     }
     if (cell) {
       cellCode = generateCellCode(cell as unknown as CellValues[]);
-      updateProjectById(
-        {
-          cellABI: { setter: cell as CellABI },
-        } as Project,
-        projectId,
-      );
+      updateProjectSetting({
+        cellABI: { setter: cell as CellABI },
+      } as ProjectSetting);
     } else {
-      cellCode = contractCellContent?.content ?? '';
+      cellCode = contractCellContent as string;
     }
     try {
       const jsOutout = await buildTs(

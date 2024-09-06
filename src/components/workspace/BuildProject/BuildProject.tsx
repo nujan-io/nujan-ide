@@ -92,8 +92,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
 
   const [deployForm] = useForm();
 
-  const { updateProjectById, updateABIInputValues, getABIInputValues } =
-    useWorkspaceActions();
+  const { updateABIInputValues, getABIInputValues } = useWorkspaceActions();
 
   const { deployContract } = useContractAction();
 
@@ -354,7 +353,12 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     }
     const contractScriptPath = selectedContract.replace('.abi', '.ts');
     if (!cellBuilderRef.current?.contentWindow) return;
-    const contractScript = (await getFile(contractScriptPath)) as string;
+    let contractScript = '';
+    try {
+      contractScript = (await getFile(contractScriptPath)) as string;
+    } catch (error) {
+      /* empty */
+    }
     if (activeProject?.language === 'tact' && !contractScript) {
       throw new Error('Contract script is missing. Rebuild the contract.');
     }
@@ -384,12 +388,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         }
         if (initParams) {
           cellCode = generateCellCode(initParams as unknown as CellValues[]);
-          updateProjectById(
-            {
-              cellABI: { deploy: initParams as CellABI },
-            } as Project,
-            projectId,
-          );
+          updateProjectSetting({
+            cellABI: { deploy: initParams as CellABI },
+          } as ProjectSetting);
         } else {
           cellCode = stateInitContent;
         }
@@ -512,12 +513,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   };
 
   const updatNetworkEnvironment = (network: NetworkEnvironment) => {
-    updateProjectById(
-      {
-        network,
-      } as Project,
-      projectId,
-    );
+    updateProjectSetting({
+      network,
+    } as ProjectSetting);
     setEnvironment(network);
   };
 

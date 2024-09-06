@@ -18,14 +18,14 @@ import {
   SuccessResult,
   compileFunc,
 } from '@ton-community/func-js';
+import useFile from './file.hooks';
 import { useProject } from './projectV2.hooks';
 import { useSettingAction } from './setting.hooks';
-import { useWorkspaceActions } from './workspace.hooks';
 
 export function useProjectActions() {
-  const { getFileByPath, createFiles, projectFiles } = useWorkspaceActions();
   const { isContractDebugEnabled } = useSettingAction();
-  const { writeFiles } = useProject();
+  const { writeFiles, projectFiles } = useProject();
+  const { getFile } = useFile();
 
   return {
     compileFuncProgram,
@@ -36,20 +36,20 @@ export function useProjectActions() {
     file: Pick<Tree, 'path'>,
     projectId: Project['id'],
   ) {
-    const fileList: Record<string, Tree> = {};
+    const fileList: Record<string, string> = {};
 
     const filesToProcess = [file.path];
 
     while (filesToProcess.length !== 0) {
-      const fileToProcess = filesToProcess.pop();
-      const file = await getFileByPath(fileToProcess!, projectId);
-      if (file?.content) {
-        fileList[file.id] = file;
-      }
-      if (!file?.content) {
+      const singleFileToProcess = filesToProcess.pop();
+      const fileContent = await getFile(singleFileToProcess!);
+      if (!fileContent) {
         continue;
       }
-      let compileDirectives = await extractCompilerDiretive(file.content);
+      fileList[singleFileToProcess!] = fileContent as string;
+      let compileDirectives = await extractCompilerDiretive(
+        fileContent as string,
+      );
 
       compileDirectives = compileDirectives.map((d: string) => {
         const pathParts = file.path.split('/');
@@ -72,15 +72,10 @@ export function useProjectActions() {
       }
       filesToProcess.push(...compileDirectives);
     }
-    const filesCollection: Tree[] = Object.values(fileList);
     const buildResult: CompileResult = await compileFunc({
       targets: [file.path!],
       sources: (path) => {
-        const file = filesCollection.find((f: Tree) => f.path === path);
-        if (file?.content) {
-          fileList[file.id] = file;
-        }
-        return file?.content ?? '';
+        return fileList[path] ?? '';
       },
     });
 
@@ -91,24 +86,23 @@ export function useProjectActions() {
     const abi = await generateABI(fileList);
 
     const contractName = file.path.replace('.fc', '');
-    await createFiles(
-      [
-        {
-          path: `dist/func_${contractName}.abi`,
-          content: JSON.stringify({
-            name: contractName,
-            getters: abi,
-            setters: [],
-          }),
-        },
-        {
-          path: `dist/func_${contractName}.code.boc`,
-          content: (buildResult as SuccessResult).codeBoc,
-        },
-      ],
-      'dist',
-      projectId,
-    );
+    const buildFiles = [
+      {
+        path: `dist/func_${contractName}.abi`,
+        content: JSON.stringify({
+          name: contractName,
+          getters: abi,
+          setters: [],
+        }),
+        type: 'file' as const,
+      },
+      {
+        path: `dist/func_${contractName}.code.boc`,
+        content: (buildResult as SuccessResult).codeBoc,
+        type: 'file' as const,
+      },
+    ];
+    await writeFiles(projectId, buildFiles, { overwrite: true });
     return { contractBOC: (buildResult as SuccessResult).codeBoc };
   }
 
@@ -118,7 +112,7 @@ export function useProjectActions() {
   ) {
     const filesToProcess = [file.path];
 
-    projectFiles(projectId).forEach((f) => {
+    projectFiles.forEach((f) => {
       if (
         /\.(tact|fc|func)$/.test(f.name) &&
         !filesToProcess.includes(f.path) &&
@@ -216,12 +210,9 @@ export function useProjectActions() {
     return fs.overwrites;
   }
 
-  async function generateABI(fileList: Record<string, Tree>) {
+  async function generateABI(fileList: Record<string, string>) {
     const unresolvedPromises = Object.values(fileList).map(async (file) => {
-      if (!file.content) {
-        return;
-      }
-      return await parseGetters(file.content);
+      return await parseGetters(file);
     });
     const results = await Promise.all(unresolvedPromises);
     return results[0];
