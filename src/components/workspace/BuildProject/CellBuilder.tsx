@@ -92,7 +92,6 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
       <p className={s.info}>
         - {info}
         <OpenFile
-          projectId={projectId}
           name={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
           path={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
         />{' '}
