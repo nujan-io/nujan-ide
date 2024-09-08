@@ -19,7 +19,6 @@ import { useEffectOnce } from 'react-use';
 import BottomPanel from '../BottomPanel/BottomPanel';
 import BuildProject from '../BuildProject';
 import Editor from '../Editor';
-import ProjectSetting from '../ProjectSetting';
 import Tabs from '../Tabs';
 import TestCases from '../TestCases';
 import WorkspaceSidebar from '../WorkspaceSidebar';
@@ -83,7 +82,6 @@ const WorkSpace: FC = () => {
   }, [activeProject]);
 
   useEffect(() => {
-
     if (!cachedProjectPath) return;
     openProject(cachedProjectPath).catch(() => {});
   }, [cachedProjectPath]);
@@ -172,9 +170,6 @@ const WorkSpace: FC = () => {
         }}
       >
         <div className={s.tree}>
-          {activeMenu === 'setting' && (
-            <ProjectSetting projectId={activeProject?.path as Project['id']} />
-          )}
           {isLoaded && activeMenu === 'code' && (
             <div className="onboarding-file-explorer">
               <span className={s.heading}>Explorer</span>
