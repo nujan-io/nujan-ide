@@ -1,3 +1,4 @@
+import { SettingInterface } from '@/interfaces/setting.interface';
 import { ProjectSetting, Tree } from '@/interfaces/workspace.interface';
 import { FC, createContext, useEffect, useMemo, useState } from 'react';
 
@@ -21,7 +22,17 @@ interface IDEContextProps {
   setActiveProject: (project: ProjectSetting | null) => void;
   fileTab: IFileTab;
   setFileTab: (fileTab: IFileTab) => void;
+  setting: SettingInterface;
+  setSetting: (setting: SettingInterface) => void;
 }
+
+const defaultSetting = {
+  contractDebug: true,
+  formatOnSave: false,
+  tonAmountForInteraction: '0.05',
+  autoBuildAndDeploy: true,
+  editorMode: 'default' as const,
+};
 
 const defaultState = {
   projects: [],
@@ -35,6 +46,8 @@ const defaultState = {
     active: null,
   },
   setFileTab: () => {},
+  setting: defaultSetting,
+  setSetting: () => {},
 };
 
 export const IDEContext = createContext<IDEContextProps>(defaultState);
@@ -48,6 +61,7 @@ export const IDEProvider: FC<{ children: React.ReactNode }> = ({
   const [activeProject, setActiveProject] = useState<ProjectSetting | null>(
     null,
   );
+  const [setting, setSetting] = useState<SettingInterface>(defaultSetting);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const value = useMemo(
@@ -60,8 +74,10 @@ export const IDEProvider: FC<{ children: React.ReactNode }> = ({
       setActiveProject,
       fileTab,
       setFileTab,
+      setting,
+      setSetting,
     }),
-    [activeProject, projects, projectFiles, fileTab],
+    [activeProject, projects, projectFiles, fileTab, setting],
   );
 
   const onInit = () => {

@@ -40,6 +40,7 @@ class FileSystem {
    */
   async ensureDirectoryExists(filePath: string) {
     const dirname = filePath.substring(0, filePath.lastIndexOf('/'));
+    if (!dirname) return;
 
     try {
       await this.fs.mkdir(dirname);

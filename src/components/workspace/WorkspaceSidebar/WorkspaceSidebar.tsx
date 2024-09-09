@@ -42,7 +42,7 @@ const WorkspaceSidebar: FC<Props> = ({
   } = useSettingAction();
 
   const hasEditAccess = isProjectEditable();
-  const editorMode = getSettingStateByKey('editorMode') ?? 'default';
+  const editorMode = getSettingStateByKey('editorMode');
 
   const menuItems: MenuItem[] = [
     {

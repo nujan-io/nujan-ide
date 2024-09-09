@@ -5,6 +5,7 @@ import { AppConfig } from '@/config/AppConfig';
 import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
+import { useSettingAction } from '@/hooks/setting.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
@@ -48,6 +49,8 @@ const WorkSpace: FC = () => {
   } = useProject();
 
   const { fileTab, open: openTab } = useFileTab();
+
+  const { init: initGlobalSetting } = useSettingAction();
 
   const commitItemCreation = async (type: Tree['type'], name: string) => {
     if (!name) return;
@@ -139,6 +142,7 @@ const WorkSpace: FC = () => {
 
   useEffectOnce(() => {
     setIsLoaded(true);
+    initGlobalSetting();
     window.TonCore = TonCore;
     window.TonCrypto = TonCrypto;
     window.Buffer = Buffer;
