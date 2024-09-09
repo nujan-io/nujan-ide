@@ -3,6 +3,7 @@ import {
   commonProjectFiles,
 } from '@/constant/ProjectTemplate';
 import {
+  ABIFormInputValues,
   ContractLanguage,
   ProjectSetting,
   ProjectTemplate,
@@ -273,6 +274,36 @@ export const useProject = () => {
     await loadProjectFiles(activeProject.path);
   };
 
+  function updateABIInputValues(inputValues: ABIFormInputValues) {
+    if (!activeProject) {
+      return;
+    }
+    const formInputValues = cloneDeep(inputValues);
+    const abiFormInputValues =
+      cloneDeep(activeProject.abiFormInputValues) ?? [];
+    const index = abiFormInputValues.findIndex(
+      (item) =>
+        item.key === formInputValues.key && item.type === formInputValues.type,
+    );
+    if (index < 0) {
+      abiFormInputValues.push(formInputValues);
+    } else {
+      abiFormInputValues[index] = formInputValues;
+    }
+    updateProjectSetting({
+      abiFormInputValues,
+    });
+  }
+
+  function getABIInputValues(key: string, type: string) {
+    if (!activeProject) {
+      return [];
+    }
+    return activeProject.abiFormInputValues?.find(
+      (item) => item.type === type && item.key === key,
+    )?.value;
+  }
+
   return {
     projects,
     projectFiles,
@@ -289,6 +320,8 @@ export const useProject = () => {
     loadProjectFiles,
     loadProjects,
     updateProjectSetting,
+    getABIInputValues,
+    updateABIInputValues,
   };
 };
 

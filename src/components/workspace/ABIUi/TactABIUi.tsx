@@ -316,7 +316,13 @@ const TactABIUi: FC<TactABI> = ({
   const { callGetter, callSetter } = useContractAction();
   const { createLog } = useLogActivity();
   const [form] = useForm();
-  const { projectFiles, readdirTree, activeProject } = useProject();
+  const {
+    projectFiles,
+    readdirTree,
+    activeProject,
+    getABIInputValues,
+    updateABIInputValues,
+  } = useProject();
 
   const getItemHeading = (item: TactType) => {
     if (item.type?.kind === 'simple') {
@@ -383,10 +389,11 @@ const TactABIUi: FC<TactABI> = ({
       } else {
         createLog(JSON.stringify(response, null, 2));
       }
-      // updateABIInputValues(
-      //   { key: abiType.name, value: formValues, type: type },
-      //   activeProject as string,
-      // );
+      updateABIInputValues({
+        key: abiType.name,
+        value: formValues,
+        type: type,
+      });
     } catch (error) {
       if ((error as Error).message.includes('no healthy nodes for')) {
         createLog(
@@ -406,13 +413,9 @@ const TactABIUi: FC<TactABI> = ({
 
   useEffect(() => {
     if (!activeProject) return;
-    // const abiFields = getABIInputValues(
-    //   projectId as string,
-    //   abiType.name,
-    //   type,
-    // );
-    // if (!abiFields) return;
-    // form.setFieldsValue(abiFields);
+    const abiFields = getABIInputValues(abiType.name, type);
+    if (!abiFields) return;
+    form.setFieldsValue(abiFields);
   }, []);
 
   return (

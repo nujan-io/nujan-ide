@@ -21,7 +21,6 @@ import s from './ContractInteraction.module.scss';
 
 const FuncContractInteraction: FC<ProjectInteractionProps> = ({
   contractAddress,
-  projectId,
   abi,
   network,
   contract = null,
@@ -121,14 +120,7 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
   };
 
   const cellBuilder = (info: string) => {
-    return (
-      <CellBuilder
-        form={messageForm}
-        info={info}
-        projectId={projectId}
-        type="setter"
-      />
-    );
+    return <CellBuilder form={messageForm} info={info} type="setter" />;
   };
 
   useEffect(() => {

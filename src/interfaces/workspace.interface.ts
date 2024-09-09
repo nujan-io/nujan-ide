@@ -21,8 +21,6 @@ export type NetworkEnvironment = 'TESTNET' | 'MAINNET' | 'SANDBOX';
 
 export type ContractLanguage = 'func' | 'tact';
 
-type ProjectFiles = Record<string, Tree[]>;
-
 export interface InitParams {
   name: string;
   type: string;
@@ -73,13 +71,8 @@ export interface ProjectSetting {
   contractAddress?: string;
   tab?: IFileTab;
   cellABI?: CellABI;
+  abiFormInputValues?: ABIFormInputValues[];
 }
-
-export type WorkspaceState = {
-  openFiles: ProjectFiles;
-  projectFiles: ProjectFiles | null;
-  projects: Project[];
-};
 
 export interface ABIParameter {
   type: string;

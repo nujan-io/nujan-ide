@@ -1,7 +1,6 @@
 import TonAuth from '@/components/auth/TonAuth/TonAuth';
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import {
   ABIField,
   CellABI,
@@ -76,8 +75,14 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   );
 
   const { isAutoBuildAndDeployEnabled } = useSettingAction();
-  const { projectFiles, readdirTree, activeProject, updateProjectSetting } =
-    useProject();
+  const {
+    projectFiles,
+    readdirTree,
+    activeProject,
+    updateProjectSetting,
+    updateABIInputValues,
+    getABIInputValues,
+  } = useProject();
   const { getFile } = useFile();
 
   const [tonConnector] = useTonConnectUI();
@@ -91,8 +96,6 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   );
 
   const [deployForm] = useForm();
-
-  const { updateABIInputValues, getABIInputValues } = useWorkspaceActions();
 
   const { deployContract } = useContractAction();
 
@@ -120,14 +123,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   const cellBuilder = (info: string) => {
     if (!activeProject?.language || activeProject.language !== 'func')
       return <></>;
-    return (
-      <CellBuilder
-        form={deployForm}
-        info={info}
-        projectId={projectId}
-        type="deploy"
-      />
-    );
+    return <CellBuilder form={deployForm} info={info} type="deploy" />;
   };
 
   const deployView = () => {
@@ -225,14 +221,11 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       if (activeProject?.language === 'tact') {
         delete tempFormValues.contract;
 
-        updateABIInputValues(
-          {
-            key: 'init',
-            value: tempFormValues as TactInputFields,
-            type: 'Init',
-          },
-          projectId as string,
-        );
+        updateABIInputValues({
+          key: 'init',
+          value: tempFormValues as TactInputFields,
+          type: 'Init',
+        });
 
         const tsProjectFiles: Record<string, string> = {};
         if (isIncludesTypeCellOrSlice(tempFormValues)) {
@@ -662,7 +655,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     };
 
     if (activeProject?.language === 'tact') {
-      const abiFields = getABIInputValues(projectId as string, 'init', 'Init');
+      const abiFields = getABIInputValues('init', 'Init');
       if (abiFields) {
         deployForm.setFieldsValue(abiFields);
       }

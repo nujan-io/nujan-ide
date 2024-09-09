@@ -1,7 +1,6 @@
 import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
@@ -30,7 +29,6 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newItemAdd, setNewItemAdd] = useState<Tree['type'] | ''>('');
 
-  const { isProjectEditable } = useWorkspaceActions();
   const { deleteProjectFile, renameProjectFile, newFileFolder } = useProject();
   const { open: openTab } = useFileTab();
   const { createLog } = useLogActivity();
@@ -150,24 +148,22 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
             }`}
           >
             <span>{node.text}</span>
-            {isProjectEditable() && (
-              <ItemAction
-                className={s.actions}
-                onRename={() => {
-                  handleItemAction();
-                }}
-                allowedActions={getAllowedActions() as actionsTypes[]}
-                onNewFile={() => {
-                  updateItemTypeCreation('file');
-                }}
-                onNewDirectory={() => {
-                  updateItemTypeCreation('directory');
-                }}
-                onDelete={() => {
-                  deleteItemFromNode().catch(() => {});
-                }}
-              />
-            )}
+            <ItemAction
+              className={s.actions}
+              onRename={() => {
+                handleItemAction();
+              }}
+              allowedActions={getAllowedActions() as actionsTypes[]}
+              onNewFile={() => {
+                updateItemTypeCreation('file');
+              }}
+              onNewDirectory={() => {
+                updateItemTypeCreation('directory');
+              }}
+              onDelete={() => {
+                deleteItemFromNode().catch(() => {});
+              }}
+            />
           </div>
         )}
 

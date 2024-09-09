@@ -2,7 +2,6 @@ import { AppLogo, Tooltip } from '@/components/ui';
 import AppIcon, { AppIconType } from '@/components/ui/icon';
 import { AppData } from '@/constant/AppData';
 import { useSettingAction } from '@/hooks/setting.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
 import { Form, Input, Popover, Select, Switch } from 'antd';
 import Link from 'next/link';
 import { FC } from 'react';
@@ -27,7 +26,6 @@ const WorkspaceSidebar: FC<Props> = ({
   onMenuClicked,
   projectName,
 }) => {
-  const { isProjectEditable } = useWorkspaceActions();
   const {
     isContractDebugEnabled,
     toggleContractDebug,
@@ -41,7 +39,6 @@ const WorkspaceSidebar: FC<Props> = ({
     updateEditorMode,
   } = useSettingAction();
 
-  const hasEditAccess = isProjectEditable();
   const editorMode = getSettingStateByKey('editorMode');
 
   const menuItems: MenuItem[] = [
@@ -171,7 +168,7 @@ const WorkspaceSidebar: FC<Props> = ({
       <div>
         <AppLogo className={s.brandLogo} href="/" />
         {menuItems.map((menu, i) => {
-          if (menu.private && !hasEditAccess) {
+          if (menu.private) {
             return;
           }
           return (

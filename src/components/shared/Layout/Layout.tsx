@@ -1,4 +1,3 @@
-import { useUserOnboardingAction } from '@/hooks/userOnboarding.hooks';
 import { FC, useEffect, useState } from 'react';
 import s from './Layout.module.scss';
 
@@ -8,7 +7,6 @@ interface Props {
 }
 export const Layout: FC<Props> = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const { onboarding } = useUserOnboardingAction();
   useEffect(() => {
     setIsLoaded(true);
   }, []);
@@ -18,14 +16,7 @@ export const Layout: FC<Props> = ({ children }) => {
   }
   return (
     <>
-      {/* <UserOnboardingWizard /> */}
-      <main
-        className={`${s.root} ${
-          onboarding().tourActive ? 'onboarding-active' : ''
-        }`}
-      >
-        {children}
-      </main>
+      <main className={s.root}>{children}</main>
     </>
   );
 };
