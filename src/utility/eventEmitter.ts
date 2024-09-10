@@ -13,6 +13,7 @@ export interface EventEmitterPayloads {
   FILE_SAVED: { fileId: string };
   TEST_CASE_LOG: string;
   RELOAD_PROJECT_FILES: string;
+  OPEN_PROJECT: string;
 }
 
 const EventEmitter = {

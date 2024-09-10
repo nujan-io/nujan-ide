@@ -71,13 +71,13 @@ const WorkSpace: FC = () => {
     globalWorkspace.sandboxWallet = wallet;
   };
 
-  const openProject = async (selectedProject: Project['id']) => {
-    if (!selectedProject) {
-      createLog(`${selectedProject} - project not found`, 'error');
+  const openProject = async (selectedProjectPath: Project['id']) => {
+    if (!selectedProjectPath) {
+      createLog(`${selectedProjectPath} - project not found`, 'error');
       return;
     }
-    setActiveProject(selectedProject);
-    await loadProjectFiles(selectedProject);
+    await setActiveProject(selectedProjectPath);
+    await loadProjectFiles(selectedProjectPath);
   };
 
   const cachedProjectPath = useMemo(() => {
@@ -118,6 +118,7 @@ const WorkSpace: FC = () => {
       if (!activeProject) return;
       await loadProjectFiles(activeProject.path as string);
     });
+    EventEmitter.on('OPEN_PROJECT', openProject);
 
     Analytics.track('Project Opened', {
       platform: 'IDE',

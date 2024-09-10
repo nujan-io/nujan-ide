@@ -22,10 +22,8 @@ const FileTree: FC<Props> = ({ projectId }) => {
     if (!activeProject?.path) return [];
     return projectFiles.map((item) => {
       return {
-        id: `${activeProject.path}/${item.path}`,
-        parent: item.parent
-          ? `${activeProject.path}/${item.parent}`
-          : (activeProject.path as string),
+        id: item.path,
+        parent: item.parent ? item.parent : (activeProject.path as string),
         droppable: item.type === 'directory',
         text: item.name,
         data: {

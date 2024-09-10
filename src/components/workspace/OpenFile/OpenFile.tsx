@@ -14,7 +14,7 @@ const OpenFile: FC<Props> = ({ path, name }) => {
     <span
       className={s.root}
       onClick={() => {
-        open(path, path);
+        open(name, path);
       }}
     >
       {name}

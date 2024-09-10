@@ -3,10 +3,11 @@ import fileSystem from '@/lib/fs';
 import { IDEContext } from '@/state/IDE.context';
 import EventEmitter from '@/utility/eventEmitter';
 import { useContext } from 'react';
+import { baseProjectPath } from './projectV2.hooks';
 
 export function useSettingAction() {
   const { setting, setSetting } = useContext(IDEContext);
-  const settingPath = '/setting.json';
+  const settingPath = `${baseProjectPath}/setting.json`;
 
   return {
     setting,

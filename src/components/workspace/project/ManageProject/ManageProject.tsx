@@ -1,8 +1,9 @@
 import { NewProject } from '@/components/project';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
-import { useProject } from '@/hooks/projectV2.hooks';
+import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
 import { Project } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import { Button, Modal, Select, message } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import s from './ManageProject.module.scss';
@@ -15,9 +16,26 @@ const ManageProject: FC = () => {
     setActiveProject,
     deleteProject,
     activeProject,
-    loadProjectFiles,
     loadProjects,
   } = useProject();
+
+  const deleteSelectedProject = async (id: Project['id']) => {
+    try {
+      await deleteProject(id);
+      setActiveProject(null);
+      setIsDeleteConfirmOpen(false);
+    } catch (error) {
+      await message.error('Failed to delete project');
+    }
+  };
+
+  const openProject = async (selectedProject: Project['id']) => {
+    if (!selectedProject) {
+      await message.error('Project not found');
+      return;
+    }
+    EventEmitter.emit('OPEN_PROJECT', `${baseProjectPath}/${selectedProject}`);
+  };
 
   const projectHeader = () => (
     <>
@@ -54,7 +72,7 @@ const ManageProject: FC = () => {
         placeholder="Select a project"
         showSearch
         className="w-100 select-search-input-dark"
-        value={activeProject?.path}
+        value={activeProject?.name}
         onChange={(_project) => {
           openProject(_project).catch(() => {});
         }}
@@ -66,7 +84,6 @@ const ManageProject: FC = () => {
         {[...projects].reverse().map((project) => (
           <Select.Option key={project} value={project} title={project}>
             {project}
-            {/* {project.name} - <span>{project.language ?? 'func'}</span> */}
           </Select.Option>
         ))}
       </Select>
@@ -79,31 +96,6 @@ const ManageProject: FC = () => {
       <NewProject ui="button" className={s.newProject} icon="Plus" />
     </div>
   );
-
-  const deleteSelectedProject = async (id: Project['id']) => {
-    try {
-      await deleteProject(`/${id}`);
-      setActiveProject(null);
-      setIsDeleteConfirmOpen(false);
-    } catch (error) {
-      console.log('Failed to delete project', error);
-      await message.error('Failed to delete project');
-    }
-  };
-
-  const openProject = async (selectedProject: Project['id']) => {
-    if (!selectedProject) {
-      await message.error('Project not found');
-      return;
-    }
-    setActiveProject(selectedProject);
-    await loadProjectFiles(selectedProject);
-  };
-
-  useEffect(() => {
-    if (!activeProject) return;
-    openProject(activeProject.path as string).catch(() => {});
-  }, [activeProject]);
 
   useEffect(() => {
     loadProjects();

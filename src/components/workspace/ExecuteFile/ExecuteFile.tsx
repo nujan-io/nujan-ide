@@ -107,8 +107,12 @@ const ExecuteFile: FC<Props> = ({
   };
 
   const selectFile = (
-    e: number | string | React.ChangeEvent<HTMLSelectElement>,
+    e: number | string | undefined | React.ChangeEvent<HTMLSelectElement>,
   ) => {
+    if (e === undefined) {
+      setSelectedFile(undefined);
+      return;
+    }
     const selectedFile = fileList.find((f) => {
       if (typeof e === 'string') return f.path === e;
       return (

@@ -17,7 +17,7 @@ import cloneDeep from 'lodash.clonedeep';
 import { useContext } from 'react';
 import { IDEContext } from '../state/IDE.context';
 
-interface FileNode {
+export interface FileNode {
   name: string;
   path: string;
   type: 'file' | 'directory';
@@ -25,7 +25,7 @@ interface FileNode {
   content?: string;
 }
 
-export const baseProjectPath = '/';
+export const baseProjectPath = '/projects';
 
 export const useProject = () => {
   const {
@@ -35,13 +35,29 @@ export const useProject = () => {
     setActiveProject,
     projectFiles,
     setProjectFiles,
+    setFileTab,
   } = useContext(IDEContext);
 
   const loadProjects = async () => {
-    const projectCollection = await fileSystem.readdir(baseProjectPath, {
-      onlyDir: true,
-    });
-    setProjects([...projectCollection]);
+    let projectCollection: string[] = [];
+    try {
+      projectCollection = await fileSystem.readdir(baseProjectPath, {
+        onlyDir: true,
+      });
+
+      // remove base path from project path
+      projectCollection = projectCollection.map((project) => {
+        return project.replace(baseProjectPath, '');
+      });
+    } catch (error) {
+      try {
+        await fileSystem.create(baseProjectPath, 'directory');
+      } catch (error) {
+        /* empty */
+      }
+    } finally {
+      setProjects([...projectCollection]);
+    }
   };
 
   const createProject = async (
@@ -52,7 +68,7 @@ export const useProject = () => {
     defaultFiles?: Tree[],
   ) => {
     const projectDirectory = await fileSystem.mkdir(
-      `${baseProjectPath}${name}`,
+      `${baseProjectPath}/${name}`,
       {
         overwrite: false,
       },
@@ -62,7 +78,12 @@ export const useProject = () => {
     let files =
       template === 'import' && defaultFiles?.length == 0
         ? await new ZIP(fileSystem).importZip(file as RcFile, projectDirectory)
-        : createTemplateBasedProject(template, language, defaultFiles);
+        : createTemplateBasedProject(
+            template,
+            language,
+            defaultFiles,
+            projectDirectory,
+          );
 
     const fileMapping: Record<string, Partial<Tree> | undefined> = files.reduce(
       (acc, current) => {
@@ -73,21 +94,21 @@ export const useProject = () => {
     );
 
     if (
-      (!fileMapping['stateInit.cell.ts'] || !fileMapping['message.cell.ts']) &&
+      (!fileMapping[`${projectDirectory}/stateInit.cell.ts`] ||
+        !fileMapping[`${projectDirectory}/message.cell.ts`]) &&
       language === 'func'
     ) {
       const commonFiles = createTemplateBasedProject(
         'import',
         language,
         commonProjectFiles,
+        projectDirectory,
       );
       files = [...files, ...commonFiles];
     }
 
-    const projectName = projectDirectory.slice(1);
-
     const project = {
-      name: projectName,
+      name: projectDirectory.replace(baseProjectPath + '/', ''),
       language,
       template,
     };
@@ -104,7 +125,7 @@ export const useProject = () => {
     await loadProjects();
 
     setActiveProject({
-      path: projectName,
+      path: projectDirectory,
       ...project,
     });
     return projectDirectory;
@@ -117,21 +138,26 @@ export const useProject = () => {
   ) => {
     await Promise.all(
       files.map(async (file) => {
-        const path = `/${projectPath}/${file.path}`;
         if (file.type === 'directory') {
-          return fileSystem.mkdir(path);
+          return fileSystem.mkdir(file.path);
         }
-        await fileSystem.writeFile(path, file.content ?? '', options);
-        EventEmitter.emit('FORCE_UPDATE_FILE', path);
-        return path;
+        await fileSystem.writeFile(file.path, file.content ?? '', options);
+        EventEmitter.emit('FORCE_UPDATE_FILE', file.path);
+        return file.path;
       }),
     );
     EventEmitter.emit('RELOAD_PROJECT_FILES', projectPath);
   };
 
-  const loadProjectFiles = async (projectName: string) => {
-    const projectFiles = await readdirTree(`${baseProjectPath}${projectName}`);
-    setProjectFiles(projectFiles as Tree[]);
+  const loadProjectFiles = async (projectPath: string) => {
+    let projectFiles: FileNode[] = [];
+    try {
+      projectFiles = await readdirTree(projectPath);
+    } catch (error) {
+      /* empty */
+    } finally {
+      setProjectFiles(projectFiles as Tree[]);
+    }
   };
 
   /**
@@ -157,10 +183,9 @@ export const useProject = () => {
       const stat = await fileSystem.stat(filePath);
       const fileNode: FileNode = {
         name: file,
-        path: filePath.replace(basePath + '/', ''),
+        path: filePath,
         type: stat.isDirectory() ? 'directory' : 'file',
-        parent:
-          path === basePath ? undefined : path.replace(basePath + '/', ''),
+        parent: path === basePath ? undefined : path,
         content: options.content
           ? ((await fileSystem.readFile(filePath)) as string)
           : '',
@@ -190,20 +215,21 @@ export const useProject = () => {
     await fileSystem.rmdir(projectName, { recursive: true });
     await loadProjects();
     setProjectFiles([]);
+    setFileTab({ items: [], active: null });
 
     return projectName;
   };
 
   const newFileFolder = async (path: string, type: 'file' | 'directory') => {
     if (!activeProject?.path) return;
-    const newPath = `${baseProjectPath}${activeProject.path}/${path}`;
+    const newPath = `${activeProject.path}/${path}`;
     await fileSystem.create(newPath, type);
     await loadProjectFiles(activeProject.path);
   };
 
   const deleteProjectFile = async (path: string) => {
     if (!activeProject?.path) return;
-    await fileSystem.remove(`${baseProjectPath}${activeProject.path}/${path}`, {
+    await fileSystem.remove(path, {
       recursive: true,
     });
     await loadProjectFiles(activeProject.path);
@@ -215,10 +241,7 @@ export const useProject = () => {
 
     const newPath = targetPath + '/' + oldPath.split('/').pop();
 
-    await fileSystem.rename(
-      `${baseProjectPath}/${oldPath}`,
-      `${baseProjectPath}/${newPath}`,
-    );
+    await fileSystem.rename(oldPath, newPath);
     await loadProjectFiles(activeProject.path);
   };
 
@@ -228,10 +251,7 @@ export const useProject = () => {
       ? oldPath.split('/').slice(0, -1).join('/') + '/' + newName
       : newName;
 
-    const success = await fileSystem.rename(
-      `${baseProjectPath}${activeProject.path}/${oldPath}`,
-      `${baseProjectPath}${activeProject.path}/${newPath}`,
-    );
+    const success = await fileSystem.rename(oldPath, newPath);
     if (!success) return;
     await loadProjectFiles(activeProject.path);
   };
@@ -241,7 +261,7 @@ export const useProject = () => {
     force = false,
   ) => {
     if (activeProject?.path === projectPath && !force) return;
-    const projectSettingPath = `${baseProjectPath}${projectPath}/.ide/setting.json`;
+    const projectSettingPath = `${projectPath}/.ide/setting.json`;
     if (projectPath && (await fileSystem.exists(projectSettingPath))) {
       const setting = (await fileSystem.readFile(projectSettingPath)) as string;
       const parsedSetting = setting ? JSON.parse(setting) : {};
@@ -256,7 +276,7 @@ export const useProject = () => {
 
   const updateProjectSetting = async (itemToUpdate: ProjectSetting) => {
     if (!activeProject?.path) return;
-    const projectSettingPath = `${baseProjectPath}${activeProject.path}/.ide/setting.json`;
+    const projectSettingPath = `${activeProject.path}/.ide/setting.json`;
     if (!(await fileSystem.exists(projectSettingPath))) {
       await fileSystem.writeFile(projectSettingPath, JSON.stringify({}));
     } else {
@@ -329,6 +349,7 @@ const createTemplateBasedProject = (
   template: 'tonBlank' | 'tonCounter' | 'import',
   language: ContractLanguage = 'tact',
   files: Tree[] = [],
+  basePath?: string,
 ) => {
   let _files: Pick<Tree, 'type' | 'path' | 'content'>[] = cloneDeep(files);
   if (files.length === 0 && template !== 'import') {
@@ -338,7 +359,7 @@ const createTemplateBasedProject = (
   _files = _files.map((file) => {
     return {
       type: file.type,
-      path: file.path,
+      path: `${basePath}/${file.path}`,
       content: file.content,
     };
   });

@@ -120,10 +120,9 @@ const Editor: FC<Props> = ({ className = '' }) => {
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
       if (!activeProject?.path || latestFile.current?.includes('setting.json'))
         return;
-      const latestFilePath = `/${activeProject.path}/${latestFile.current}`;
 
       (async () => {
-        if (filePath !== latestFilePath) return;
+        if (filePath !== latestFile.current) return;
         await fetchFileContent(true);
       })().catch((error) => {
         console.error('Error handling FORCE_UPDATE_FILE event:', error);
@@ -239,7 +238,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
       </div>
       <EditorDefault
         className={s.editor}
-        path={fileTab.active ? `${activeProject?.path}/${fileTab.active}` : ''}
+        path={fileTab.active ?? ''}
         theme="vs-theme-dark"
         // height="90vh"
         defaultLanguage={fileTypeFromFileName(fileTab.active ?? '')}

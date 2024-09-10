@@ -104,7 +104,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
       .filter((f) => {
         const _fileExtension = getFileExtension(f.name || '');
         return (
-          f.path.startsWith('dist') &&
+          f.path.startsWith(`${activeProject?.path}/dist`) &&
           ['abi'].includes(_fileExtension as string)
         );
       })
@@ -230,7 +230,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         const tsProjectFiles: Record<string, string> = {};
         if (isIncludesTypeCellOrSlice(tempFormValues)) {
           const fileCollection = await readdirTree(
-            `/${activeProject.path}`,
+            `${activeProject.path}`,
             {
               basePath: null,
               content: true,
@@ -370,7 +370,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         let stateInitContent = '';
         let cellCode = '';
         try {
-          stateInitContent = (await getFile('stateInit.cell.ts')) as string;
+          stateInitContent = (await getFile(
+            `${activeProject?.path}/stateInit.cell.ts`,
+          )) as string;
         } catch (error) {
           console.log('stateInit.cell.ts is missing');
         }
@@ -521,6 +523,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
 
   const extractContractName = (currentContractName: string) => {
     return currentContractName
+      .replace(activeProject?.path + '/', '')
       .replace('dist/', '')
       .replace('.abi', '')
       .replace('tact_', '')

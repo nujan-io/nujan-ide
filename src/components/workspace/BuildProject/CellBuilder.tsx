@@ -90,7 +90,11 @@ const CellBuilder: FC<Props> = ({ info, type, form }) => {
         - {info}
         <OpenFile
           name={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
-          path={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
+          path={
+            type === 'deploy'
+              ? `${activeProject?.path}/stateInit.cell.ts`
+              : `${activeProject?.path}/message.cell.ts`
+          }
         />{' '}
         or use <b>{`"Cell Builder"`}</b>{' '}
         {type === 'deploy' && ' to send message'}

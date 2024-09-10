@@ -134,6 +134,11 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     [`${fileTypeFromFileName(node.text)}-lang-file-icon`]: !droppable,
   });
 
+  // Hide ./ide/settings.json file
+  if (node.data?.path.includes('.ide')) {
+    return null;
+  }
+
   return (
     <>
       <div

@@ -17,7 +17,7 @@ const useFileTab = () => {
     };
 
     try {
-      const settingPath = `/${activeProject.path}/.ide/setting.json`;
+      const settingPath = `${activeProject.path}/.ide/setting.json`;
       if (!(await fileSystem.exists(settingPath))) {
         await fileSystem.writeFile(
           settingPath,

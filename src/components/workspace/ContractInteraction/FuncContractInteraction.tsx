@@ -29,7 +29,7 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
   const [isLoading, setIsLoading] = useState('');
   const { sendMessage } = useContractAction();
   const { getFile } = useFile();
-  const { updateProjectSetting } = useProject();
+  const { updateProjectSetting, activeProject } = useProject();
   const { createLog } = useLogActivity();
   const { sandboxWallet: wallet } = globalWorkspace;
   const [messageForm] = useForm();
@@ -42,7 +42,9 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
     if (!cellBuilderRef.current?.contentWindow) return;
     let cellCode = '';
 
-    const contractCellContent = await getFile('message.cell.ts');
+    const contractCellContent = await getFile(
+      `${activeProject?.path}/message.cell.ts`,
+    );
     if (!contractCellContent && !cell) {
       throw new Error('Cell data is missing in file message.cell.ts');
     }

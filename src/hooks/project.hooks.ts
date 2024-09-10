@@ -85,10 +85,12 @@ export function useProjectActions() {
 
     const abi = await generateABI(fileList);
 
-    const contractName = file.path.replace('.fc', '');
+    const contractName = file.path
+      .replace(`${projectId}/`, '')
+      .replace('.fc', '');
     const buildFiles = [
       {
-        path: `dist/func_${contractName}.abi`,
+        path: `${projectId}/dist/func_${contractName}.abi`,
         content: JSON.stringify({
           name: contractName,
           getters: abi,
@@ -97,7 +99,7 @@ export function useProjectActions() {
         type: 'file' as const,
       },
       {
-        path: `dist/func_${contractName}.code.boc`,
+        path: `${projectId}/dist/func_${contractName}.code.boc`,
         content: (buildResult as SuccessResult).codeBoc,
         type: 'file' as const,
       },
@@ -126,16 +128,15 @@ export function useProjectActions() {
 
     while (filesToProcess.length !== 0) {
       const fileToProcess = filesToProcess.pop();
-      const filePath = `/${projectId}/${fileToProcess}`;
-      const fileContent = await fileSystem.readFile(filePath!);
+      const fileContent = await fileSystem.readFile(fileToProcess!);
       if (fileContent) {
-        fs.writeContractFile(filePath!, fileContent as string);
+        fs.writeContractFile(fileToProcess!, fileContent as string);
       }
     }
 
     let ctx = new CompilerContext({ shared: {} });
     const stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
-    const entryFile = `/${projectId}/${file.path}`;
+    const entryFile = file.path;
     ctx = precompile(ctx, fs, stdlib, entryFile);
 
     const response = await buildTact({
@@ -179,7 +180,7 @@ export function useProjectActions() {
 
     const buildFiles: Pick<Tree, 'path' | 'content' | 'type'>[] = [];
     fs.overwrites.forEach((value, key) => {
-      const filePath = key.slice(1);
+      const filePath = `${projectId}/${key.slice(1)}`;
 
       let fileContent = value.toString();
       if (key.includes('.abi')) {
