@@ -118,7 +118,8 @@ const Editor: FC<Props> = ({ className = '' }) => {
 
     // If file is changed e.g. in case of build process then force update in editor
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
-      if (!activeProject?.path) return;
+      if (!activeProject?.path || latestFile.current?.includes('setting.json'))
+        return;
       const latestFilePath = `/${activeProject.path}/${latestFile.current}`;
 
       (async () => {
