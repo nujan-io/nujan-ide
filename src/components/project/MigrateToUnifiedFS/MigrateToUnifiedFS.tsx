@@ -43,6 +43,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
         'projects'
       ] as Partial<Project[]>;
       const projectFiles = parsedItems?.['workspaceState']?.['projectFiles'];
+      if (!existingProjects) return;
 
       const project = existingProjects.map((project) => {
         if (!project) return;
@@ -112,6 +113,9 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
       localStorage.removeItem('recoil-persist');
       await fileSystem.deleteDatabase();
       localStorage.removeItem('migrationStatus');
+      message.success('Old projects deleted successfully');
+      setIsMigrationView(false);
+      setMigrationStatus('done');
     } catch (error) {
       if (error instanceof Error) {
         message.error(error.message);
@@ -212,7 +216,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
               project from archive.
             </p>
             <Popconfirm
-              title="Delete the task"
+              title="Delete archive projects"
               description="Are you sure to delete?"
               onConfirm={deleteOldProjects}
               onCancel={() => {}}
