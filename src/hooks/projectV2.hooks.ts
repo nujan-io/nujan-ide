@@ -66,6 +66,7 @@ export const useProject = () => {
     template: ProjectTemplate,
     file: RcFile | null,
     defaultFiles?: Tree[],
+    autoActivate = true,
   ) => {
     const projectDirectory = await fileSystem.mkdir(
       `${baseProjectPath}/${name}`,
@@ -124,10 +125,13 @@ export const useProject = () => {
     }
     await loadProjects();
 
-    setActiveProject({
-      path: projectDirectory,
-      ...project,
-    });
+    if (autoActivate) {
+      setActiveProject({
+        path: projectDirectory,
+        ...project,
+      });
+    }
+
     return projectDirectory;
   };
 
@@ -218,6 +222,14 @@ export const useProject = () => {
     setFileTab({ items: [], active: null });
 
     return projectName;
+  };
+
+  const deleteAllProjects = async () => {
+    await fileSystem.rmdir(baseProjectPath, { recursive: true });
+    setProjectFiles([]);
+    setFileTab({ items: [], active: null });
+    setActiveProject(null);
+    await loadProjects();
   };
 
   const newFileFolder = async (path: string, type: 'file' | 'directory') => {
@@ -334,6 +346,7 @@ export const useProject = () => {
     readdirTree,
     newFileFolder,
     deleteProjectFile,
+    deleteAllProjects,
     moveItem,
     renameProjectFile,
     setActiveProject: updateActiveProject,

@@ -1,3 +1,4 @@
+import { MigrateToUnifiedFS } from '@/components/project';
 import { LogView } from '@/components/shared';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
@@ -51,6 +52,7 @@ const BottomPanel: FC = () => {
       <div className={s.tabsContainer}>
         <div className={s.tab}>LOG</div>
         <div className={s.actions}>
+          <MigrateToUnifiedFS />
           <Input
             className={s.filterText}
             onChange={(e) => {

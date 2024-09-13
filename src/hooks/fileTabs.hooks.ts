@@ -7,7 +7,7 @@ const useFileTab = () => {
   const { fileTab, setFileTab, activeProject } = useContext(IDEContext);
 
   const syncTabSettings = async (updatedTab?: IFileTab) => {
-    if (!activeProject) return;
+    if (!activeProject || Object.keys(activeProject).length === 0) return;
 
     const defaultSetting = {
       tab: {

@@ -1,0 +1,39 @@
+.root {
+  min-width: 12rem;
+  .btnRestore {
+    .icon {
+      min-width: 1rem;
+    }
+  }
+
+  .description {
+    font-size: 0.8rem;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    span {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+  }
+}
+
+.modal {
+  .title {
+    text-align: center;
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .description {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .successMessage {
+    margin-top: 1rem;
+    color: #00ff00;
+    font-size: 0.9rem;
+  }
+}

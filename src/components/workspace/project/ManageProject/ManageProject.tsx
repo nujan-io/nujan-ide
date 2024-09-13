@@ -1,4 +1,4 @@
-import { NewProject } from '@/components/project';
+import { MigrateToUnifiedFS, NewProject } from '@/components/project';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
 import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
@@ -94,6 +94,7 @@ const ManageProject: FC = () => {
     <div className={s.startNew}>
       <span className={s.title}>Begin by initiating a new project</span>
       <NewProject ui="button" className={s.newProject} icon="Plus" />
+      <MigrateToUnifiedFS hasDescription />
     </div>
   );
 

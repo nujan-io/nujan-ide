@@ -179,7 +179,7 @@ const WorkSpace: FC = () => {
             <div className="onboarding-file-explorer">
               <span className={s.heading}>Explorer</span>
               <ManageProject />
-              {activeProject && (
+              {activeProject?.path && (
                 <div className={s.globalAction}>
                   <span>{AppConfig.name} IDE</span>
                   <ItemAction
