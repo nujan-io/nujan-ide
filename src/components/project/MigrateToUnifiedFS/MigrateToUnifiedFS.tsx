@@ -128,7 +128,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
   useEffect(() => {
     const migrationStatus = localStorage.getItem('migrationStatus');
     if (migrationStatus === 'completed') {
-      // setMigrationStatus('completed');
+      setMigrationStatus('completed');
     }
     try {
       checkMigration();
@@ -137,7 +137,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
     }
   }, []);
 
-  if (projects === null) return null;
+  if (projects === null || migrationStatus === 'done') return null;
 
   return (
     <>
