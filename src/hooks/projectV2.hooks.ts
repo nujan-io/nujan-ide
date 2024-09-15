@@ -158,6 +158,7 @@ export const useProject = () => {
     try {
       projectFiles = await readdirTree(projectPath);
     } catch (error) {
+      console.log('Error loading project files', error);
       /* empty */
     } finally {
       setProjectFiles(projectFiles as Tree[]);

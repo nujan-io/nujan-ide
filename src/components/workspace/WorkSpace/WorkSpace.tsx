@@ -84,17 +84,22 @@ const WorkSpace: FC = () => {
     return activeProject?.path as string;
   }, [activeProject]);
 
-  useEffect(() => {
-    if (!cachedProjectPath) return;
-    openProject(cachedProjectPath).catch(() => {});
-  }, [cachedProjectPath]);
-
   const onKeydown = (e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       EventEmitter.emit('SAVE_FILE');
     }
   };
+
+  const reloadProjectFiles = async (projectPath: string) => {
+    if (!projectPath) return;
+    await loadProjectFiles(projectPath);
+  };
+
+  useEffect(() => {
+    if (!cachedProjectPath) return;
+    openProject(cachedProjectPath).catch(() => {});
+  }, [cachedProjectPath]);
 
   useEffect(() => {
     if (!activeProject) {
@@ -114,10 +119,7 @@ const WorkSpace: FC = () => {
 
   useEffect(() => {
     document.addEventListener('keydown', onKeydown);
-    EventEmitter.on('RELOAD_PROJECT_FILES', async () => {
-      if (!activeProject) return;
-      await loadProjectFiles(activeProject.path as string);
-    });
+    EventEmitter.on('RELOAD_PROJECT_FILES', reloadProjectFiles);
     EventEmitter.on('OPEN_PROJECT', openProject);
 
     Analytics.track('Project Opened', {
@@ -128,6 +130,8 @@ const WorkSpace: FC = () => {
     return () => {
       try {
         document.removeEventListener('keydown', onKeydown);
+        EventEmitter.off('RELOAD_PROJECT_FILES', reloadProjectFiles);
+        EventEmitter.off('OPEN_PROJECT', openProject);
         clearLog();
       } catch (error) {
         /* empty */

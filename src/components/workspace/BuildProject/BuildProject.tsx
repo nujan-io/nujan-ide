@@ -34,7 +34,6 @@ import { useFile } from '@/hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { ABIParser, parseInputs } from '@/utility/abi';
-import EventEmitter from '@/utility/eventEmitter';
 import { Maybe } from '@ton/core/dist/utils/maybe';
 import { TonClient } from '@ton/ton';
 import { useForm } from 'antd/lib/form/Form';
@@ -728,7 +727,6 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
             `}
           allowedFile={['fc', 'tact']}
           onCompile={() => {
-            EventEmitter.emit('RELOAD_PROJECT_FILES', projectId);
             (async () => {
               if (
                 environment == 'SANDBOX' &&
