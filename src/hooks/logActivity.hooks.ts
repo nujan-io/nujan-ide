@@ -1,7 +1,6 @@
 import { LogEntry, LogType } from '@/interfaces/log.interface';
 import { logState } from '@/state/log.state';
 import EventEmitter from '@/utility/eventEmitter';
-import { htmlToAnsi, isHTML } from '@/utility/utils';
 import { useRecoilState } from 'recoil';
 
 export function useLogActivity() {
@@ -40,7 +39,7 @@ export function useLogActivity() {
       return;
     }
     const logEntry: LogEntry = {
-      text: isHTML(text.trim()) ? htmlToAnsi(text.trim()) : text,
+      text,
       type,
       timestamp: !disableTimestamp ? new Date().toISOString() : '',
     };

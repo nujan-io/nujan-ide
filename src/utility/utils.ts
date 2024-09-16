@@ -114,8 +114,6 @@ export const htmlToAnsi = (html: string) => {
   return html;
 };
 
-export const isHTML = RegExp.prototype.test.bind(/(<([^>]+)>)/i);
-
 export const getFileNameFromPath = (filePath: string): string => {
   const pathArray = filePath.split('/');
 

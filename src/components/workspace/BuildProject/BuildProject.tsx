@@ -15,6 +15,7 @@ import { buildTs } from '@/utility/typescriptHelper';
 import {
   delay,
   getFileExtension,
+  htmlToAnsi,
   isIncludesTypeCellOrSlice,
   tonHttpEndpoint,
 } from '@/utility/utils';
@@ -287,7 +288,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         const wallet = await blockchain.treasury('user');
         globalWorkspace.sandboxWallet = wallet;
         createLog(
-          `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          htmlToAnsi(
+            `Sandbox account created. Address: <i>${wallet.address.toString()}</i>`,
+          ),
           'info',
           false,
         );
@@ -309,7 +312,9 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
         environment: environment.toLowerCase(),
       });
       createLog(
-        `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}`,
+        htmlToAnsi(
+          `Contract deployed on <b><i>${environment}</i></b> <br /> Contract address: ${_contractAddress}`,
+        ),
         'success',
       );
 
