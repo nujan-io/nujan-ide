@@ -41,7 +41,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
       const parsedItems = JSON.parse(localStorageItems);
       const existingProjects = parsedItems?.['workspaceState']?.[
         'projects'
-      ] as Partial<Project[]>;
+      ] as Partial<Project[] | undefined>;
       const projectFiles = parsedItems?.['workspaceState']?.['projectFiles'];
       if (!existingProjects) return;
 
@@ -187,8 +187,8 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
           </p>
 
           <p>
-            <strong>Projects({projects?.length}): </strong>
-            {projects?.map((project, index) => (
+            <strong>Projects({projects.length}): </strong>
+            {projects.map((project, index) => (
               <span key={project.projectDetails.name}>
                 {project.projectDetails.name}
                 {index !== projects.length - 1 && ', '}
