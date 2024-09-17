@@ -29,7 +29,7 @@ const nextConfig = withTM({
     if (!options.isServer) {
       config.plugins.push(
         new MonacoWebpackPlugin({
-          languages: ["typescript"],
+          languages: ["typescript", "json"],
           filename: "static/[name].worker.js",
         }),
       );

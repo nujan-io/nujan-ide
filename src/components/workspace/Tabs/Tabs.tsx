@@ -1,52 +1,48 @@
 import AppIcon from '@/components/ui/icon';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
-import { Tree } from '@/interfaces/workspace.interface';
+import { useFileTab } from '@/hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { fileTypeFromFileName } from '@/utility/utils';
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import s from './Tabs.module.scss';
 
-interface Props {
-  projectId: string;
-}
+const Tabs: FC = () => {
+  const { fileTab, open, close, syncTabSettings } = useFileTab();
+  const { activeProject } = useProject();
 
-const Tabs: FC<Props> = ({ projectId }) => {
-  const { openedFiles, openFile, closeFile } = useWorkspaceActions();
-  const openedFilesList = openedFiles(projectId);
-
-  const updateActiveTab = (node: Tree) => {
-    openFile(node.id, projectId);
-  };
-
-  const closeTab = (e: React.MouseEvent, id: string) => {
+  const closeTab = (e: React.MouseEvent, filePath: string) => {
     e.preventDefault();
     e.stopPropagation();
-    closeFile(id, projectId);
+    close(filePath);
   };
 
-  if (openedFilesList.length === 0) {
+  useEffect(() => {
+    syncTabSettings();
+  }, [activeProject]);
+
+  if (fileTab.items.length === 0) {
     return <></>;
   }
   return (
     <div className={s.container}>
       <div className={s.tabList}>
-        {openedFilesList.map((item) => (
+        {fileTab.items.map((item) => (
           <div
             onClick={() => {
-              updateActiveTab(item);
+              open(item.name, item.path);
             }}
             className={`${s.item} 
             file-icon
             ${item.name.split('.').pop()}-lang-file-icon
             ${fileTypeFromFileName(item.name)}-lang-file-icon
-               ${item.isOpen ? s.isActive : ''}
+               ${item.path === fileTab.active ? s.isActive : ''}
               `}
-            key={item.id}
+            key={item.path}
           >
             {item.name}
             <span
               className={`${s.close} ${item.isDirty ? s.isDirty : ''}`}
               onClick={(e) => {
-                closeTab(e, item.id);
+                closeTab(e, item.path);
               }}
             >
               <span className={s.fileDirtyIcon}></span>

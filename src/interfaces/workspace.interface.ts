@@ -1,3 +1,4 @@
+import { IFileTab } from '@/state/IDE.context';
 import { ABITypeRef } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
 
@@ -7,7 +8,7 @@ export interface Tree {
   parent: string | null;
   type: 'directory' | 'file';
   isOpen?: boolean;
-  path?: string;
+  path: string;
   content?: string;
   isDirty?: boolean;
   createdAt?: Date;
@@ -19,8 +20,6 @@ export type ProjectTemplate = 'tonBlank' | 'tonCounter' | 'import';
 export type NetworkEnvironment = 'TESTNET' | 'MAINNET' | 'SANDBOX';
 
 export type ContractLanguage = 'func' | 'tact';
-
-type ProjectFiles = Record<string, Tree[]>;
 
 export interface InitParams {
   name: string;
@@ -42,9 +41,9 @@ export interface ABIFormInputValues {
 export interface Project {
   id: string;
   userId?: string;
-  name: string;
+  name?: string;
   language?: ContractLanguage;
-  template: string;
+  template?: string;
   contractAddress?: string;
   contractBOC?: string;
   abi?: ABI;
@@ -58,14 +57,22 @@ export interface Project {
   updatedAt?: Date;
   cellABI?: CellABI;
   abiFormInputValues?: ABIFormInputValues[];
+  path?: string;
 }
 
-export type WorkspaceState = {
-  openFiles: ProjectFiles;
-  projectFiles: ProjectFiles | null;
-  projects: Project[];
-  activeProjectId: string;
-};
+export interface ProjectSetting {
+  name?: string;
+  path?: string;
+  template?: ProjectTemplate;
+  language?: ContractLanguage;
+  contractName?: string;
+  network?: NetworkEnvironment;
+  selectedContract?: string;
+  contractAddress?: string;
+  tab?: IFileTab;
+  cellABI?: CellABI;
+  abiFormInputValues?: ABIFormInputValues[];
+}
 
 export interface ABIParameter {
   type: string;

@@ -1,4 +1,4 @@
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import {
   DropOptions,
   getBackendOptions,
@@ -9,44 +9,50 @@ import {
 import { FC } from 'react';
 import { DndProvider } from 'react-dnd';
 import s from './FileTree.module.scss';
-import TreeNode from './TreeNode';
+import TreeNode, { TreeNodeData } from './TreeNode';
 
 interface Props {
   projectId: string;
 }
 
 const FileTree: FC<Props> = ({ projectId }) => {
-  const workspaceAction = useWorkspaceActions();
+  const { activeProject, projectFiles, moveItem } = useProject();
 
-  const projectFiles = (): NodeModel[] => {
-    return workspaceAction.projectFiles(projectId).map((item) => {
+  const getProjectFiles = (): NodeModel[] => {
+    if (!activeProject?.path) return [];
+    return projectFiles.map((item) => {
       return {
-        id: item.id,
-        parent: item.parent ?? 0,
+        id: item.path,
+        parent: item.parent ? item.parent : (activeProject.path as string),
         droppable: item.type === 'directory',
         text: item.name,
+        data: {
+          path: item.path,
+        },
       };
     });
   };
-  const handleDrop = (_: unknown, options: DropOptions) => {
-    workspaceAction.moveFile(
+
+  const handleDrop = async (_: unknown, options: DropOptions) => {
+    await moveItem(
       options.dragSourceId as string,
       options.dropTargetId as string,
-      projectId,
     );
   };
+
+  if (!activeProject?.path) return null;
 
   return (
     <div className={s.root}>
       <DndProvider backend={MultiBackend} options={getBackendOptions()}>
         <Tree
-          tree={projectFiles()}
-          rootId={0}
+          tree={getProjectFiles()}
+          rootId={activeProject.path}
           onDrop={handleDrop}
           render={(node, { depth, isOpen, onToggle }) => (
             <TreeNode
               projectId={projectId as string}
-              node={node}
+              node={node as NodeModel<TreeNodeData>}
               depth={depth}
               isOpen={isOpen}
               onToggle={onToggle}

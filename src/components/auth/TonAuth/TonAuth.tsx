@@ -1,4 +1,3 @@
-import { useAuthAction } from '@/hooks/auth.hooks';
 import { ConnectedWallet, useTonConnectUI } from '@tonconnect/ui-react';
 import { Button } from 'antd';
 import Image from 'next/image';
@@ -8,7 +7,6 @@ import s from './TonAuth.module.scss';
 const TonAuth: FC = () => {
   const [tonConnector] = useTonConnectUI();
   const [isConnected, setIsConnected] = useState(false);
-  const { updateAuth } = useAuthAction();
 
   const handleConnectWallet = async () => {
     try {
@@ -32,7 +30,6 @@ const TonAuth: FC = () => {
     tonConnector.onStatusChange((wallet: ConnectedWallet | null) => {
       if (!wallet || !tonConnector.connected) return;
       setIsConnected(Boolean(wallet) || tonConnector.connected);
-      updateAuth({ walletAddress: wallet.account.address });
     });
   }, []);
 

@@ -1,21 +1,20 @@
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useFileTab } from '@/hooks';
 import { FC } from 'react';
 import s from './OpenFile.module.scss';
 
 interface Props {
   path: string;
   name: string;
-  projectId: string;
 }
 
-const OpenFile: FC<Props> = ({ path, name, projectId }) => {
-  const { openFileByPath } = useWorkspaceActions();
+const OpenFile: FC<Props> = ({ path, name }) => {
+  const { open } = useFileTab();
 
   return (
     <span
       className={s.root}
       onClick={() => {
-        openFileByPath(path, projectId);
+        open(name, path);
       }}
     >
       {name}

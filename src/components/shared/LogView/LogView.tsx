@@ -174,17 +174,15 @@ const LogView: FC<Props> = ({ filter }) => {
       }
     };
 
-    EventEmitter.on('ON_SPLIT_DRAG_END', () => {
-      onReSize();
-    });
+    EventEmitter.on('ON_SPLIT_DRAG_END', onReSize);
 
     return () => {
       isTerminalLoaded.current = false;
       EventEmitter.off('LOG', onGenericLog);
       EventEmitter.off('TEST_CASE_LOG', onTestCaseLog);
       EventEmitter.off('LOG_CLEAR');
-      EventEmitter.off('ON_SPLIT_DRAG_END');
-      terminal.current?.dispose();
+      EventEmitter.off('ON_SPLIT_DRAG_END', onReSize);
+      // terminal.current?.dispose();
     };
   });
 

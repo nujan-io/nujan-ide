@@ -1,5 +1,6 @@
 import { Layout } from '@/components/shared';
 import { AppConfig } from '@/config/AppConfig';
+import { IDEProvider } from '@/state/IDE.context';
 import '@/styles/theme.scss';
 import { THEME } from '@tonconnect/ui';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
@@ -83,26 +84,28 @@ export default function App({
         <link rel="icon" type="image/png" href="/images/logo.png" />
       </Head>
       <RecoilRoot>
-        <ConfigProvider
-          theme={{
-            token: {
-              colorPrimary: '#0098ea',
-              colorError: '#C84075',
-              fontFamily: 'var(--font-body)',
-              borderRadius: 4,
-            },
-            algorithm: darkAlgorithm,
-          }}
-        >
-          <TonConnectUIProvider
-            uiPreferences={{ theme: THEME.LIGHT }}
-            manifestUrl="https://ide.nujan.io/assets/ton/tonconnect-manifest.json"
+        <IDEProvider>
+          <ConfigProvider
+            theme={{
+              token: {
+                colorPrimary: '#0098ea',
+                colorError: '#C84075',
+                fontFamily: 'var(--font-body)',
+                borderRadius: 4,
+              },
+              algorithm: darkAlgorithm,
+            }}
           >
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </TonConnectUIProvider>
-        </ConfigProvider>
+            <TonConnectUIProvider
+              uiPreferences={{ theme: THEME.LIGHT }}
+              manifestUrl="https://ide.nujan.io/assets/ton/tonconnect-manifest.json"
+            >
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </TonConnectUIProvider>
+          </ConfigProvider>
+        </IDEProvider>
       </RecoilRoot>
     </>
   );

@@ -1,7 +1,7 @@
 import AppIcon from '@/components/ui/icon';
 import { UserContract, useContractAction } from '@/hooks/contract.hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { LogType } from '@/interfaces/log.interface';
 import {
   TactABIField,
@@ -17,7 +17,6 @@ import { SandboxContract } from '@ton/sandbox';
 import { Button, Form, Input, Popover, Select, Switch } from 'antd';
 import { Rule, RuleObject } from 'antd/es/form';
 import { useForm } from 'antd/lib/form/Form';
-import { useRouter } from 'next/router';
 import { FC, Fragment, useEffect, useState } from 'react';
 import { ABIUiProps } from './ABIUi';
 import s from './ABIUi.module.scss';
@@ -78,8 +77,8 @@ function FieldItem(
       .filter(
         (f) =>
           f.name.includes('.ts') &&
-          !f.path?.startsWith('dist') &&
-          !f.path?.endsWith('.spec.ts'),
+          !f.path.startsWith('dist') &&
+          !f.path.endsWith('.spec.ts'),
       )
       .map((file) => (
         <Select.Option
@@ -319,14 +318,11 @@ const TactABIUi: FC<TactABI> = ({
   const [form] = useForm();
   const {
     projectFiles,
-    getAllFilesWithContent,
-    updateABIInputValues,
+    readdirTree,
+    activeProject,
     getABIInputValues,
-    project,
-  } = useWorkspaceActions();
-  const router = useRouter();
-  const { id: projectId } = router.query;
-  const activeProject = project(projectId as string);
+    updateABIInputValues,
+  } = useProject();
 
   const getItemHeading = (item: TactType) => {
     if (item.type?.kind === 'simple') {
@@ -348,15 +344,22 @@ const TactABIUi: FC<TactABI> = ({
 
   const onSubmit = async (formValues: TactInputFields, fieldName: string) => {
     try {
-      let tsProjectFiles = {};
+      const tsProjectFiles: Record<string, string> = {};
       if (isIncludesTypeCellOrSlice(formValues)) {
-        tsProjectFiles = await getAllFilesWithContent(
-          projectId as string,
+        const fileCollection = await readdirTree(
+          `/${activeProject?.path}`,
+          {
+            basePath: null,
+            content: true,
+          },
           (file) =>
-            !file.path?.startsWith('dist') &&
+            !file.path.startsWith('dist') &&
             file.name.endsWith('.ts') &&
             !file.name.endsWith('.spec.ts'),
         );
+        fileCollection.forEach((file) => {
+          tsProjectFiles[file.path!] = file.content ?? '';
+        });
       }
       const parsedInputsValues = Object.values(
         await parseInputs(formValues, tsProjectFiles),
@@ -386,10 +389,11 @@ const TactABIUi: FC<TactABI> = ({
       } else {
         createLog(JSON.stringify(response, null, 2));
       }
-      updateABIInputValues(
-        { key: abiType.name, value: formValues, type: type },
-        projectId as string,
-      );
+      updateABIInputValues({
+        key: abiType.name,
+        value: formValues,
+        type: type,
+      });
     } catch (error) {
       if ((error as Error).message.includes('no healthy nodes for')) {
         createLog(
@@ -409,11 +413,7 @@ const TactABIUi: FC<TactABI> = ({
 
   useEffect(() => {
     if (!activeProject) return;
-    const abiFields = getABIInputValues(
-      projectId as string,
-      abiType.name,
-      type,
-    );
+    const abiFields = getABIInputValues(abiType.name, type);
     if (!abiFields) return;
     form.setFieldsValue(abiFields);
   }, []);
@@ -434,7 +434,7 @@ const TactABIUi: FC<TactABI> = ({
           <Fragment key={field.name}>
             {renderField(
               field as TactABIField,
-              projectFiles(projectId as string),
+              projectFiles,
               [],
               type === 'Setter' ? -1 : 0,
             )}

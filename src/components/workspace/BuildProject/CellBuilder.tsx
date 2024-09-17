@@ -1,5 +1,5 @@
 import AppIcon from '@/components/ui/icon';
-import { useWorkspaceActions } from '@/hooks/workspace.hooks';
+import { useProject } from '@/hooks/projectV2.hooks';
 import { MinusCircleOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Select, Switch } from 'antd';
 import { FormInstance } from 'antd/lib/form/Form';
@@ -9,7 +9,6 @@ import s from './BuildProject.module.scss';
 
 interface Props {
   info: string;
-  projectId: string;
   type: 'deploy' | 'setter';
   form: FormInstance;
 }
@@ -66,11 +65,9 @@ export const generateCellCode = (cellValues: CellValues[]) => {
     export default cell;`;
 };
 
-const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
-  const { project } = useWorkspaceActions();
+const CellBuilder: FC<Props> = ({ info, type, form }) => {
+  const { activeProject } = useProject();
   const [isCellBuilder, setIsCellBuilder] = useState(false);
-
-  const activeProject = project(projectId);
 
   const getPlaceHolder = (key: number) => {
     return (
@@ -92,9 +89,12 @@ const CellBuilder: FC<Props> = ({ info, projectId, type, form }) => {
       <p className={s.info}>
         - {info}
         <OpenFile
-          projectId={projectId}
           name={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
-          path={type === 'deploy' ? 'stateInit.cell.ts' : 'message.cell.ts'}
+          path={
+            type === 'deploy'
+              ? `${activeProject?.path}/stateInit.cell.ts`
+              : `${activeProject?.path}/message.cell.ts`
+          }
         />{' '}
         or use <b>{`"Cell Builder"`}</b>{' '}
         {type === 'deploy' && ' to send message'}
