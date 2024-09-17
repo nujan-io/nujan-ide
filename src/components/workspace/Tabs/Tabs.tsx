@@ -1,12 +1,14 @@
 import AppIcon from '@/components/ui/icon';
 import { useFileTab } from '@/hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
+import EventEmitter from '@/utility/eventEmitter';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { FC, useEffect } from 'react';
 import s from './Tabs.module.scss';
 
 const Tabs: FC = () => {
-  const { fileTab, open, close, syncTabSettings } = useFileTab();
+  const { fileTab, open, close, syncTabSettings, updateFileDirty } =
+    useFileTab();
   const { activeProject } = useProject();
 
   const closeTab = (e: React.MouseEvent, filePath: string) => {
@@ -15,9 +17,17 @@ const Tabs: FC = () => {
     close(filePath);
   };
 
+  const onFileSave = ({ filePath }: { filePath: string }) => {
+    updateFileDirty(filePath, false);
+  };
+
   useEffect(() => {
     syncTabSettings();
   }, [activeProject]);
+
+  useEffect(() => {
+    EventEmitter.on('FILE_SAVED', onFileSave);
+  }, []);
 
   if (fileTab.items.length === 0) {
     return <></>;

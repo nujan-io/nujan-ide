@@ -22,7 +22,7 @@ interface Props {
 const Editor: FC<Props> = ({ className = '' }) => {
   const { activeProject } = useProject();
   const { getFile, saveFile: storeFileContent } = useFile();
-  const { fileTab } = useFileTab();
+  const { fileTab, updateFileDirty } = useFileTab();
 
   const { isFormatOnSave, getSettingStateByKey } = useSettingAction();
 
@@ -65,7 +65,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
         await delay(200);
       }
       await storeFileContent(fileTab.active, fileContent);
-      EventEmitter.emit('FILE_SAVED', { fileId: fileTab.active });
+      EventEmitter.emit('FILE_SAVED', { filePath: fileTab.active });
     } catch (error) {
       /* empty */
     }
@@ -156,19 +156,19 @@ const Editor: FC<Props> = ({ className = '' }) => {
   };
 
   const markFileDirty = () => {
-    // if (!editorRef.current) return;
-    // const fileContent = editorRef.current.getValue();
-    // if (
-    //   file.id !== initialFile?.id ||
-    //   !initialFile.content ||
-    //   initialFile.content === fileContent
-    // ) {
-    //   return;
-    // }
-    // if (!fileContent) {
-    //   return;
-    // }
-    // updateOpenFile(file.id, { isDirty: true }, projectId);
+    if (!editorRef.current) return;
+    const fileContent = editorRef.current.getValue();
+    if (
+      fileTab.active !== initialFile?.id ||
+      !initialFile.content ||
+      initialFile.content === fileContent
+    ) {
+      return;
+    }
+    if (!fileContent) {
+      return;
+    }
+    updateFileDirty(fileTab.active, true);
   };
 
   const initializeEditorMode = async () => {

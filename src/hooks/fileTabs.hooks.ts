@@ -106,7 +106,30 @@ const useFileTab = () => {
     syncTabSettings(updatedTab);
   };
 
-  return { fileTab, open, close, syncTabSettings };
+  const updateFileDirty = (filePath: string, isDirty: boolean) => {
+    const updatedItems = fileTab.items.map((item) => {
+      if (item.path === filePath) {
+        return { ...item, isDirty: isDirty };
+      }
+      return item;
+    });
+
+    const updatedTab = { ...fileTab, items: updatedItems };
+    syncTabSettings(updatedTab);
+  };
+
+  const hasDirtyFiles = () => {
+    return fileTab.items.some((item) => item.isDirty);
+  };
+
+  return {
+    fileTab,
+    open,
+    close,
+    syncTabSettings,
+    updateFileDirty,
+    hasDirtyFiles,
+  };
 };
 
 export default useFileTab;
