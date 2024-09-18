@@ -134,7 +134,7 @@ export function useProjectActions() {
       }
     }
 
-    let ctx = new CompilerContext({ shared: {} });
+    let ctx = new CompilerContext();
     const stdlib = createVirtualFileSystem('@stdlib', stdLibFiles);
     const entryFile = file.path;
     ctx = precompile(ctx, fs, stdlib, entryFile);
