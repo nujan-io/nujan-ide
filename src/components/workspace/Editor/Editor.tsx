@@ -71,6 +71,10 @@ const Editor: FC<Props> = ({ className = '' }) => {
     }
   };
 
+  const updateFileSaveCounter = () => {
+    setSaveFileCounter((prev) => prev + 1);
+  };
+
   useEffect(() => {
     async function loadMonacoEditor() {
       const monaco = await import('monaco-editor');
@@ -115,9 +119,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
 
   useEffect(() => {
     if (!isLoaded) return;
-    EventEmitter.on('SAVE_FILE', () => {
-      setSaveFileCounter((prev) => prev + 1);
-    });
+    EventEmitter.on('SAVE_FILE', updateFileSaveCounter);
 
     // If file is changed e.g. in case of build process then force update in editor
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
@@ -132,7 +134,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
       });
     });
     return () => {
-      EventEmitter.off('SAVE_FILE');
+      EventEmitter.off('SAVE_FILE', updateFileSaveCounter);
       EventEmitter.off('FORCE_UPDATE_FILE');
     };
   }, [isLoaded]);

@@ -27,7 +27,10 @@ const Tabs: FC = () => {
 
   useEffect(() => {
     EventEmitter.on('FILE_SAVED', onFileSave);
-  }, []);
+    return () => {
+      EventEmitter.off('FILE_SAVED', onFileSave);
+    };
+  }, [updateFileDirty]);
 
   if (fileTab.items.length === 0) {
     return <></>;
