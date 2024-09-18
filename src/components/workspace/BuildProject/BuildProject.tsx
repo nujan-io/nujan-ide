@@ -58,6 +58,7 @@ interface Props {
 }
 const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
   const [isLoading, setIsLoading] = useState('');
+  const [buildCount, setBuildCount] = useState(0);
   const { createLog } = useLogActivity();
   const [environment, setEnvironment] = useState<NetworkEnvironment>('SANDBOX');
   const [buildOutput, setBuildoutput] = useState<{
@@ -609,6 +610,16 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     updateContract(_userContract);
   };
 
+  const autoSelectFirstContract = () => {
+    const _contractsToDeploy = contractsToDeploy();
+    if (_contractsToDeploy.length > 0 && !selectedContract) {
+      deployForm.setFieldsValue({
+        contract: _contractsToDeploy[0]?.path, // Set the first contract as default
+      });
+      updateSelectedContract(_contractsToDeploy[0]?.path);
+    }
+  };
+
   useEffect(() => {
     updateABI().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -681,6 +692,11 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
     deploy().catch(() => {});
   }, [buildOutput?.dataCell]);
 
+  useEffect(() => {
+    if (buildCount === 0) return;
+    autoSelectFirstContract();
+  }, [buildCount]);
+
   return (
     <div className={`${s.root} onboarding-build-deploy`}>
       <h3 className={s.heading}>Build & Deploy</h3>
@@ -737,6 +753,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
                 environment == 'SANDBOX' &&
                 activeProject?.language === 'tact'
               ) {
+                setBuildCount((prevCount) => prevCount + 1);
                 if (selectedContract) {
                   await delay(500);
                   updateABI().catch(() => {});
