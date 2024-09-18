@@ -99,6 +99,9 @@ const Editor: FC<Props> = ({ className = '' }) => {
   }, []);
 
   useEffect(() => {
+    // Don't save file on initial render
+    if (saveFileCounter === 1) return;
+
     const saveFileDebouce = setTimeout(() => {
       (async () => {
         await saveFile();
