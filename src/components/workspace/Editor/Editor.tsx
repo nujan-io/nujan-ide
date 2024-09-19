@@ -22,7 +22,7 @@ interface Props {
 const Editor: FC<Props> = ({ className = '' }) => {
   const { activeProject } = useProject();
   const { getFile, saveFile: storeFileContent } = useFile();
-  const { fileTab } = useFileTab();
+  const { fileTab, updateFileDirty } = useFileTab();
 
   const { isFormatOnSave, getSettingStateByKey } = useSettingAction();
 
@@ -65,10 +65,14 @@ const Editor: FC<Props> = ({ className = '' }) => {
         await delay(200);
       }
       await storeFileContent(fileTab.active, fileContent);
-      EventEmitter.emit('FILE_SAVED', { fileId: fileTab.active });
+      EventEmitter.emit('FILE_SAVED', { filePath: fileTab.active });
     } catch (error) {
       /* empty */
     }
+  };
+
+  const updateFileSaveCounter = () => {
+    setSaveFileCounter((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -99,6 +103,9 @@ const Editor: FC<Props> = ({ className = '' }) => {
   }, []);
 
   useEffect(() => {
+    // Don't save file on initial render
+    if (saveFileCounter === 1) return;
+
     const saveFileDebouce = setTimeout(() => {
       (async () => {
         await saveFile();
@@ -112,9 +119,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
 
   useEffect(() => {
     if (!isLoaded) return;
-    EventEmitter.on('SAVE_FILE', () => {
-      setSaveFileCounter((prev) => prev + 1);
-    });
+    EventEmitter.on('SAVE_FILE', updateFileSaveCounter);
 
     // If file is changed e.g. in case of build process then force update in editor
     EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
@@ -129,7 +134,7 @@ const Editor: FC<Props> = ({ className = '' }) => {
       });
     });
     return () => {
-      EventEmitter.off('SAVE_FILE');
+      EventEmitter.off('SAVE_FILE', updateFileSaveCounter);
       EventEmitter.off('FORCE_UPDATE_FILE');
     };
   }, [isLoaded]);
@@ -156,19 +161,19 @@ const Editor: FC<Props> = ({ className = '' }) => {
   };
 
   const markFileDirty = () => {
-    // if (!editorRef.current) return;
-    // const fileContent = editorRef.current.getValue();
-    // if (
-    //   file.id !== initialFile?.id ||
-    //   !initialFile.content ||
-    //   initialFile.content === fileContent
-    // ) {
-    //   return;
-    // }
-    // if (!fileContent) {
-    //   return;
-    // }
-    // updateOpenFile(file.id, { isDirty: true }, projectId);
+    if (!editorRef.current) return;
+    const fileContent = editorRef.current.getValue();
+    if (
+      fileTab.active !== initialFile?.id ||
+      !initialFile.content ||
+      initialFile.content === fileContent
+    ) {
+      return;
+    }
+    if (!fileContent) {
+      return;
+    }
+    updateFileDirty(fileTab.active, true);
   };
 
   const initializeEditorMode = async () => {

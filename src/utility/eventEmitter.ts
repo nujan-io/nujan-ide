@@ -10,7 +10,7 @@ export interface EventEmitterPayloads {
   ON_SPLIT_DRAG_END: { position?: number };
   SAVE_FILE: undefined | { fileId: string; content: string };
   FORCE_UPDATE_FILE: string;
-  FILE_SAVED: { fileId: string };
+  FILE_SAVED: { filePath: string };
   TEST_CASE_LOG: string;
   RELOAD_PROJECT_FILES: string;
   OPEN_PROJECT: string;

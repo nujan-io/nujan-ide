@@ -1,6 +1,7 @@
 import fileSystem from '@/lib/fs';
 import { IDEContext, IFileTab } from '@/state/IDE.context';
 import EventEmitter from '@/utility/eventEmitter';
+import cloneDeep from 'lodash.clonedeep';
 import { useContext } from 'react';
 
 const useFileTab = () => {
@@ -39,7 +40,7 @@ const useFileTab = () => {
           ...parsedSetting,
         };
       }
-      setFileTab(parsedSetting.tab);
+      setFileTab(cloneDeep(parsedSetting.tab));
 
       await fileSystem.writeFile(
         settingPath,
@@ -102,11 +103,33 @@ const useFileTab = () => {
       updatedTab = { items: updatedItems, active: newActiveTab };
     }
 
-    setFileTab(updatedTab);
     syncTabSettings(updatedTab);
   };
 
-  return { fileTab, open, close, syncTabSettings };
+  const updateFileDirty = (filePath: string, isDirty: boolean) => {
+    const updatedItems = cloneDeep(fileTab).items.map((item) => {
+      if (item.path === filePath) {
+        return { ...item, isDirty: isDirty };
+      }
+      return item;
+    });
+
+    const updatedTab = { ...fileTab, items: updatedItems };
+    syncTabSettings(updatedTab);
+  };
+
+  const hasDirtyFiles = () => {
+    return fileTab.items.some((item) => item.isDirty);
+  };
+
+  return {
+    fileTab,
+    open,
+    close,
+    syncTabSettings,
+    updateFileDirty,
+    hasDirtyFiles,
+  };
 };
 
 export default useFileTab;
