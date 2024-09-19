@@ -22,7 +22,7 @@ function useWorkspaceActions() {
     const tsProjectFiles: Record<string, string> = {};
 
     const filesWithContent = await readdirTree(
-      `/${projectId}`,
+      projectId,
       {
         basePath: null,
         content: true,
