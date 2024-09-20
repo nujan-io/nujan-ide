@@ -1,86 +1,84 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TON</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TON</title>
-</head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/ton-core.js"></script>
+    <script>
+      window.TonCore = window.parent.TonCore;
+      window.addEventListener("message", async function (event) {
+        if (
+          !event.data ||
+          typeof event.data !== "object" ||
+          !event.data?.type ||
+          event.data?.name !== "ton-web-ide"
+        ) {
+          return;
+        }
 
-<body>
-  <script src="https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/ton-core.js"></script>
-  <script>
-    window.TonCore = window.parent.TonCore;
-    window.addEventListener("message", async function (event) {
-      if (
-        !event.data ||
-        typeof event.data !== "object" ||
-        !event.data?.type ||
-        event.data?.name !== "ton-web-ide"
-      ) {
-        return;
-      }
+        let _code = "";
 
-      let _code = "";
-
-      if (event.data?.language !== "tact") {
-        _code = `async function main() {
+        if (event.data?.language !== "tact") {
+          _code = `async function main() {
                 ${event.data.code}
                 const boc = await cell.toBoc();
                 return boc;
             } main()`;
-      }
+        }
 
-      if (event.data?.language === "tact") {
-        let contractName = event.data?.contractName;
-        _code = `async function main() {
+        if (event.data?.language === "tact") {
+          let contractName = event.data?.contractName;
+          _code = `async function main() {
                 ${event.data.code}
                 const contractInit  = await ${contractName}.fromInit(${event.data.initParams});
                 window.contractInit = contractInit;
                 return contractInit;
             } main()`;
-      }
-
-      try {
-        let cellValue = await eval(_code);
-        if (event.data?.language === "tact") {
-          cellValue = {};
         }
 
-        const response = {
-          name: "ton-web-ide",
-          data: cellValue,
-          type: event.data?.type,
-        };
-        window.parent.postMessage(response, "*");
-      } catch (error) {
-        console.log("error-frame", error);
-        let errorStack = error.stack.split("\n");
-        errorStack = errorStack
-          .filter(
-            (line) => line.trim() !== "" && !line.includes("tonweb.html"),
-          )
-          .map((item) => {
-            // TODO: test this as cdn is not being used
-            if (item.includes("ton-core.js")) {
-              return item.replace(
-                "https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/",
-                "",
-              );
-            }
-            return item;
-          });
-        const _error = `Error: ${error.message} \n${errorStack.join("\n")}`;
-        const response = {
-          name: "ton-web-ide",
-          error: _error,
-          type: event.data?.type,
-        };
-        window.parent.postMessage(response, "*");
-      }
-    });
-  </script>
-</body>
+        try {
+          let cellValue = await eval(_code);
+          if (event.data?.language === "tact") {
+            cellValue = {};
+          }
 
+          const response = {
+            name: "ton-web-ide",
+            data: cellValue,
+            type: event.data?.type,
+          };
+          window.parent.postMessage(response, "*");
+        } catch (error) {
+          console.log("error-frame", error);
+          let errorStack = error.stack.split("\n");
+          errorStack = errorStack
+            .filter(
+              (line) => line.trim() !== "" && !line.includes("tonweb.html"),
+            )
+            .map((item) => {
+              // TODO: test this as cdn is not being used
+              if (item.includes("ton-core.js")) {
+                return item.replace(
+                  "https://cdn.jsdelivr.net/gh/rahulyadav-57/ton-standalone-libraries@master/dist/",
+                  "",
+                );
+              }
+              return item;
+            });
+          const _error = `Error: ${error.message} \n${errorStack.join("\n")}`;
+          const response = {
+            name: "ton-web-ide",
+            error: _error,
+            type: event.data?.type,
+          };
+          window.parent.postMessage(response, "*");
+        }
+      });
+    </script>
+  </body>
 </html>
