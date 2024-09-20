@@ -1,5 +1,6 @@
 'use client';
 
+import { DownloadProject } from '@/components/project';
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
 import { useFileTab } from '@/hooks';
@@ -185,17 +186,23 @@ const WorkSpace: FC = () => {
               <ManageProject />
               {activeProject?.path && (
                 <div className={s.globalAction}>
-                  <span>{AppConfig.name} IDE</span>
-                  <ItemAction
-                    className={s.visible}
-                    allowedActions={['NewFile', 'NewFolder']}
-                    onNewFile={() => {
-                      commitItemCreation('file', 'new file');
-                    }}
-                    onNewDirectory={() => {
-                      commitItemCreation('directory', 'new folder');
-                    }}
-                  />
+                  <span>{AppConfig.name}</span>
+                  <div className={s.actionWrapper}>
+                    <ItemAction
+                      className={s.visible}
+                      allowedActions={['NewFile', 'NewFolder']}
+                      onNewFile={() => {
+                        commitItemCreation('file', 'new file');
+                      }}
+                      onNewDirectory={() => {
+                        commitItemCreation('directory', 'new folder');
+                      }}
+                    />
+                    <DownloadProject
+                      path={activeProject.path}
+                      title={`Download ${activeProject.name}`}
+                    />
+                  </div>
                 </div>
               )}
 

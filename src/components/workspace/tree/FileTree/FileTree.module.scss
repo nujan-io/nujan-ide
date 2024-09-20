@@ -80,6 +80,10 @@
   opacity: 0;
   pointer-events: none;
   transition: 0.2s;
+  > span {
+    display: flex;
+    align-items: center;
+  }
   &.visible {
     opacity: 1;
     pointer-events: all;
