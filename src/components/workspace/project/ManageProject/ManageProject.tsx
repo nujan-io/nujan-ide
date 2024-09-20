@@ -1,4 +1,8 @@
-import { MigrateToUnifiedFS, NewProject } from '@/components/project';
+import {
+  DownloadProject,
+  MigrateToUnifiedFS,
+  NewProject,
+} from '@/components/project';
 import { Tooltip } from '@/components/ui';
 import AppIcon from '@/components/ui/icon';
 import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
@@ -62,6 +66,7 @@ const ManageProject: FC = () => {
             <AppIcon name="Delete" />
           </div>
         </Tooltip>
+        <DownloadProject path="/" title="Download all projects" />
       </div>
     </>
   );
