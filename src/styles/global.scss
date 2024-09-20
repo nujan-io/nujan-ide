@@ -1,8 +1,8 @@
 :root {
   --primary: #0098ea;
   --brand-color-2: rgba(19, 226, 218, 1);
-  --font-title: 'Poppins', sans-serif;
-  --font-body: 'Poppins', sans-serif;
+  --font-title: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --text-color: #f7f7f7;
   --black-500: #0e0e10;
   --grey: #4f4e4e;
@@ -23,20 +23,15 @@
     rgba(0, 0, 0, 0.6) 0%,
     rgba(0, 0, 0, 0.6) 100%
   );
-  --primary-gradient: linear-gradient(
-    45deg,
-    rgba(186, 74, 255, 1),
-    rgba(144, 85, 255, 1),
-    rgba(19, 226, 218, 1)
-  );
+  --primary-gradient: linear-gradient(45deg, #2d83ec, #1ac9ff);
   --modal-bg: linear-gradient(
       0deg,
       rgba(0, 0, 0, 0.5) 0%,
       rgba(0, 0, 0, 0.5) 100%
     ),
     #232328;
-  --btn-primary: linear-gradient(90deg, #2d83ec -3.34%, #1ac9ff 100%);
-  --btn-primary-hover: linear-gradient(90deg, #2d82ea -3.34%, #16b0df 100%);
+  --btn-primary: #0098ea;
+  --btn-primary-hover: #00a6ff;
   --btn-disabled: rgba(255, 255, 255, 0.1);
 }
 

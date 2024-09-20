@@ -10,7 +10,7 @@ interface Props {
 }
 
 const AppLogo: FC<Props> = ({
-  src = '/images/logo-icon.svg',
+  src = '/images/ton_logo.svg',
   href = '/',
   className = '',
 }) => {

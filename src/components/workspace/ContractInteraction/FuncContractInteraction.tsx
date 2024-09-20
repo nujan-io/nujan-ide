@@ -70,7 +70,7 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
 
       cellBuilderRef.current.contentWindow.postMessage(
         {
-          name: 'nujan-ton-ide',
+          name: 'ton-web-ide',
           type: 'abi-data',
           code: finalJsoutput,
         },
@@ -133,7 +133,7 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
       if (
         typeof event.data !== 'object' ||
         event.data.type !== 'abi-data' ||
-        event.data.name !== 'nujan-ton-ide'
+        event.data.name !== 'ton-web-ide'
       ) {
         setIsLoading('');
         return;

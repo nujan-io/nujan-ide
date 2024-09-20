@@ -185,7 +185,7 @@ const WorkSpace: FC = () => {
               <ManageProject />
               {activeProject?.path && (
                 <div className={s.globalAction}>
-                  <span>{AppConfig.name} IDE</span>
+                  <span>{AppConfig.name}</span>
                   <ItemAction
                     className={s.visible}
                     allowedActions={['NewFile', 'NewFolder']}
