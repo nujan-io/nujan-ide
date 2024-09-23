@@ -6,6 +6,7 @@ import {
   Project,
   Tree,
 } from '@/interfaces/workspace.interface';
+import EventEmitter from '@/utility/eventEmitter';
 import { Button, ConfigProvider, message, Modal, Popconfirm } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import { IndexedDBHelper } from './IndexedDBHelper';
@@ -29,15 +30,17 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
   const [isMigrationView, setIsMigrationView] = useState(false);
   const fileSystem = new IndexedDBHelper('NujanFiles', 'files', 10);
   const [projects, setProjects] = useState<IProject[] | null>(null);
-  const [migrationStatus, setMigrationStatus] = useState('pending');
+  const [migrationStatus, setMigrationStatus] = useState<
+    'pending' | 'migrating' | 'failed' | 'completed' | 'done'
+  >('pending');
   const { createProject } = useProject();
   const { createLog } = useLogActivity();
   const note = `We've recently upgraded the IDE, and some of your projects may not be visible.`;
 
   const checkMigration = async () => {
-    const filesInDB = (await fileSystem.getAllFiles()) as DBFile[];
     const localStorageItems = localStorage.getItem('recoil-persist');
     if (localStorageItems) {
+      const filesInDB = (await fileSystem.getAllFiles()) as DBFile[];
       const parsedItems = JSON.parse(localStorageItems);
       const existingProjects = parsedItems?.['workspaceState']?.[
         'projects'
@@ -102,6 +105,7 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
         'success',
       );
       setMigrationStatus('completed');
+      EventEmitter.emit('PROJECT_MIGRATED');
     } catch (error) {
       createLog('Failed to migrate project', 'error');
       setMigrationStatus('failed');
@@ -125,6 +129,12 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
     }
   };
 
+  const onProjectMigrated = () => {
+    if (migrationStatus !== 'pending') return;
+    setMigrationStatus('completed');
+    setIsMigrationView(true);
+  };
+
   useEffect(() => {
     const migrationStatus = localStorage.getItem('migrationStatus');
     if (migrationStatus === 'completed') {
@@ -135,6 +145,10 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
     } catch (error) {
       /* empty */
     }
+    EventEmitter.on('PROJECT_MIGRATED', onProjectMigrated);
+    return () => {
+      EventEmitter.off('PROJECT_MIGRATED', onProjectMigrated);
+    };
   }, []);
 
   if (projects === null || migrationStatus === 'done') return null;

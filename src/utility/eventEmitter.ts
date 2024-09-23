@@ -14,6 +14,7 @@ export interface EventEmitterPayloads {
   TEST_CASE_LOG: string;
   RELOAD_PROJECT_FILES: string;
   OPEN_PROJECT: string;
+  PROJECT_MIGRATED: undefined;
 }
 
 const EventEmitter = {
