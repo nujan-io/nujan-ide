@@ -1,6 +1,7 @@
 import AppIcon from '@/components/ui/icon';
 import { useFileTab } from '@/hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
+import fileSystem from '@/lib/fs';
 import EventEmitter from '@/utility/eventEmitter';
 import { fileTypeFromFileName } from '@/utility/utils';
 import { FC, useEffect } from 'react';
@@ -9,7 +10,7 @@ import s from './Tabs.module.scss';
 const Tabs: FC = () => {
   const { fileTab, open, close, syncTabSettings, updateFileDirty } =
     useFileTab();
-  const { activeProject } = useProject();
+  const { activeProject, setActiveProject } = useProject();
 
   const closeTab = (e: React.MouseEvent, filePath: string) => {
     e.preventDefault();
@@ -24,6 +25,23 @@ const Tabs: FC = () => {
   useEffect(() => {
     syncTabSettings();
   }, [activeProject]);
+
+  useEffect(() => {
+    (async () => {
+      // If the active project is a temp project, the file tab is active and file does not exist
+      if (activeProject?.path?.includes('temp')) {
+        setActiveProject('non-existing-dir');
+        try {
+          if (!fileTab.active) {
+            return;
+          }
+          await fileSystem.exists(fileTab.active);
+        } catch (error) {
+          syncTabSettings({ items: [], active: null });
+        }
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     EventEmitter.on('FILE_SAVED', onFileSave);

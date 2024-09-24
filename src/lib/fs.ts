@@ -2,11 +2,16 @@ import FS, { PromisifiedFS } from '@isomorphic-git/lightning-fs';
 
 class FileSystem {
   private fs: PromisifiedFS;
+  private virtualFiles: Map<string, string | Uint8Array>;
   constructor(fs: PromisifiedFS) {
     this.fs = fs;
+    this.virtualFiles = new Map();
   }
 
   async readFile(path: string) {
+    if (this.virtualFiles.has(path)) {
+      return this.virtualFiles.get(path);
+    }
     if (!(await this.exists(path))) {
       throw new Error(`File not found: ${path}`);
     }
@@ -23,9 +28,14 @@ class FileSystem {
   async writeFile(
     path: string,
     data: string | Uint8Array,
-    options?: { overwrite?: boolean },
+    options?: { overwrite?: boolean; virtual?: boolean },
   ) {
-    const { overwrite } = options ?? {};
+    const { overwrite, virtual } = options ?? {};
+
+    if (!!virtual || this.virtualFiles.has(path)) {
+      this.virtualFiles.set(path, data);
+      return;
+    }
     const finalPath = overwrite ? path : await this.getUniquePath(path);
     await this.ensureDirectoryExists(finalPath);
     return this.fs.writeFile(finalPath, data);
@@ -70,21 +80,34 @@ class FileSystem {
   ) {
     if (!path) return [];
     const { recursive, basePath, onlyDir } = options;
+    let results: string[] = [];
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    const files = (await this.fs.readdir(path)) ?? [];
+    results.push(...files);
+
+    const virtualFilesInDir = Array.from(this.virtualFiles.keys()).filter(
+      (key) => key.startsWith(path),
+    );
+    const virtualFilesNames = virtualFilesInDir.map((filePath) =>
+      filePath.replace(`${path}/`, ''),
+    );
+
+    results.push(...virtualFilesNames);
+
     if (!recursive) {
-      const files = await this.fs.readdir(path);
-      if (!onlyDir) return files;
-      const results: string[] = [];
-      for (const file of files) {
-        const stat = await this.fs.stat(`${path}/${file}`);
+      if (!onlyDir) return results;
+      const dirs: string[] = [];
+      for (const file of results) {
+        const stat = await this.stat(`${path}/${file}`);
         if (stat.isDirectory()) {
-          results.push(file);
+          dirs.push(file);
         }
       }
-      return results;
+      return dirs;
     }
-    let results: string[] = [];
-    const files = await this.readdir(path);
-    for (const file of files) {
+
+    for (const file of results) {
       const filePath = `${path}/${file}`;
       const stat = await this.stat(filePath);
       if (stat.isDirectory()) {
@@ -95,13 +118,12 @@ class FileSystem {
         });
         results = results.concat(nestedFiles);
       } else {
-        // Remove the rootPath from the file path
-        results.push(filePath.replace(basePath + '/', ''));
+        // Remove the basePath from the file path if provided
+        results.push(filePath.replace(basePath ? basePath + '/' : '', ''));
       }
     }
     return results;
   }
-
   async mkdir(
     path: string,
     options: { overwrite?: boolean } = { overwrite: true },
@@ -152,10 +174,17 @@ class FileSystem {
   }
 
   async unlink(path: string) {
+    if (this.virtualFiles.has(path)) {
+      this.virtualFiles.delete(path);
+      return;
+    }
     return this.fs.unlink(path);
   }
 
   async exists(path: string) {
+    if (this.virtualFiles.has(path)) {
+      return true;
+    }
     try {
       await this.fs.stat(path);
       return true;
@@ -165,6 +194,12 @@ class FileSystem {
   }
 
   async stat(path: string) {
+    if (this.virtualFiles.has(path)) {
+      return {
+        isFile: () => true,
+        isDirectory: () => false,
+      };
+    }
     return this.fs.stat(path);
   }
 
@@ -179,7 +214,7 @@ class FileSystem {
 
   async copy(oldPath: string, newPath: string) {
     const data = await this.readFile(oldPath);
-    await this.writeFile(newPath, data);
+    await this.writeFile(newPath, data ?? '');
   }
 
   async copyDir(oldPath: string, newPath: string) {
