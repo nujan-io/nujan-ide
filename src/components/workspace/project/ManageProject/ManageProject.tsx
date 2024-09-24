@@ -9,6 +9,7 @@ import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
 import { Project } from '@/interfaces/workspace.interface';
 import EventEmitter from '@/utility/eventEmitter';
 import { Button, Modal, Select, message } from 'antd';
+import Router from 'next/router';
 import { FC, useEffect, useState } from 'react';
 import s from './ManageProject.module.scss';
 
@@ -28,6 +29,7 @@ const ManageProject: FC = () => {
       await deleteProject(id);
       setActiveProject(null);
       setIsDeleteConfirmOpen(false);
+      Router.push('/');
     } catch (error) {
       await message.error('Failed to delete project');
     }

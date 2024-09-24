@@ -1,7 +1,8 @@
 import { Tooltip } from '@/components/ui';
 import AppIcon, { AppIconType } from '@/components/ui/icon';
+import { useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
-import { useProject } from '@/hooks/projectV2.hooks';
+import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
 import {
   ContractLanguage,
   ProjectTemplate,
@@ -46,6 +47,7 @@ const NewProject: FC<Props> = ({
   const { createProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
   const { createLog } = useLogActivity();
+  const { open: openTab } = useFileTab();
 
   const router = useRouter();
   const {
@@ -130,7 +132,7 @@ const NewProject: FC<Props> = ({
 
   const importFromCode = async (code: string) => {
     try {
-      const fileName = `main.${importLanguage}`;
+      const defaultFileName = `main.${importLanguage}`;
       if (!importLanguage || !['tact', 'func'].includes(importLanguage)) {
         createLog(`Invalid language: ${importLanguage}`, 'error');
         return;
@@ -144,14 +146,19 @@ const NewProject: FC<Props> = ({
           {
             id: '',
             parent: null,
-            path: fileName,
+            path: defaultFileName,
             type: 'file' as const,
-            name: fileName,
+            name: defaultFileName,
             content: decodeBase64(code),
           },
         ],
         isTemporary: true,
       });
+      const finalQueryParam = router.query;
+      delete finalQueryParam.code;
+      delete finalQueryParam.lang;
+      router.replace({ query: finalQueryParam }).catch(() => {});
+      openTab(defaultFileName, `${baseProjectPath}/temp/${defaultFileName}`);
     } catch (error) {
       if (error instanceof Error) {
         createLog(error.message, 'error');
