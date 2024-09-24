@@ -10,11 +10,13 @@ class FileSystem {
 
   async readFile(path: string) {
     if (this.virtualFiles.has(path)) {
-      return this.virtualFiles.get(path);
+      return this.virtualFiles.get(path) as string;
     }
+
     if (!(await this.exists(path))) {
       throw new Error(`File not found: ${path}`);
     }
+
     return this.fs.readFile(path, 'utf8');
   }
 
@@ -214,7 +216,7 @@ class FileSystem {
 
   async copy(oldPath: string, newPath: string) {
     const data = await this.readFile(oldPath);
-    await this.writeFile(newPath, data ?? '');
+    await this.writeFile(newPath, data);
   }
 
   async copyDir(oldPath: string, newPath: string) {
