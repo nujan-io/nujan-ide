@@ -14,6 +14,7 @@ const CloneProject: FC = () => {
   const storeAsNewProject = async ({ name }: { name: string }) => {
     try {
       setIsSaving(true);
+
       const files = cloneDeep(projectFiles);
       const finalFiles = [];
       for (const file of files) {
@@ -25,6 +26,10 @@ const CloneProject: FC = () => {
         }
         file.path = file.path.replace(`${activeProject?.path as string}/`, '');
         finalFiles.push(file);
+      }
+      if (finalFiles.length === 0) {
+        message.error('No files to save');
+        return;
       }
 
       await createProject({
