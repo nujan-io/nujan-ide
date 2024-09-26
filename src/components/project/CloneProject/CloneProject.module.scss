@@ -1,0 +1,14 @@
+.root {
+  color: var(--color-warning);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  .saveIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+.form {
+  margin-top: 2rem;
+}

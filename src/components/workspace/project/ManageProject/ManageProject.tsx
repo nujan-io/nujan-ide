@@ -1,4 +1,5 @@
 import {
+  CloneProject,
   DownloadProject,
   MigrateToUnifiedFS,
   NewProject,
@@ -47,6 +48,7 @@ const ManageProject: FC = () => {
     <>
       <span className={s.heading}>Projects</span>
       <div className={s.options}>
+        <CloneProject />
         <NewProject />
 
         <NewProject

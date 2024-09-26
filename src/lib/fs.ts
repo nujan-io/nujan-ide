@@ -261,6 +261,10 @@ class FileSystem {
     await this.rmdir(path);
   }
 
+  clearVirtualFiles() {
+    this.virtualFiles.clear();
+  }
+
   async du(path = '/') {
     return this.fs.du(path);
   }

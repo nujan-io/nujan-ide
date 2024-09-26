@@ -7,6 +7,7 @@ import {
   AiOutlineLogout,
   AiOutlineProject,
   AiOutlineReload,
+  AiOutlineSave,
 } from 'react-icons/ai';
 import { BsShare } from 'react-icons/bs';
 
@@ -67,7 +68,8 @@ export type AppIconType =
   | 'Download'
   | 'Import'
   | 'Reload'
-  | 'Share';
+  | 'Share'
+  | 'Save';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -107,6 +109,7 @@ const Components = {
   Import,
   Reload: AiOutlineReload,
   Share: BsShare,
+  Save: AiOutlineSave,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {
