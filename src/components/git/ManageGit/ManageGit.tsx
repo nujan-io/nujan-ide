@@ -48,7 +48,7 @@ const ManageGit: FC = () => {
   };
 
   const handleFiles = (
-    filePath: string | 'none',
+    filePath: string,
     action: 'add' | 'unstage',
     all = false,
   ) => {
@@ -154,9 +154,7 @@ const ManageGit: FC = () => {
               </span>
             </Tooltip>
 
-            <div className={s.actionWrapper}>
-              {file.status && `${file.status}`}
-            </div>
+            <div className={s.actionWrapper}>{file.status}</div>
           </li>
         ))}
       </ul>

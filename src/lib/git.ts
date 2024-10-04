@@ -83,7 +83,7 @@ class GitManager {
 
   async getFileCollection(
     dest: string,
-  ): Promise<Array<{ path: string; status: string; staged: boolean }>> {
+  ): Promise<{ path: string; status: string; staged: boolean }[]> {
     try {
       const statusMatrix = await git.statusMatrix({ fs: this.fs, dir: dest });
       type Status = 0 | 1 | 2;
