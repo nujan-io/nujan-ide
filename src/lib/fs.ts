@@ -6,6 +6,10 @@ class FileSystem {
     this.fs = fs;
   }
 
+  get fsInstance() {
+    return this.fs;
+  }
+
   async readFile(path: string) {
     if (!(await this.exists(path))) {
       throw new Error(`File not found: ${path}`);

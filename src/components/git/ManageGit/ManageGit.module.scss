@@ -1,0 +1,79 @@
+.root {
+  .collapse,
+  .collapsePanel {
+    background-color: transparent !important;
+    user-select: none;
+  }
+  .collapsePanel {
+    border: 0;
+
+    > div {
+      padding: 0 !important;
+      background: transparent !important;
+    }
+    .collapseHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .action {
+      display: inline-flex;
+      cursor: pointer;
+      padding: 0.2rem;
+      background-color: var(--light-grey);
+      border-radius: 50%;
+      position: absolute;
+      right: -0.5rem;
+      &:hover {
+        background-color: var(--light-grey);
+      }
+    }
+    .fileItem {
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: space-between;
+      position: relative;
+      &:hover {
+        .action {
+          visibility: visible;
+        }
+      }
+      .fileDetails {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .action {
+        visibility: hidden;
+        &:hover {
+          visibility: visible;
+        }
+      }
+    }
+    .filePath {
+      opacity: 0.6;
+      font-size: 0.8rem;
+    }
+    ul {
+      padding: 0;
+      list-style-type: none;
+      li {
+        border-left: 1px solid #d9d9d9;
+        padding-left: 0.9rem;
+        margin-left: 0.3rem;
+      }
+    }
+    div[class*='ant-collapse-content-box'] {
+      padding: 0;
+    }
+    div[class*='ant-collapse-header'] {
+      font-weight: 600;
+    }
+    div[class*='ant-collapse-expand-icon'] {
+      padding-inline-end: 5px;
+    }
+  }
+}
