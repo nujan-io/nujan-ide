@@ -1,9 +1,10 @@
-import { useFileTab } from '@/hooks';
+import { useFile, useFileTab } from '@/hooks';
 import { useLogActivity } from '@/hooks/logActivity.hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
 import { Project, Tree } from '@/interfaces/workspace.interface';
-import { fileTypeFromFileName } from '@/utility/utils';
+import { encodeBase64, fileTypeFromFileName } from '@/utility/utils';
 import { NodeModel } from '@minoru/react-dnd-treeview';
+import { message } from 'antd';
 import cn from 'clsx';
 import { FC, useState } from 'react';
 import s from './FileTree.module.scss';
@@ -32,6 +33,7 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
   const { deleteProjectFile, renameProjectFile, newFileFolder } = useProject();
   const { open: openTab } = useFileTab();
   const { createLog } = useLogActivity();
+  const { getFile } = useFile();
 
   const disallowedFile = [
     'message.cell.ts',
@@ -100,7 +102,12 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     if (node.droppable) {
       return ['Edit', 'NewFile', 'NewFolder', 'Close'];
     }
-    return ['Edit', 'Close'];
+    const options = ['Edit', 'Close'];
+    const allowedLanguages = ['tact', 'func'];
+    if (allowedLanguages.includes(fileTypeFromFileName(node.text))) {
+      options.push('Share');
+    }
+    return options;
   };
 
   const deleteItemFromNode = async () => {
@@ -111,6 +118,32 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
     }
 
     await deleteProjectFile(nodePath);
+  };
+
+  const onShare = async () => {
+    try {
+      const fileContent =
+        ((await getFile(node.data?.path as string)) as string) || '';
+      const maxAllowedCharacters = 32779; // Maximum allowed characters in a Chrome. Firefox has more limit but we are using less for compatibility
+      if (!fileContent) {
+        message.error('File is empty');
+        return;
+      }
+      if (fileContent && fileContent.length > maxAllowedCharacters) {
+        message.error(
+          `File is too large to share. Maximum allowed characters is ${maxAllowedCharacters}`,
+        );
+        return;
+      }
+      const language = fileTypeFromFileName(node.text);
+      const shareableLink = `${window.location.origin}/?code=${encodeBase64(fileContent)}&lang=${language}`;
+
+      navigator.clipboard.writeText(shareableLink);
+
+      message.success("File's shareable link copied to clipboard");
+    } catch (error) {
+      message.error((error as Error).message);
+    }
   };
 
   const isAllowed = () => {
@@ -167,6 +200,9 @@ const TreeNode: FC<Props> = ({ node, depth, isOpen, onToggle }) => {
               }}
               onDelete={() => {
                 deleteItemFromNode().catch(() => {});
+              }}
+              onShare={() => {
+                onShare();
               }}
             />
           </div>

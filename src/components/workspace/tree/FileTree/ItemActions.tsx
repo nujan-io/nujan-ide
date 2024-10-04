@@ -14,6 +14,7 @@ interface Props {
   onNewFile?: () => void;
   onNewDirectory?: () => void;
   onDelete?: () => void;
+  onShare?: () => void;
 }
 
 const ItemAction: FC<Props> = ({
@@ -23,6 +24,7 @@ const ItemAction: FC<Props> = ({
   onNewFile,
   onNewDirectory,
   onDelete,
+  onShare,
 }) => {
   const rootClassName = cn(s.actionRoot, className, 'actions');
   const handleOnClick = (
@@ -50,6 +52,11 @@ const ItemAction: FC<Props> = ({
       title: 'NewFolder',
       label: 'New Folder',
       action: onNewDirectory,
+    },
+    {
+      title: 'Share',
+      label: 'Share',
+      action: onShare,
     },
     {
       title: 'Close',
