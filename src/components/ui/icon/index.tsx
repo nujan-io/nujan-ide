@@ -10,7 +10,10 @@ import {
   AiOutlinePlus,
   AiOutlineProject,
   AiOutlineReload,
+  AiOutlineSave,
 } from 'react-icons/ai';
+import { BsShare } from 'react-icons/bs';
+
 import { BsFillPlayFill } from 'react-icons/bs';
 import { FaRegClone } from 'react-icons/fa';
 import { FiEdit2, FiEye } from 'react-icons/fi';
@@ -70,6 +73,8 @@ export type AppIconType =
   | 'Download'
   | 'Import'
   | 'Reload'
+  | 'Share'
+  | 'Save'
   | 'GitBranch';
 
 export interface AppIconInterface {
@@ -111,6 +116,8 @@ const Components = {
   Download: AiOutlineDownload,
   Import,
   Reload: AiOutlineReload,
+  Share: BsShare,
+  Save: AiOutlineSave,
   GitBranch: AiOutlineBranches,
 };
 

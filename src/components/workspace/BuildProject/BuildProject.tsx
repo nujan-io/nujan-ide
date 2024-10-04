@@ -309,7 +309,7 @@ const BuildProject: FC<Props> = ({ projectId, contract, updateContract }) => {
 
       Analytics.track('Deploy project', {
         platform: 'IDE',
-        type: 'TON-func',
+        type: `TON-${activeProject?.language}`,
         environment: environment.toLowerCase(),
       });
       createLog(

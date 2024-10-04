@@ -86,14 +86,14 @@ const MigrateToUnifiedFS: FC<Props> = ({ hasDescription = false }) => {
         const project = projects[i];
         const isLastProject = i === projects.length - 1;
 
-        await createProject(
-          project.projectDetails.name as string,
-          project.projectDetails.language as ContractLanguage,
-          'import',
-          null,
-          project.files as Tree[],
-          isLastProject,
-        );
+        await createProject({
+          name: project.projectDetails.name as string,
+          language: project.projectDetails.language as ContractLanguage,
+          template: 'import',
+          file: null,
+          defaultFiles: project.files as Tree[],
+          autoActivate: isLastProject,
+        });
 
         migratedProjects.push(project.projectDetails.name);
       }

@@ -2,7 +2,7 @@ import AppIcon from '@/components/ui/icon';
 import { useFileTab } from '@/hooks';
 import { useProject } from '@/hooks/projectV2.hooks';
 import EventEmitter from '@/utility/eventEmitter';
-import { fileTypeFromFileName } from '@/utility/utils';
+import { delay, fileTypeFromFileName } from '@/utility/utils';
 import { FC, useEffect } from 'react';
 import s from './Tabs.module.scss';
 
@@ -22,7 +22,10 @@ const Tabs: FC = () => {
   };
 
   useEffect(() => {
-    syncTabSettings();
+    (async () => {
+      await delay(200);
+      syncTabSettings();
+    })();
   }, [activeProject]);
 
   useEffect(() => {

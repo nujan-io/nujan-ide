@@ -16,6 +16,10 @@ const TactContractInteraction: FC<ProjectInteractionProps> = ({
 
   return (
     <div className={s.root}>
+      <p className="color-warn">
+        You are using code that has been imported from an external source.
+        Exercise caution with the contract code before executing it.
+      </p>
       <p>
         Below options will be used to call receiver and call getter method on
         contract after the contract is deployed.
