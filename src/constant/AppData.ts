@@ -1,7 +1,7 @@
 export const AppData = {
   socials: [
     {
-      label: 'GitHub',
+      label: 'Project GitHub',
       icon: 'GitHub',
       url: 'https://github.com/nujan-io/nujan-ide',
     },

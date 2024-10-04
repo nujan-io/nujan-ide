@@ -1,10 +1,13 @@
 import { FC } from 'react';
 import {
+  AiOutlineBranches,
   AiOutlineDelete,
   AiOutlineDownload,
   AiOutlineGoogle,
   AiOutlineHome,
   AiOutlineLogout,
+  AiOutlineMinus,
+  AiOutlinePlus,
   AiOutlineProject,
   AiOutlineReload,
   AiOutlineSave,
@@ -45,6 +48,8 @@ export type AppIconType =
   | 'Code'
   | 'Beaker'
   | 'Plus'
+  | 'Plus2'
+  | 'Minus'
   | 'Home'
   | 'AngleUp'
   | 'AngleDown'
@@ -69,7 +74,8 @@ export type AppIconType =
   | 'Import'
   | 'Reload'
   | 'Share'
-  | 'Save';
+  | 'Save'
+  | 'GitBranch';
 
 export interface AppIconInterface {
   name: AppIconType;
@@ -95,6 +101,8 @@ const Components = {
   Setting,
   Clone: FaRegClone,
   Plus,
+  Plus2: AiOutlinePlus,
+  Minus: AiOutlineMinus,
   Delete: AiOutlineDelete,
   Play: BsFillPlayFill,
   Document: HiDocumentText,
@@ -110,6 +118,7 @@ const Components = {
   Reload: AiOutlineReload,
   Share: BsShare,
   Save: AiOutlineSave,
+  GitBranch: AiOutlineBranches,
 };
 
 const AppIcon: FC<AppIconInterface> = ({ name, className = '' }) => {

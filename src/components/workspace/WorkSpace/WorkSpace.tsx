@@ -1,5 +1,6 @@
 'use client';
 
+import { ManageGit } from '@/components/git';
 import { DownloadProject } from '@/components/project';
 import { ProjectTemplate } from '@/components/template';
 import { AppConfig } from '@/config/AppConfig';
@@ -220,8 +221,13 @@ const WorkSpace: FC = () => {
             />
           )}
           {activeMenu === 'test-cases' && (
-            <div className={s.testCaseArea}>
+            <div className={s.commonContainer}>
               <TestCases projectId={activeProject?.path as string} />
+            </div>
+          )}
+          {activeMenu === 'git' && (
+            <div className={s.commonContainer}>
+              <ManageGit />
             </div>
           )}
         </div>

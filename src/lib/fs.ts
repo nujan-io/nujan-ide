@@ -8,6 +8,10 @@ class FileSystem {
     this.virtualFiles = new Map();
   }
 
+  get fsInstance() {
+    return this.fs;
+  }
+
   async readFile(path: string) {
     if (this.virtualFiles.has(path)) {
       return this.virtualFiles.get(path) as string;
