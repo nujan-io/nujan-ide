@@ -170,6 +170,10 @@ const FuncContractInteraction: FC<ProjectInteractionProps> = ({
         src="/html/tonweb.html"
         sandbox="allow-scripts  allow-same-origin"
       />
+      <p className="color-warn">
+        You are using code that has been imported from an external source.
+        Exercise caution with the contract code before executing it.
+      </p>
       <p>
         Below options will be used to send internal message and call getter
         method on contract after the contract is deployed.

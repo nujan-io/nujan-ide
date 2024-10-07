@@ -1,6 +1,8 @@
 import { Tooltip } from '@/components/ui';
 import AppIcon, { AppIconType } from '@/components/ui/icon';
-import { useProject } from '@/hooks/projectV2.hooks';
+import { useFileTab } from '@/hooks';
+import { useLogActivity } from '@/hooks/logActivity.hooks';
+import { baseProjectPath, useProject } from '@/hooks/projectV2.hooks';
 import {
   ContractLanguage,
   ProjectTemplate,
@@ -8,6 +10,7 @@ import {
 } from '@/interfaces/workspace.interface';
 import { Analytics } from '@/utility/analytics';
 import EventEmitter from '@/utility/eventEmitter';
+import { decodeBase64 } from '@/utility/utils';
 import { Button, Form, Input, Modal, Radio, Upload, message } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import type { RcFile } from 'antd/lib/upload';
@@ -43,9 +46,21 @@ const NewProject: FC<Props> = ({
   const [isActive, setIsActive] = useState(active);
   const { createProject } = useProject();
   const [isLoading, setIsLoading] = useState(false);
+  const { createLog } = useLogActivity();
+  const { open: openTab } = useFileTab();
 
   const router = useRouter();
-  const { importURL, name: projectName, lang: importLanguage } = router.query;
+  const {
+    importURL,
+    name: projectName,
+    lang: importLanguage,
+    code: codeToImport,
+  } = router.query as {
+    importURL?: string;
+    name?: string;
+    lang?: ContractLanguage;
+    code?: string;
+  };
 
   const [form] = useForm();
 
@@ -83,13 +98,13 @@ const NewProject: FC<Props> = ({
         // files = await downloadRepo(githubUrl as string);
       }
 
-      await createProject(
-        projectName,
+      await createProject({
+        name: projectName,
         language,
-        values.template ?? 'import',
-        values.file?.file ?? null,
-        files,
-      );
+        template: values.template ?? 'import',
+        file: values.file?.file ?? null,
+        defaultFiles: files,
+      });
 
       form.resetFields();
       closeModal();
@@ -115,7 +130,49 @@ const NewProject: FC<Props> = ({
     }
   };
 
+  const importFromCode = async (code: string) => {
+    try {
+      const defaultFileName = `main.${importLanguage}`;
+      if (!importLanguage || !['tact', 'func'].includes(importLanguage)) {
+        createLog(`Invalid language: ${importLanguage}`, 'error');
+        return;
+      }
+      await createProject({
+        name: 'temp',
+        language: importLanguage,
+        template: 'import',
+        file: null,
+        defaultFiles: [
+          {
+            id: '',
+            parent: null,
+            path: defaultFileName,
+            type: 'file' as const,
+            name: defaultFileName,
+            content: decodeBase64(code),
+          },
+        ],
+        isTemporary: true,
+      });
+      const finalQueryParam = router.query;
+      delete finalQueryParam.code;
+      delete finalQueryParam.lang;
+      router.replace({ query: finalQueryParam }).catch(() => {});
+      openTab(defaultFileName, `${baseProjectPath}/temp/${defaultFileName}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        createLog(error.message, 'error');
+        return;
+      }
+    }
+  };
+
   useEffect(() => {
+    if (codeToImport) {
+      importFromCode(codeToImport as string);
+      return;
+    }
+
     if (!importURL || !active) {
       return;
     }
@@ -132,7 +189,7 @@ const NewProject: FC<Props> = ({
     delete finalQueryParam.name;
     router.replace({ query: finalQueryParam }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [importURL, projectName, form]);
+  }, [importURL, projectName, form, codeToImport]);
 
   const closeModal = () => {
     setIsActive(false);

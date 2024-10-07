@@ -1,6 +1,7 @@
 import { IFileTab } from '@/state/IDE.context';
 import { ABITypeRef } from '@ton/core';
 import { Maybe } from '@ton/core/dist/utils/maybe';
+import { RcFile } from 'antd/es/upload';
 
 export interface Tree {
   id: string;
@@ -36,6 +37,16 @@ export interface ABIFormInputValues {
   key: string;
   value: TactInputFields;
   type: 'Init' | 'Getter' | 'Setter';
+}
+
+export interface CreateProjectParams {
+  name: string;
+  language: ContractLanguage;
+  template: ProjectTemplate;
+  file: RcFile | null;
+  defaultFiles?: Tree[];
+  autoActivate?: boolean;
+  isTemporary?: boolean; // Used for temporary projects like code import from URL
 }
 
 export interface Project {

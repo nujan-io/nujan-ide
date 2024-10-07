@@ -5,8 +5,8 @@ import {
 import {
   ABIFormInputValues,
   ContractLanguage,
+  CreateProjectParams,
   ProjectSetting,
-  ProjectTemplate,
   Tree,
 } from '@/interfaces/workspace.interface';
 import fileSystem from '@/lib/fs';
@@ -60,21 +60,24 @@ export const useProject = () => {
     }
   };
 
-  const createProject = async (
-    name: string,
-    language: ContractLanguage,
-    template: ProjectTemplate,
-    file: RcFile | null,
-    defaultFiles?: Tree[],
+  const createProject = async ({
+    name,
+    language,
+    template,
+    file,
+    defaultFiles,
     autoActivate = true,
-  ) => {
-    const projectDirectory = await fileSystem.mkdir(
-      `${baseProjectPath}/${name}`,
-      {
-        overwrite: false,
-      },
-    );
-    if (!projectDirectory) return;
+    isTemporary = false,
+  }: CreateProjectParams) => {
+    let projectDirectory = `${baseProjectPath}/${name}`;
+    try {
+      projectDirectory = (await fileSystem.mkdir(`${baseProjectPath}/${name}`, {
+        overwrite: isTemporary,
+      })) as string;
+    } catch (error) {
+      /* empty */
+    }
+    if (!name || !projectDirectory) return;
 
     let files =
       template === 'import' && defaultFiles?.length == 0
@@ -114,7 +117,7 @@ export const useProject = () => {
       template,
     };
 
-    await writeFiles(projectDirectory, files);
+    await writeFiles(projectDirectory, files, { isTemporary });
 
     const projectSettingPath = `${projectDirectory}/.ide/setting.json`;
     if (!(await fileSystem.exists(projectSettingPath))) {
@@ -138,14 +141,18 @@ export const useProject = () => {
   const writeFiles = async (
     projectPath: string,
     files: Pick<Tree, 'type' | 'path' | 'content'>[],
-    options?: { overwrite?: boolean },
+    options?: { overwrite?: boolean; isTemporary?: boolean },
   ) => {
     await Promise.all(
       files.map(async (file) => {
         if (file.type === 'directory') {
           return fileSystem.mkdir(file.path);
         }
-        await fileSystem.writeFile(file.path, file.content ?? '', options);
+        await fileSystem.writeFile(file.path, file.content ?? '', {
+          ...options,
+          virtual: options?.isTemporary ?? false,
+          overwrite: options?.isTemporary ? true : options?.overwrite,
+        });
         EventEmitter.emit('FORCE_UPDATE_FILE', file.path);
         return file.path;
       }),

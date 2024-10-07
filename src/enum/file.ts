@@ -31,6 +31,7 @@ export enum FileExtensionToFileType {
   jsx = FileType.JavaScriptReact,
   rs = FileType.Rust,
   fc = FileType.FC,
+  func = FileType.FC,
   tact = FileType.TACT,
   json = FileType.JSON,
 }
