@@ -1,7 +1,10 @@
 {
-  "name": "nujan-ton-ide",
+  "name": "ton-web-ide",
   "version": "0.1.0",
-  "private": true,
+  "author": {
+    "name": "Rahul Yadav",
+    "url": "https://github.com/rahulyadav-57/"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -128,7 +128,7 @@ const LogView: FC<Props> = ({ filter }) => {
 
       _terminal.open(appTerminal);
       _terminal.writeln(
-        `${colorMap.info}Welcome to ${AppConfig.name} IDE${colorMap.reset}`,
+        `${colorMap.info}Welcome to ${AppConfig.name}${colorMap.reset}`,
       );
       _searchAddon.activate(_terminal);
       _fitAddon.fit();
