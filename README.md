@@ -31,4 +31,4 @@ We have put significant effort into developing and refining our codebase, and we
 
 ## License
 
-[Business Source License 1.1](https://github.com/rahulyadav-57/ton-ide/blob/main/LICENSE)
+MIT
