@@ -32,7 +32,7 @@ To set up the project locally for development, ensure that Node.js v18 LTS or hi
    npm install
    ```
 
-3. **Run the development server**:
+3. **Run the development server**
 
    ```bash
    npm run dev
