@@ -21,7 +21,7 @@ We are pleased to announce that our project is now live, and you can access it a
 
 ## Local Setup
 
-To set up the project locally for development with **Node.js 18 LTS** or higher, follow these steps:
+To set up the project locally for development, ensure that Node.js v18 LTS or higher is installed, and follow these steps:
 
 ### Steps
 
