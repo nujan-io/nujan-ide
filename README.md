@@ -19,6 +19,53 @@ We are pleased to announce that our project is now live, and you can access it a
 
 ![IDE Preview](/images/screenshot.jpg)
 
+## Local Setup
+
+To set up the project locally for development, ensure that Node.js v18 LTS or higher is installed, and follow these steps:
+
+### Steps
+
+1. **Clone the repository**
+2. **Install the dependencies**: After cloning the repository, navigate to the project directory and install the dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. **Run the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Open the project in the browser**: Once the development server is running, open your browser and navigate to:
+
+   ```
+   http://localhost:3000
+   ```
+
+   This will load the local version of the IDE.
+
+Ensure that you configure any necessary environment variables in a `.env.local` file. You can create this file by copying `.env.example` and modifying it with your own values.
+
+```bash
+cp .env.example .env.local
+```
+
+### Building for Production
+
+To create an optimized production build of the application, use the following command:
+
+```bash
+npm run build
+```
+
+After the build process is complete, you can start the production server:
+
+```bash
+npm start
+```
+
 ## 📖 Documentation
 
 The documentation for Nujan can be found at [docs.nujan.io](https://docs.nujan.io/)
