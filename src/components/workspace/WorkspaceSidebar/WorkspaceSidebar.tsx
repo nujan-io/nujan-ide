@@ -37,9 +37,11 @@ const WorkspaceSidebar: FC<Props> = ({
     toggleAutoBuildAndDeploy,
     getSettingStateByKey,
     updateEditorMode,
+    toggleExternalMessage,
   } = useSettingAction();
 
   const editorMode = getSettingStateByKey('editorMode');
+  const isExternalMessage = getSettingStateByKey('isExternalMessage');
 
   const menuItems: MenuItem[] = [
     {
@@ -80,6 +82,16 @@ const WorkspaceSidebar: FC<Props> = ({
             Contract rebuild and redeploy <br /> required after an update
           </small>
         </p>
+      </div>
+      <div className={s.settingItem}>
+        <Form.Item label="External Message" valuePropName="checked">
+          <Switch
+            checked={!!isExternalMessage}
+            onChange={(toggleState) => {
+              toggleExternalMessage(toggleState);
+            }}
+          />
+        </Form.Item>
       </div>
       <div className={s.settingItem}>
         <Form.Item label="Format code on save" valuePropName="checked">
