@@ -1,8 +1,8 @@
 ![](https://res.cloudinary.com/don6qaqms/image/upload/v1696056044/k8w16co4k2nsjsrn7sup.jpg)
 
-# What is Nujan?
+# What is TON Web IDE?
 
-Web IDE, powered by Nujan, is your ultimate browser-based IDE designed to simplify the journey of writing, testing, compiling, deploying, and interacting with smart contracts on TON. Write smart contracts from anywhere, No setups, no downloads, just pure convenience and versatility.
+It is your ultimate browser-based IDE designed to simplify the journey of writing, testing, compiling, deploying, and interacting with smart contracts on TON. Write smart contracts from anywhere, No setups, no downloads, just pure convenience and versatility.
 
 # What we offer 🤝
 
@@ -78,4 +78,4 @@ We have put significant effort into developing and refining our codebase, and we
 
 ## License
 
-[Business Source License 1.1](https://github.com/rahulyadav-57/ton-ide/blob/main/LICENSE)
+MIT

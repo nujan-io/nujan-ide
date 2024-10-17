@@ -37,7 +37,7 @@ export default function App({
             file: {
               contents: `
                 {
-                  "name": "nujan-app",
+                  "name": "ton-web-ide-app",
                   "type": "module",
                   "dependencies": {
                     "jest": "29.6.2",
@@ -82,7 +82,11 @@ export default function App({
         <title>{AppConfig.seo.title}</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/png" href="/images/logo.png" />
+        <link
+          rel="icon"
+          type="image/image/svg+xml"
+          href="/images/ton_logo.svg"
+        />
       </Head>
       <RecoilRoot>
         <IDEProvider>

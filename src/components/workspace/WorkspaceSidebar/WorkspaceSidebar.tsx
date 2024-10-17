@@ -4,7 +4,7 @@ import { AppData } from '@/constant/AppData';
 import { useSettingAction } from '@/hooks/setting.hooks';
 import { Form, Input, Popover, Select, Switch } from 'antd';
 import Link from 'next/link';
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import s from './WorkspaceSidebar.module.scss';
 
 export type WorkSpaceMenu = 'code' | 'build' | 'test-cases' | 'setting';
@@ -60,6 +60,12 @@ const WorkspaceSidebar: FC<Props> = ({
       icon: 'Test',
     },
   ];
+
+  useEffect(() => {
+    if (!projectName) {
+      onMenuClicked('code');
+    }
+  }, []);
 
   const settingContent = () => (
     <div>
