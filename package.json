@@ -8,7 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "format:check": "prettier --check --ignore-path .gitignore .",
-    "format:fix": "prettier --write --ignore-path .gitignore ."
+    "format:fix": "prettier --write --ignore-path .gitignore .",
+    "prepare": "husky",
+    "commit": "git-cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   },
   "dependencies": {
     "@codingame/monaco-jsonrpc": "^0.3.1",
@@ -69,6 +76,9 @@
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@commitlint/types": "^19.5.0",
     "@types/bn.js": "^5.1.1",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/lodash.clonedeep": "^4.5.7",
@@ -76,7 +86,12 @@
     "@types/react-syntax-highlighter": "^15.5.10",
     "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "commitizen": "^4.3.1",
+    "conventional-changelog-atom": "^5.0.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint-config-prettier": "^9.1.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "next-transpile-modules": "^10.0.0",
     "prettier": "^3.3.2"
