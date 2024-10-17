@@ -122,11 +122,16 @@ const Editor: FC<Props> = ({ className = '' }) => {
     EventEmitter.on('SAVE_FILE', updateFileSaveCounter);
 
     // If file is changed e.g. in case of build process then force update in editor
-    EventEmitter.on('FORCE_UPDATE_FILE', (filePath: string) => {
-      if (!activeProject?.path || latestFile.current?.includes('setting.json'))
+    EventEmitter.on('FORCE_UPDATE_FILE', (file) => {
+      if (
+        !activeProject?.path ||
+        (latestFile.current?.includes('setting.json') &&
+          typeof file == 'string')
+      )
         return;
 
       (async () => {
+        const filePath = typeof file === 'string' ? file : file.newPath;
         if (filePath !== latestFile.current) return;
         await fetchFileContent(true);
       })().catch((error) => {
