@@ -315,7 +315,7 @@ const NewProject: FC<Props> = ({
                 },
               ]}
             >
-              <Input placeholder="Ex. https://github.com/nujan-io/ton-contracts/" />
+              <Input placeholder="Ex. https://github.com/tact-lang/tact-template" />
             </Form.Item>
           )}
 

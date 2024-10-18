@@ -82,11 +82,7 @@ export default function App({
         <title>{AppConfig.seo.title}</title>
         <meta name="description" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link
-          rel="icon"
-          type="image/image/svg+xml"
-          href="/images/ton_logo.svg"
-        />
+        <link rel="icon" type="image/image/svg+xml" href="/images/logo.svg" />
       </Head>
       <RecoilRoot>
         <IDEProvider>
@@ -103,7 +99,7 @@ export default function App({
           >
             <TonConnectUIProvider
               uiPreferences={{ theme: THEME.LIGHT }}
-              manifestUrl="https://ide.nujan.io/assets/ton/tonconnect-manifest.json"
+              manifestUrl="https://ide.ton.org/assets/ton/tonconnect-manifest.json"
             >
               <Layout>
                 <Component {...pageProps} />
