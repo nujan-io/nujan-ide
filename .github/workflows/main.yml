@@ -57,7 +57,7 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           scope: ${{ secrets.VERCEL_SCOPE }}
           alias-domains: |
-            nujan-ide-{{BRANCH}}.vercel.app
+            ton-web-ide-{{BRANCH}}.vercel.app
 
       - uses: amondnet/vercel-action@v25
         id: now-deployment-production
@@ -69,5 +69,4 @@ jobs:
           scope: ${{ secrets.VERCEL_SCOPE }}
           vercel-args: "${{ github.ref == 'refs/heads/main' && '--prod' || '' }}"
           alias-domains: |
-            nujan-ide.vercel.app
-            ide.nujan.io
+            ton-web-ide.vercel.app
